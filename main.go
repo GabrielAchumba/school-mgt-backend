@@ -15,6 +15,18 @@ import (
 	userdtos "github.com/GabrielAchumba/school-mgt-backend/modules/user-module/dtos"
 	userService "github.com/GabrielAchumba/school-mgt-backend/modules/user-module/services"
 
+	staffmodule "github.com/GabrielAchumba/school-mgt-backend/modules/staff-module"
+	staffService "github.com/GabrielAchumba/school-mgt-backend/modules/staff-module/services"
+
+	studentmodule "github.com/GabrielAchumba/school-mgt-backend/modules/student-module"
+	studentService "github.com/GabrielAchumba/school-mgt-backend/modules/student-module/services"
+
+	subjectmodule "github.com/GabrielAchumba/school-mgt-backend/modules/subject-module"
+	subjectService "github.com/GabrielAchumba/school-mgt-backend/modules/subject-module/services"
+
+	classroommodule "github.com/GabrielAchumba/school-mgt-backend/modules/classroom-module"
+	classroomService "github.com/GabrielAchumba/school-mgt-backend/modules/classroom-module/services"
+
 	"github.com/GabrielAchumba/school-mgt-backend/authentication/token"
 	"github.com/gin-gonic/gin"
 	cors "github.com/itsjamie/gin-cors"
@@ -91,6 +103,18 @@ func main() {
 
 	_userService := userService.New(mongoClient, configSettings, ctx, tokenMaker, emailData)
 	usermodule.InjectService(_userService).RegisterRoutes(apiBaseName, tokenMaker)
+
+	_staffService := staffService.New(mongoClient, configSettings, ctx)
+	staffmodule.InjectService(_staffService).RegisterRoutes(apiBaseName, tokenMaker)
+
+	_studentService := studentService.New(mongoClient, configSettings, ctx)
+	studentmodule.InjectService(_studentService).RegisterRoutes(apiBaseName, tokenMaker)
+
+	_subjectService := subjectService.New(mongoClient, configSettings, ctx)
+	subjectmodule.InjectService(_subjectService).RegisterRoutes(apiBaseName, tokenMaker)
+
+	_classRoomService := classroomService.New(mongoClient, configSettings, ctx)
+	classroommodule.InjectService(_classRoomService).RegisterRoutes(apiBaseName, tokenMaker)
 
 	port := config.AppSettings.Server.Port
 

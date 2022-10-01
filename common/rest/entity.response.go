@@ -23,6 +23,15 @@ func (ap Response) GetError(statusCode int, msg string) *Response {
 		Success:    false,
 	}
 }
+
+func (ap Response) NotAuthorized() *Response {
+	return &Response{
+		StatusCode: 400,
+		Message:    "Not Authorized",
+		Success:    false,
+	}
+}
+
 func GetSuccess(statusCode int, data interface{}) *Response {
 	return &Response{
 		StatusCode: statusCode,

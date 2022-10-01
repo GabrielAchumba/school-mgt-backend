@@ -23,7 +23,7 @@ func InjectService(service services.UserService) *userModule {
 }
 
 func (module *userModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker token.Maker) {
-	moduleRoute := rg.Group("/users")
+	moduleRoute := rg.Group("/user")
 	serverHttp := rest.ServeHTTP
 
 	moduleRoute.POST("/login", serverHttp(module.controller.Login))

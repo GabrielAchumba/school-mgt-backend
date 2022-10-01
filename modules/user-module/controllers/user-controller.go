@@ -66,6 +66,9 @@ func (ctrl *controllerImpl) RegisterUser(ctx *gin.Context) *rest.Response {
 
 	payload, _ := middleware.GetAuthorizationPayload(ctx)
 	var userId string = payload.UserId
+	if userId == "" {
+		return _response.NotAuthorized()
+	}
 
 	if m, er := ctrl.userService.RegisterUser(userId, model); er != nil {
 		return _response.GetError(http.StatusOK, er.Error())

@@ -20,7 +20,7 @@ type StaffService interface {
 	DeleteStaff(id string) (int64, error)
 	GetStaff(id string) (dtos.StaffResponse, error)
 	GetStaffs() ([]dtos.StaffResponse, error)
-	PutUser(id string, User dtos.UpdateStaffRequest) (interface{}, error)
+	PutStaff(id string, User dtos.UpdateStaffRequest) (interface{}, error)
 }
 
 type serviceImpl struct {
@@ -132,7 +132,7 @@ func (impl serviceImpl) CreateStaff(userId string, model dtos.CreateStaffRequest
 	return modelObj, er
 }
 
-func (impl serviceImpl) PutUser(id string, User dtos.UpdateStaffRequest) (interface{}, error) {
+func (impl serviceImpl) PutStaff(id string, User dtos.UpdateStaffRequest) (interface{}, error) {
 
 	objId := conversion.GetMongoId(id)
 	var updatedStaff dtos.UpdateStaffRequest
