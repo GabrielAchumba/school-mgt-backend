@@ -24,7 +24,8 @@ type Settings struct {
 		DatabaseName       string
 	}
 	TableNames struct {
-		User string
+		User  string
+		Staff string
 	}
 	EmailData struct {
 		Origin    string
@@ -40,13 +41,12 @@ var AppSettings = &Settings{}
 
 func Setup() {
 	AppSettings.Server.Port = os.Getenv("PORT")
-	AppSettings.Server.UserName = os.Getenv("USERNAME")
-	AppSettings.Server.Password = os.Getenv("PASSWORD")
 
 	AppSettings.Database.DatabaseConnection = os.Getenv("DATABASECONNECTION")
 	AppSettings.Database.DatabaseName = os.Getenv("DATABASENAME")
 
 	AppSettings.TableNames.User = os.Getenv("USER")
+	AppSettings.TableNames.Staff = os.Getenv("STAFF")
 
 	AppSettings.EmailData.EmailFrom = os.Getenv("EMAIL_FROM")
 	AppSettings.EmailData.SMTPHost = os.Getenv("SMTP_HOST")
