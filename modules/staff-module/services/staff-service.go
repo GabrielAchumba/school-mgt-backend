@@ -117,13 +117,12 @@ func (impl serviceImpl) CreateStaff(userId string, model dtos.CreateStaffRequest
 	}
 
 	filter := bson.D{bson.E{Key: "type", Value: modelObj.Type}}
-	count, err := impl.collection.CountDocuments(impl.ctx, filter)
-	if err != nil {
-		return nil, err
+
+	err := impl.collection.FindOne(impl.ctx, filter).Decode(&modelObj)
+	if err == nil {
+		return nil, errors.Error(fmt.Sprintf("Type of staff ('%v') already exist.", model.Type))
 	}
-	if count > 0 {
-		return nil, errors.Error(fmt.Sprintf("Type of staff '%v'already exist.", model.Type))
-	}
+
 	_, er := impl.collection.InsertOne(impl.ctx, modelObj)
 	if er != nil {
 		return nil, errors.Error("Error in creating staff.")
@@ -132,19 +131,22 @@ func (impl serviceImpl) CreateStaff(userId string, model dtos.CreateStaffRequest
 	return modelObj, er
 }
 
-func (impl serviceImpl) PutStaff(id string, User dtos.UpdateStaffRequest) (interface{}, error) {
+func (impl serviceImpl) PutStaff(id string, item dtos.UpdateStaffRequest) (interface{}, error) {
 
+	log.Print("PutStaff started")
 	objId := conversion.GetMongoId(id)
 	var updatedStaff dtos.UpdateStaffRequest
-	conversion.Convert(User, &updatedStaff)
+	conversion.Convert(item, &updatedStaff)
 	filter := bson.D{bson.E{Key: "_id", Value: objId}}
-	var oldStaff models.Staff
-	err := impl.collection.FindOne(impl.ctx, filter).Decode(&oldStaff)
-	if err == nil {
-		return nil, errors.Error("Type of staff does not exist")
-	}
+	var modelObj models.Staff
 
 	update := bson.D{bson.E{Key: "type", Value: updatedStaff.Type}}
-	result, er := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
-	return result.UpsertedID, er
+	_, err := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
+
+	if err != nil {
+		return modelObj, errors.Error("Could not upadte type of staff")
+	}
+
+	log.Print("PutStaff completed")
+	return modelObj, nil
 }
