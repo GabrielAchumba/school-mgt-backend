@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/GabrielAchumba/school-mgt-backend/common/config"
@@ -20,7 +21,7 @@ type StudentService interface {
 	DeleteStudent(id string) (int64, error)
 	GetStudent(id string) (dtos.StudentResponse, error)
 	GetStudents() ([]dtos.StudentResponse, error)
-	PutStudent(id string, User dtos.UpdateStudentRequest) (interface{}, error)
+	PutStudent(id string, item dtos.UpdateStudentRequest) (interface{}, error)
 }
 
 type serviceImpl struct {
@@ -112,17 +113,25 @@ func (impl serviceImpl) CreateStudent(userId string, model dtos.CreateStudentReq
 	modelObj.CreatedBy = userId
 	modelObj.CreatedAt = time.Now()
 
-	if modelObj.Type == "" {
-		return nil, errors.Error("Type of Student cannot be empty.")
+	if modelObj.FirstName == "" {
+		return nil, errors.Error("FirstName of Student cannot be empty.")
+	}
+	if modelObj.LastName == "" {
+		return nil, errors.Error("LastName of Student cannot be empty.")
 	}
 
-	filter := bson.D{bson.E{Key: "type", Value: modelObj.Type}}
+	filter := bson.D{bson.E{Key: "firstname", Value: modelObj.FirstName},
+		bson.E{Key: "lastname", Value: modelObj.LastName},
+		bson.E{Key: "birthday", Value: modelObj.BirthDay},
+		bson.E{Key: "birthmonth", Value: modelObj.BirthMonth},
+		bson.E{Key: "birthyear", Value: modelObj.BirthYear}}
 	count, err := impl.collection.CountDocuments(impl.ctx, filter)
 	if err != nil {
 		return nil, err
 	}
 	if count > 0 {
-		return nil, errors.Error(fmt.Sprintf("Type of student '%v'already exist.", model.Type))
+		return nil, errors.Error(fmt.Sprintf("Student '%v'already exist.",
+			strings.Join([]string{model.FirstName, model.LastName}, " ")))
 	}
 	_, er := impl.collection.InsertOne(impl.ctx, modelObj)
 	if er != nil {
@@ -134,17 +143,25 @@ func (impl serviceImpl) CreateStudent(userId string, model dtos.CreateStudentReq
 
 func (impl serviceImpl) PutStudent(id string, User dtos.UpdateStudentRequest) (interface{}, error) {
 
+	log.Print("PutStudent started")
+
 	objId := conversion.GetMongoId(id)
 	var updatedStudent dtos.UpdateStudentRequest
 	conversion.Convert(User, &updatedStudent)
 	filter := bson.D{bson.E{Key: "_id", Value: objId}}
-	var oldStudent models.Student
-	err := impl.collection.FindOne(impl.ctx, filter).Decode(&oldStudent)
-	if err == nil {
-		return nil, errors.Error("Type of student does not exist")
+	var modelObj models.Student
+
+	update := bson.D{bson.E{Key: "firstname", Value: updatedStudent.FirstName},
+		bson.E{Key: "lastname", Value: updatedStudent.LastName},
+		bson.E{Key: "birthday", Value: updatedStudent.BirthDay},
+		bson.E{Key: "birthmonth", Value: updatedStudent.BirthMonth},
+		bson.E{Key: "birthyear", Value: updatedStudent.BirthYear}}
+	_, err := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
+
+	if err != nil {
+		return modelObj, errors.Error("Could not upadte student")
 	}
 
-	update := bson.D{bson.E{Key: "type", Value: updatedStudent.Type}}
-	result, er := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
-	return result.UpsertedID, er
+	log.Print("PutStudent completed")
+	return modelObj, nil
 }

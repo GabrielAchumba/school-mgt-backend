@@ -20,7 +20,7 @@ type SubjectService interface {
 	DeleteSubject(id string) (int64, error)
 	GetSubject(id string) (dtos.SubjectResponse, error)
 	GetSubjects() ([]dtos.SubjectResponse, error)
-	PutSubject(id string, User dtos.UpdateSubjectRequest) (interface{}, error)
+	PutSubject(id string, item dtos.UpdateSubjectRequest) (interface{}, error)
 }
 
 type serviceImpl struct {
@@ -134,17 +134,21 @@ func (impl serviceImpl) CreateSubject(userId string, model dtos.CreateSubjectReq
 
 func (impl serviceImpl) PutSubject(id string, User dtos.UpdateSubjectRequest) (interface{}, error) {
 
+	log.Print("PutSubject started")
+
 	objId := conversion.GetMongoId(id)
 	var updatedSubject dtos.UpdateSubjectRequest
 	conversion.Convert(User, &updatedSubject)
 	filter := bson.D{bson.E{Key: "_id", Value: objId}}
-	var oldSubject models.Subject
-	err := impl.collection.FindOne(impl.ctx, filter).Decode(&oldSubject)
-	if err == nil {
-		return nil, errors.Error("Type of Subject does not exist")
-	}
+	var modelObj models.Subject
 
 	update := bson.D{bson.E{Key: "type", Value: updatedSubject.Type}}
-	result, er := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
-	return result.UpsertedID, er
+	_, err := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
+
+	if err != nil {
+		return modelObj, errors.Error("Could not upadte type of subject")
+	}
+
+	log.Print("PutSubject completed")
+	return modelObj, nil
 }

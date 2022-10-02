@@ -258,15 +258,13 @@ func (impl serviceImpl) PostUser(User dtos.CreateUserRequest) (interface{}, erro
 
 func (impl serviceImpl) PutUser(id string, User dtos.UpdateUserRequest) (interface{}, error) {
 
+	log.Print("PutUser started")
+
 	objId := conversion.GetMongoId(id)
 	var updatedUser dtos.UpdateUserRequest
 	conversion.Convert(User, &updatedUser)
 	filter := bson.D{bson.E{Key: "_id", Value: objId}}
-	var oldUser models.User
-	err := impl.collection.FindOne(impl.ctx, filter).Decode(&oldUser)
-	if err == nil {
-		return nil, errors.Error("User does not exist")
-	}
+	var modelObj models.User
 
 	update := bson.D{bson.E{Key: "designation", Value: updatedUser.Designation},
 		bson.E{Key: "firstName", Value: updatedUser.FirstName},
@@ -276,8 +274,14 @@ func (impl serviceImpl) PutUser(id string, User dtos.UpdateUserRequest) (interfa
 		bson.E{Key: "phoneNumber", Value: updatedUser.PhoneNumber},
 		bson.E{Key: "username", Value: updatedUser.UserName},
 		bson.E{Key: "userType", Value: updatedUser.UserType}}
-	result, er := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
-	return result.UpsertedID, er
+
+	_, err := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
+	if err != nil {
+		return modelObj, errors.Error("Could not upadte user")
+	}
+
+	log.Print("PutUser completed")
+	return modelObj, nil
 }
 
 func (impl serviceImpl) GetSelectedUser(filter primitive.D) (interface{}, interface{}) {

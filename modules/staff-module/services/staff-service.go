@@ -20,7 +20,7 @@ type StaffService interface {
 	DeleteStaff(id string) (int64, error)
 	GetStaff(id string) (dtos.StaffResponse, error)
 	GetStaffs() ([]dtos.StaffResponse, error)
-	PutStaff(id string, User dtos.UpdateStaffRequest) (interface{}, error)
+	PutStaff(id string, item dtos.UpdateStaffRequest) (interface{}, error)
 }
 
 type serviceImpl struct {

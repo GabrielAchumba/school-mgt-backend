@@ -27,6 +27,9 @@ import (
 	classroommodule "github.com/GabrielAchumba/school-mgt-backend/modules/classroom-module"
 	classroomService "github.com/GabrielAchumba/school-mgt-backend/modules/classroom-module/services"
 
+	resultmodule "github.com/GabrielAchumba/school-mgt-backend/modules/result-module"
+	resultService "github.com/GabrielAchumba/school-mgt-backend/modules/result-module/services"
+
 	"github.com/GabrielAchumba/school-mgt-backend/authentication/token"
 	"github.com/gin-gonic/gin"
 	cors "github.com/itsjamie/gin-cors"
@@ -115,6 +118,10 @@ func main() {
 
 	_classRoomService := classroomService.New(mongoClient, configSettings, ctx)
 	classroommodule.InjectService(_classRoomService).RegisterRoutes(apiBaseName, tokenMaker)
+
+	_resultService := resultService.New(mongoClient, configSettings, ctx, _userService,
+		_studentService, _subjectService)
+	resultmodule.InjectService(_resultService).RegisterRoutes(apiBaseName, tokenMaker)
 
 	port := config.AppSettings.Server.Port
 

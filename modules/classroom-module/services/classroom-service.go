@@ -20,7 +20,7 @@ type ClassRoomService interface {
 	DeleteClassRoom(id string) (int64, error)
 	GetClassRoom(id string) (dtos.ClassRoomResponse, error)
 	GetClassRooms() ([]dtos.ClassRoomResponse, error)
-	PutClassRoom(id string, User dtos.UpdateClassRoomRequest) (interface{}, error)
+	PutClassRoom(id string, item dtos.UpdateClassRoomRequest) (interface{}, error)
 }
 
 type serviceImpl struct {
@@ -132,19 +132,23 @@ func (impl serviceImpl) CreateClassRoom(userId string, model dtos.CreateClassRoo
 	return modelObj, er
 }
 
-func (impl serviceImpl) PutClassRoom(id string, User dtos.UpdateClassRoomRequest) (interface{}, error) {
+func (impl serviceImpl) PutClassRoom(id string, item dtos.UpdateClassRoomRequest) (interface{}, error) {
+
+	log.Print("PutStaff started")
 
 	objId := conversion.GetMongoId(id)
 	var updatedClassRoom dtos.UpdateClassRoomRequest
-	conversion.Convert(User, &updatedClassRoom)
+	conversion.Convert(item, &updatedClassRoom)
 	filter := bson.D{bson.E{Key: "_id", Value: objId}}
-	var oldClassRoom models.ClassRoom
-	err := impl.collection.FindOne(impl.ctx, filter).Decode(&oldClassRoom)
-	if err == nil {
-		return nil, errors.Error("Type of ClassRoom does not exist")
-	}
+	var modelObj models.ClassRoom
 
 	update := bson.D{bson.E{Key: "type", Value: updatedClassRoom.Type}}
-	result, er := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
-	return result.UpsertedID, er
+	_, err := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
+
+	if err != nil {
+		return modelObj, errors.Error("Could not upadte type of staff")
+	}
+
+	log.Print("PutStaff completed")
+	return modelObj, nil
 }
