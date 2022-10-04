@@ -120,7 +120,7 @@ func main() {
 	classroommodule.InjectService(_classRoomService).RegisterRoutes(apiBaseName, tokenMaker)
 
 	_resultService := resultService.New(mongoClient, configSettings, ctx, _userService,
-		_studentService, _subjectService)
+		_studentService, _subjectService, _classRoomService)
 	resultmodule.InjectService(_resultService).RegisterRoutes(apiBaseName, tokenMaker)
 
 	port := config.AppSettings.Server.Port

@@ -26,6 +26,7 @@ type UserService interface {
 	RegisterUser(userId string, requestModel dtos.CreateUserRequest) (interface{}, error)
 	GetUsers() ([]dtos.UserResponse, error)
 	GetUser(id string) (dtos.UserResponse, error)
+	GetUsersByCategory(category string) ([]dtos.UserResponse, error)
 	PutUser(id string, User dtos.UpdateUserRequest) (interface{}, error)
 	PostUser(User dtos.CreateUserRequest) (interface{}, error)
 	DeleteUser(id string) (int64, error)
@@ -227,6 +228,33 @@ func (impl serviceImpl) GetUsers() ([]dtos.UserResponse, error) {
 	}
 
 	log.Print("Call to get all Users completed.")
+	return Users, err
+}
+
+func (impl serviceImpl) GetUsersByCategory(category string) ([]dtos.UserResponse, error) {
+
+	log.Print("Call to get Users by category started.")
+
+	var Users []dtos.UserResponse
+	filter := bson.D{bson.E{Key: "designation", Value: category}}
+	cur, err := impl.collection.Find(impl.ctx, filter)
+
+	if err != nil {
+		Users = make([]dtos.UserResponse, 0)
+		return Users, errors.Error("Users not found!")
+	}
+
+	err = cur.All(impl.ctx, &Users)
+	if err != nil {
+		return Users, err
+	}
+
+	cur.Close(impl.ctx)
+	if len(Users) == 0 {
+		Users = make([]dtos.UserResponse, 0)
+	}
+
+	log.Print("Call to get Users by category completed.")
 	return Users, err
 }
 

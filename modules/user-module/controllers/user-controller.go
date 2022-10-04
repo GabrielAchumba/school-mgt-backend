@@ -20,6 +20,7 @@ type UserController interface {
 	Login(ctx *gin.Context) *rest.Response
 	DeleteUser(ctx *gin.Context) *rest.Response
 	GetUser(ctx *gin.Context) *rest.Response
+	GetUsersByCategory(ctx *gin.Context) *rest.Response
 	GetUsers(ctx *gin.Context) *rest.Response
 	PutUser(ctx *gin.Context) *rest.Response
 	UpdateAdminDTO(ctx *gin.Context) *rest.Response
@@ -91,6 +92,17 @@ func (ctrl *controllerImpl) GetUser(ctx *gin.Context) *rest.Response {
 	id := ctx.Param("id")
 
 	m, er := ctrl.userService.GetUser(id)
+	if er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	}
+	return _response.GetSuccess(http.StatusOK, m)
+}
+
+func (ctrl *controllerImpl) GetUsersByCategory(ctx *gin.Context) *rest.Response {
+
+	category := ctx.Param("category")
+
+	m, er := ctrl.userService.GetUsersByCategory(category)
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}
