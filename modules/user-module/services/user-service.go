@@ -10,6 +10,7 @@ import (
 	"github.com/GabrielAchumba/school-mgt-backend/common/config"
 	"github.com/GabrielAchumba/school-mgt-backend/common/conversion"
 	errors "github.com/GabrielAchumba/school-mgt-backend/common/errors"
+	staffServicePackage "github.com/GabrielAchumba/school-mgt-backend/modules/staff-module/services"
 	"github.com/GabrielAchumba/school-mgt-backend/modules/user-module/dtos"
 	"github.com/GabrielAchumba/school-mgt-backend/modules/user-module/models"
 	"github.com/GabrielAchumba/school-mgt-backend/modules/user-module/utils"
@@ -38,34 +39,37 @@ type UserService interface {
 }
 
 type serviceImpl struct {
-	ctx        context.Context
-	collection *mongo.Collection
-	tokenMaker token.Maker
-	emailDto   dtos.EmailDto
+	ctx          context.Context
+	collection   *mongo.Collection
+	tokenMaker   token.Maker
+	emailDto     dtos.EmailDto
+	staffService staffServicePackage.StaffService
 }
 
 func New(mongoClient *mongo.Client, config config.Settings, ctx context.Context,
-	tokenMaker token.Maker, emailDto dtos.EmailDto) UserService {
+	tokenMaker token.Maker, emailDto dtos.EmailDto,
+	staffService staffServicePackage.StaffService) UserService {
 	collection := mongoClient.Database(config.Database.DatabaseName).Collection(config.TableNames.User)
 
 	return &serviceImpl{
-		collection: collection,
-		ctx:        ctx,
-		tokenMaker: tokenMaker,
-		emailDto:   emailDto,
+		collection:   collection,
+		ctx:          ctx,
+		tokenMaker:   tokenMaker,
+		emailDto:     emailDto,
+		staffService: staffService,
 	}
 }
 
 func (impl serviceImpl) SeedAdmin() {
 	admin := dtos.CreateUserRequest{
-		Password:    "school",
-		FirstName:   "admin",
-		LastName:    "admin",
-		PhoneNumber: "07032488605",
-		CountryCode: "+234",
-		UserName:    "admin@school.com",
-		UserType:    "Admin",
-		Designation: "CEO",
+		Password:      "school",
+		FirstName:     "admin",
+		LastName:      "admin",
+		PhoneNumber:   "07032488605",
+		CountryCode:   "+234",
+		UserName:      "admin@school.com",
+		UserType:      "Admin",
+		DesignationId: "CEO",
 	}
 
 	filter := bson.D{bson.E{Key: "username", Value: admin.UserName}}
@@ -106,15 +110,15 @@ func (impl serviceImpl) LoginUser(requestModel dtos.LoginUserRequest) (interface
 		Token:     accessToken,
 		ExpiresAt: accessPayload.ExpiredAt,
 		User: dtos.UserResponse{
-			Id:           modelDto.ID,
-			PhoneNumber:  modelDto.PhoneNumber,
-			FirstName:    modelDto.FirstName,
-			LastName:     modelDto.LastName,
-			UserName:     modelDto.UserName,
-			UserType:     modelDto.UserType,
-			Designation:  modelDto.Designation,
-			CreatedAt:    modelDto.CreatedAt,
-			Base64String: modelDto.Base64String,
+			Id:            modelDto.ID,
+			PhoneNumber:   modelDto.PhoneNumber,
+			FirstName:     modelDto.FirstName,
+			LastName:      modelDto.LastName,
+			UserName:      modelDto.UserName,
+			UserType:      modelDto.UserType,
+			DesignationId: modelDto.DesignationId,
+			CreatedAt:     modelDto.CreatedAt,
+			Base64String:  modelDto.Base64String,
 		},
 	}
 
@@ -199,6 +203,9 @@ func (impl serviceImpl) GetUser(id string) (dtos.UserResponse, error) {
 		return User, errors.Error("could not find adminstrator by id")
 	}
 
+	staff, _ := impl.staffService.GetStaff(User.DesignationId)
+	User.Designation = staff.Type
+
 	log.Print("Get Adminstrator completed")
 	return User, err
 
@@ -223,8 +230,14 @@ func (impl serviceImpl) GetUsers() ([]dtos.UserResponse, error) {
 	}
 
 	cur.Close(impl.ctx)
-	if len(Users) == 0 {
+	length := len(Users)
+	if length == 0 {
 		Users = make([]dtos.UserResponse, 0)
+	}
+
+	for i := 0; i < length; i++ {
+		staff, _ := impl.staffService.GetStaff(Users[i].DesignationId)
+		Users[i].Designation = staff.Type
 	}
 
 	log.Print("Call to get all Users completed.")
@@ -236,7 +249,7 @@ func (impl serviceImpl) GetUsersByCategory(category string) ([]dtos.UserResponse
 	log.Print("Call to get Users by category started.")
 
 	var Users []dtos.UserResponse
-	filter := bson.D{bson.E{Key: "designation", Value: category}}
+	filter := bson.D{bson.E{Key: "designationid", Value: category}}
 	cur, err := impl.collection.Find(impl.ctx, filter)
 
 	if err != nil {
@@ -250,8 +263,14 @@ func (impl serviceImpl) GetUsersByCategory(category string) ([]dtos.UserResponse
 	}
 
 	cur.Close(impl.ctx)
-	if len(Users) == 0 {
+	length := len(Users)
+	if length == 0 {
 		Users = make([]dtos.UserResponse, 0)
+	}
+
+	for i := 0; i < length; i++ {
+		staff, _ := impl.staffService.GetStaff(Users[i].DesignationId)
+		Users[i].Designation = staff.Type
 	}
 
 	log.Print("Call to get Users by category completed.")
@@ -294,7 +313,7 @@ func (impl serviceImpl) PutUser(id string, User dtos.UpdateUserRequest) (interfa
 	filter := bson.D{bson.E{Key: "_id", Value: objId}}
 	var modelObj models.User
 
-	update := bson.D{bson.E{Key: "designation", Value: updatedUser.Designation},
+	update := bson.D{bson.E{Key: "designationId", Value: updatedUser.DesignationId},
 		bson.E{Key: "firstName", Value: updatedUser.FirstName},
 		bson.E{Key: "isPhotographUploaded", Value: updatedUser.IsPhotographUploaded},
 		bson.E{Key: "lastName", Value: updatedUser.LastName},

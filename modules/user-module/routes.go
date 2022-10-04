@@ -32,7 +32,7 @@ func (module *userModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker token.M
 
 	moduleRoute.Use(middleware.AuthMiddleware(tokenMaker))
 	{
-		moduleRoute.POST("/register", serverHttp(module.controller.RegisterUser))
+		moduleRoute.POST("/create", serverHttp(module.controller.RegisterUser))
 		moduleRoute.PUT("/:id", serverHttp(module.controller.PutUser))
 		moduleRoute.GET("", serverHttp(module.controller.GetUsers))
 		moduleRoute.GET("/:id", serverHttp(module.controller.GetUser))

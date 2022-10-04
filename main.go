@@ -104,11 +104,12 @@ func main() {
 
 	tokenMaker, _ := token.NewJWTMaker(config.AppSettings.Token.TokenSecretKey, config.AppSettings.Token.RefreshTokenSecretKey, config.AppSettings.Token.AccessTokenDuration, config.AppSettings.Token.RefreshTokenDuration)
 
-	_userService := userService.New(mongoClient, configSettings, ctx, tokenMaker, emailData)
-	usermodule.InjectService(_userService).RegisterRoutes(apiBaseName, tokenMaker)
-
 	_staffService := staffService.New(mongoClient, configSettings, ctx)
 	staffmodule.InjectService(_staffService).RegisterRoutes(apiBaseName, tokenMaker)
+
+	_userService := userService.New(mongoClient, configSettings, ctx, tokenMaker, emailData,
+		_staffService)
+	usermodule.InjectService(_userService).RegisterRoutes(apiBaseName, tokenMaker)
 
 	_studentService := studentService.New(mongoClient, configSettings, ctx)
 	studentmodule.InjectService(_studentService).RegisterRoutes(apiBaseName, tokenMaker)
