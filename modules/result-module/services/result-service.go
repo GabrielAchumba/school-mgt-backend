@@ -3,14 +3,18 @@ package services
 import (
 	"context"
 	"log"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/GabrielAchumba/school-mgt-backend/common/config"
 	"github.com/GabrielAchumba/school-mgt-backend/common/conversion"
 	errors "github.com/GabrielAchumba/school-mgt-backend/common/errors"
+	assessmentServicePackage "github.com/GabrielAchumba/school-mgt-backend/modules/assessment-module/services"
 	classRoomServicePackage "github.com/GabrielAchumba/school-mgt-backend/modules/classroom-module/services"
 	"github.com/GabrielAchumba/school-mgt-backend/modules/result-module/dtos"
 	"github.com/GabrielAchumba/school-mgt-backend/modules/result-module/models"
+	staffServicePackage "github.com/GabrielAchumba/school-mgt-backend/modules/staff-module/services"
 	studentServicePackage "github.com/GabrielAchumba/school-mgt-backend/modules/student-module/services"
 	subjectServicePackage "github.com/GabrielAchumba/school-mgt-backend/modules/subject-module/services"
 	userServicePackage "github.com/GabrielAchumba/school-mgt-backend/modules/user-module/services"
@@ -24,31 +28,43 @@ type ResultService interface {
 	GetResult(id string) (dtos.ResultResponse, error)
 	GetResults() ([]dtos.ResultResponse, error)
 	PutResult(id string, item dtos.UpdateResultRequest) (interface{}, error)
+	ComputeSummaryResults(req dtos.GetResultsRequest) (interface{}, error)
 }
 
 type serviceImpl struct {
-	ctx              context.Context
-	collection       *mongo.Collection
-	userService      userServicePackage.UserService
-	studentService   studentServicePackage.StudentService
-	subjectService   subjectServicePackage.SubjectService
-	classRoomService classRoomServicePackage.ClassRoomService
+	ctx               context.Context
+	collection        *mongo.Collection
+	userService       userServicePackage.UserService
+	studentService    studentServicePackage.StudentService
+	subjectService    subjectServicePackage.SubjectService
+	classRoomService  classRoomServicePackage.ClassRoomService
+	assessmentService assessmentServicePackage.AssessmentService
+	staffService      staffServicePackage.StaffService
+}
+
+type SubJectResult struct {
+	assessments  map[string]float64
+	SubjectScore float64
 }
 
 func New(mongoClient *mongo.Client, config config.Settings, ctx context.Context,
 	userService userServicePackage.UserService,
 	studentService studentServicePackage.StudentService,
 	subjectService subjectServicePackage.SubjectService,
-	classRoomService classRoomServicePackage.ClassRoomService) ResultService {
+	classRoomService classRoomServicePackage.ClassRoomService,
+	assessmentService assessmentServicePackage.AssessmentService,
+	staffService staffServicePackage.StaffService) ResultService {
 	collection := mongoClient.Database(config.Database.DatabaseName).Collection(config.TableNames.Result)
 
 	return &serviceImpl{
-		collection:       collection,
-		ctx:              ctx,
-		userService:      userService,
-		studentService:   studentService,
-		subjectService:   subjectService,
-		classRoomService: classRoomService,
+		collection:        collection,
+		ctx:               ctx,
+		userService:       userService,
+		studentService:    studentService,
+		subjectService:    subjectService,
+		classRoomService:  classRoomService,
+		assessmentService: assessmentService,
+		staffService:      staffService,
 	}
 }
 
@@ -89,11 +105,15 @@ func (impl serviceImpl) GetResult(id string) (dtos.ResultResponse, error) {
 	subject, _ := impl.subjectService.GetSubject(Result.SubjectId)
 	teacher, _ := impl.userService.GetUser(Result.TeacherId)
 	_classRoom, _ := impl.classRoomService.GetClassRoom(Result.ClassRoomId)
+	assessment, _ := impl.assessmentService.GetAssessment(Result.AssessmentId)
+	designation, _ := impl.staffService.GetStaff(Result.DesignationId)
 
 	Result.StudentFullName = student.FirstName + " " + student.LastName
 	Result.SubjectFullName = subject.Type
 	Result.TeacherFullName = teacher.FirstName + " " + teacher.LastName
 	Result.ClassRoomFullName = _classRoom.Type
+	Result.AssessmentFullName = assessment.Type
+	Result.DesignationFullName = designation.Type
 
 	log.Print("Get type of Result completed")
 	return Result, err
@@ -125,15 +145,19 @@ func (impl serviceImpl) GetResults() ([]dtos.ResultResponse, error) {
 	}
 
 	for i := 0; i < length; i++ {
+		designation, _ := impl.staffService.GetStaff(Results[i].DesignationId)
 		student, _ := impl.studentService.GetStudent(Results[i].StudentId)
 		subject, _ := impl.subjectService.GetSubject(Results[i].SubjectId)
 		teacher, _ := impl.userService.GetUser(Results[i].TeacherId)
 		classRoom, _ := impl.classRoomService.GetClassRoom(Results[i].ClassRoomId)
+		assessment, _ := impl.assessmentService.GetAssessment(Results[i].AssessmentId)
 
 		Results[i].StudentFullName = student.FirstName + " " + student.LastName
 		Results[i].SubjectFullName = subject.Type
 		Results[i].TeacherFullName = teacher.FirstName + " " + teacher.LastName
 		Results[i].ClassRoomFullName = classRoom.Type
+		Results[i].AssessmentFullName = assessment.Type
+		Results[i].DesignationFullName = designation.Type
 
 	}
 
@@ -145,11 +169,9 @@ func (impl serviceImpl) ViewSelectdResults(req dtos.GetResultsRequest) ([]dtos.R
 
 	log.Print("Call to get results by range of date started")
 
-	/* { tags: ["red", "blank"] } */
-
 	var Results []dtos.ResultResponse
-	filter := bson.D{bson.E{Key: "createdAt", Value: bson.D{bson.E{Key: "$gte", Value: req.StartDate}}},
-		bson.E{Key: "nleveloneroomonechildren", Value: bson.D{bson.E{Key: "$lte", Value: req.EndDate}}},
+	filter := bson.D{bson.E{Key: "createdat", Value: bson.D{bson.E{Key: "$gte", Value: req.StartDate}}},
+		bson.E{Key: "createdat", Value: bson.D{bson.E{Key: "$lte", Value: req.EndDate}}},
 		bson.E{Key: "subjectsid", Value: req.SubjectIds},
 		bson.E{Key: "teacherid", Value: req.TeacherId},
 		bson.E{Key: "studentid", Value: req.StudentId},
@@ -177,16 +199,97 @@ func (impl serviceImpl) ViewSelectdResults(req dtos.GetResultsRequest) ([]dtos.R
 		subject, _ := impl.subjectService.GetSubject(Results[i].SubjectId)
 		teacher, _ := impl.userService.GetUser(Results[i].TeacherId)
 		classRoom, _ := impl.classRoomService.GetClassRoom(Results[i].ClassRoomId)
+		assessment, _ := impl.assessmentService.GetAssessment(Results[i].AssessmentId)
+		designation, _ := impl.staffService.GetStaff(Results[i].DesignationId)
 
 		Results[i].StudentFullName = student.FirstName + " " + student.LastName
 		Results[i].SubjectFullName = subject.Type
 		Results[i].TeacherFullName = teacher.FirstName + " " + teacher.LastName
 		Results[i].ClassRoomFullName = classRoom.Type
+		Results[i].AssessmentFullName = assessment.Type
+		Results[i].DesignationFullName = designation.Type
 
 	}
 
 	log.Print("Call to get results by range of date completed")
 	return Results, err
+}
+
+func (impl serviceImpl) ComputeSummaryResults(req dtos.GetResultsRequest) (interface{}, error) {
+
+	log.Print("Call ComputeSummaryResults started")
+
+	assessments, _ := impl.assessmentService.GetAssessments()
+	subjects, _ := impl.subjectService.GetSubjects()
+
+	splitStartDte := strings.Split(req.StartDate, "/")
+	startDay, _ := strconv.Atoi(splitStartDte[2])
+	startMonth, _ := strconv.Atoi(splitStartDte[1])
+	startYear, _ := strconv.Atoi(splitStartDte[0])
+
+	splitEndDate := strings.Split(req.EndDate, "/")
+	endDay, _ := strconv.Atoi(splitEndDate[2])
+	endMonth, _ := strconv.Atoi(splitEndDate[1])
+	endYear, _ := strconv.Atoi(splitEndDate[0])
+
+	startDate := time.Date(startYear, time.Month(startMonth), startDay, 1, 10, 30, 0, time.UTC)
+	endDate := time.Date(endYear, time.Month(endMonth), endDay, 1, 10, 30, 0, time.UTC)
+
+	var Results []dtos.ResultResponse
+	filter := bson.D{bson.E{Key: "createdat", Value: bson.D{bson.E{Key: "$gte", Value: startDate}}},
+		bson.E{Key: "createdat", Value: bson.D{bson.E{Key: "$lte", Value: endDate}}},
+		bson.E{Key: "subjectsid", Value: req.SubjectIds},
+		bson.E{Key: "teacherid", Value: req.TeacherId},
+		bson.E{Key: "studentid", Value: req.StudentId},
+		bson.E{Key: "classroomid", Value: req.ClassRoomId}}
+	cur, err := impl.collection.Find(impl.ctx, filter)
+
+	if err != nil {
+		Results = make([]dtos.ResultResponse, 0)
+		return Results, errors.Error("Results not found!")
+	}
+
+	err = cur.All(impl.ctx, &Results)
+	if err != nil {
+		return Results, err
+	}
+
+	cur.Close(impl.ctx)
+	length := len(Results)
+	if length == 0 {
+		Results = make([]dtos.ResultResponse, 0)
+	}
+
+	subjectsScores := make(map[string]SubJectResult, 0)
+	for _, subject := range subjects {
+		var subjectScore float64 = 0
+		subjectAssessments := make(map[string]float64, 0)
+		for _, assessment := range assessments {
+			var assessmentScore float64 = 0
+			var assessmentCounter float64 = 0
+			for _, Result := range Results {
+				if Result.AssessmentId == assessment.Id &&
+					Result.SubjectId == subject.Id {
+					if Result.ScoreMax > 0 {
+						assessmentScore = assessmentScore + (Result.Score / Result.ScoreMax)
+						assessmentCounter++
+					}
+				}
+			}
+
+			var totalAssementScore float64 = (assessmentScore / assessmentCounter) / assessment.Percentage
+			subjectAssessments[assessment.Type] = totalAssementScore
+			subjectScore = subjectScore + totalAssementScore
+			subjectsScores[subject.Type] = SubJectResult{
+				SubjectScore: subjectScore,
+				assessments:  subjectAssessments,
+			}
+		}
+	}
+
+	log.Print("Call ComputeSummaryResults completed")
+	return subjectsScores, err
+
 }
 
 func (impl serviceImpl) CreateResult(userId string, model dtos.CreateResultRequest) (interface{}, error) {
@@ -232,22 +335,29 @@ func (impl serviceImpl) PutResult(id string, User dtos.UpdateResultRequest) (int
 	filter := bson.D{bson.E{Key: "_id", Value: objId}}
 	var modelObj models.Result
 
+	modelObj.CreatedAt = time.Now()
+	modelObj.CreatedDay = modelObj.CreatedAt.Day()
+	modelObj.CreatedMonth = int(modelObj.CreatedAt.Month())
+	modelObj.CreatedYear = modelObj.CreatedAt.Year()
+
 	update := bson.D{bson.E{Key: "createdat", Value: modelObj.CreatedAt},
-		bson.E{Key: "studentid", Value: modelObj.StudentId},
-		bson.E{Key: "subjectid", Value: modelObj.SubjectId},
-		bson.E{Key: "teacherid", Value: modelObj.TeacherId},
-		bson.E{Key: "classroomid", Value: modelObj.ClassRoomId},
-		bson.E{Key: "score", Value: modelObj.Score},
-		bson.E{Key: "scoremax", Value: modelObj.ScoreMax},
+		bson.E{Key: "studentid", Value: updatedResult.StudentId},
+		bson.E{Key: "subjectid", Value: updatedResult.SubjectId},
+		bson.E{Key: "teacherid", Value: updatedResult.TeacherId},
+		bson.E{Key: "classroomid", Value: updatedResult.ClassRoomId},
+		bson.E{Key: "assessmentid", Value: updatedResult.AssessmentId},
+		bson.E{Key: "designationid", Value: updatedResult.DesignationId},
+		bson.E{Key: "score", Value: updatedResult.Score},
+		bson.E{Key: "scoremax", Value: updatedResult.ScoreMax},
 		bson.E{Key: "createdyear", Value: modelObj.CreatedYear},
 		bson.E{Key: "createdmonth", Value: modelObj.CreatedMonth},
 		bson.E{Key: "createdday", Value: modelObj.CreatedDay}}
 	_, err := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
 
 	if err != nil {
-		return modelObj, errors.Error("Could not upadte Result")
+		return updatedResult, errors.Error("Could not upadte Result")
 	}
 
 	log.Print("PutResult completed")
-	return modelObj, nil
+	return updatedResult, nil
 }

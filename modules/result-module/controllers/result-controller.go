@@ -18,6 +18,7 @@ type ResultController interface {
 	GetResult(ctx *gin.Context) *rest.Response
 	GetResults(ctx *gin.Context) *rest.Response
 	PutResult(ctx *gin.Context) *rest.Response
+	ComputeSummaryResults(ctx *gin.Context) *rest.Response
 }
 
 type controllerImpl struct {
@@ -87,6 +88,26 @@ func (ctrl *controllerImpl) PutResult(ctx *gin.Context) *rest.Response {
 	}
 
 	if m, er := ctrl.ResultService.PutResult(id, model); er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	} else {
+		return _response.GetSuccess(http.StatusOK, m)
+	}
+}
+
+func (ctrl *controllerImpl) ComputeSummaryResults(ctx *gin.Context) *rest.Response {
+	var model dtos.GetResultsRequest
+
+	if er := ctx.BindJSON(&model); er != nil {
+		return _response.GetError(http.StatusBadRequest, er.Error())
+	}
+
+	payload, _ := middleware.GetAuthorizationPayload(ctx)
+	var userId string = payload.UserId
+	if userId == "" {
+		return _response.NotAuthorized()
+	}
+
+	if m, er := ctrl.ResultService.ComputeSummaryResults(model); er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	} else {
 		return _response.GetSuccess(http.StatusOK, m)

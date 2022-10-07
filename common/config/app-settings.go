@@ -24,12 +24,13 @@ type Settings struct {
 		DatabaseName       string
 	}
 	TableNames struct {
-		User      string
-		Staff     string
-		Student   string
-		Subject   string
-		ClassRoom string
-		Result    string
+		User       string
+		Staff      string
+		Student    string
+		Subject    string
+		ClassRoom  string
+		Result     string
+		Assessment string
 	}
 	EmailData struct {
 		Origin    string
@@ -55,6 +56,7 @@ func Setup() {
 	AppSettings.TableNames.Subject = os.Getenv("SUBJECT")
 	AppSettings.TableNames.ClassRoom = os.Getenv("CLASSROOM")
 	AppSettings.TableNames.Result = os.Getenv("RESULT")
+	AppSettings.TableNames.Assessment = os.Getenv("ASSESSMENT")
 
 	AppSettings.EmailData.EmailFrom = os.Getenv("EMAIL_FROM")
 	AppSettings.EmailData.SMTPHost = os.Getenv("SMTP_HOST")

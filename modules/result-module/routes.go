@@ -31,5 +31,6 @@ func (module *ResultModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker token
 		moduleRoute.GET("", serverHttp(module.controller.GetResults))
 		moduleRoute.GET("/:id", serverHttp(module.controller.GetResult))
 		moduleRoute.DELETE("/:id", serverHttp(module.controller.DeleteResult))
+		moduleRoute.POST("/summarizedresult", serverHttp(module.controller.ComputeSummaryResults))
 	}
 }
