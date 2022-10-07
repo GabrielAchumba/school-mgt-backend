@@ -11,6 +11,7 @@ type CreateResultRequest struct {
 	ClassRoomId   string  `json:"classRoomId" binding:"required"`
 	AssessmentId  string  `json:"assessmentId" binding:"required"`
 	DesignationId string  `json:"designationId" binding:"required"`
+	CreatedAt     string  `json:"createdAt" binding:"required"`
 }
 
 type UpdateResultRequest struct {
@@ -22,6 +23,7 @@ type UpdateResultRequest struct {
 	ClassRoomId   string  `json:"classRoomId" binding:"required"`
 	AssessmentId  string  `json:"assessmentId" binding:"required"`
 	DesignationId string  `json:"designationId" binding:"required"`
+	UpdatedAt     string  `json:"updatedAt" binding:"required"`
 }
 
 type ResultResponse struct {
@@ -55,4 +57,9 @@ type GetResultsRequest struct {
 	ClassRoomId   string   `json:"classRoomId" binding:"required"`
 	AssessmentId  string   `json:"assessmentId"`
 	DesignationId string   `json:"designationId"`
+}
+
+type SubJectResult struct {
+	Assessments  map[string]float64 `json:"assessments"`
+	SubjectScore float64            `json:"subjectScore"`
 }

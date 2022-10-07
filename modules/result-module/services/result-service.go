@@ -42,11 +42,6 @@ type serviceImpl struct {
 	staffService      staffServicePackage.StaffService
 }
 
-type SubJectResult struct {
-	assessments  map[string]float64
-	SubjectScore float64
-}
-
 func New(mongoClient *mongo.Client, config config.Settings, ctx context.Context,
 	userService userServicePackage.UserService,
 	studentService studentServicePackage.StudentService,
@@ -238,10 +233,11 @@ func (impl serviceImpl) ComputeSummaryResults(req dtos.GetResultsRequest) (inter
 	var Results []dtos.ResultResponse
 	filter := bson.D{bson.E{Key: "createdat", Value: bson.D{bson.E{Key: "$gte", Value: startDate}}},
 		bson.E{Key: "createdat", Value: bson.D{bson.E{Key: "$lte", Value: endDate}}},
-		bson.E{Key: "subjectsid", Value: req.SubjectIds},
+		bson.E{Key: "subjectid", Value: bson.D{bson.E{Key: "$in", Value: req.SubjectIds}}},
 		bson.E{Key: "teacherid", Value: req.TeacherId},
 		bson.E{Key: "studentid", Value: req.StudentId},
 		bson.E{Key: "classroomid", Value: req.ClassRoomId}}
+
 	cur, err := impl.collection.Find(impl.ctx, filter)
 
 	if err != nil {
@@ -260,9 +256,10 @@ func (impl serviceImpl) ComputeSummaryResults(req dtos.GetResultsRequest) (inter
 		Results = make([]dtos.ResultResponse, 0)
 	}
 
-	subjectsScores := make(map[string]SubJectResult, 0)
+	subjectsScores := make(map[string]dtos.SubJectResult, 0)
 	for _, subject := range subjects {
 		var subjectScore float64 = 0
+		isSubject := false
 		subjectAssessments := make(map[string]float64, 0)
 		for _, assessment := range assessments {
 			var assessmentScore float64 = 0
@@ -277,12 +274,18 @@ func (impl serviceImpl) ComputeSummaryResults(req dtos.GetResultsRequest) (inter
 				}
 			}
 
-			var totalAssementScore float64 = (assessmentScore / assessmentCounter) / assessment.Percentage
-			subjectAssessments[assessment.Type] = totalAssementScore
-			subjectScore = subjectScore + totalAssementScore
-			subjectsScores[subject.Type] = SubJectResult{
+			if assessmentCounter > 0 {
+				var totalAssementScore float64 = (assessmentScore / assessmentCounter) * assessment.Percentage
+				subjectAssessments[assessment.Type] = totalAssementScore
+				subjectScore = subjectScore + totalAssementScore
+				isSubject = true
+			}
+		}
+
+		if isSubject {
+			subjectsScores[subject.Type] = dtos.SubJectResult{
 				SubjectScore: subjectScore,
-				assessments:  subjectAssessments,
+				Assessments:  subjectAssessments,
 			}
 		}
 	}
@@ -300,10 +303,14 @@ func (impl serviceImpl) CreateResult(userId string, model dtos.CreateResultReque
 	conversion.Convert(model, &modelObj)
 
 	modelObj.CreatedBy = userId
-	modelObj.CreatedAt = time.Now()
-	modelObj.CreatedDay = modelObj.CreatedAt.Day()
-	modelObj.CreatedMonth = int(modelObj.CreatedAt.Month())
-	modelObj.CreatedYear = modelObj.CreatedAt.Year()
+
+	splitCreatedAt := strings.Split(model.CreatedAt, "/")
+	modelObj.CreatedDay, _ = strconv.Atoi(splitCreatedAt[2])
+	modelObj.CreatedMonth, _ = strconv.Atoi(splitCreatedAt[1])
+	modelObj.CreatedYear, _ = strconv.Atoi(splitCreatedAt[0])
+
+	modelObj.CreatedAt = time.Date(modelObj.CreatedYear,
+		time.Month(modelObj.CreatedMonth), modelObj.CreatedDay, 1, 10, 30, 0, time.UTC)
 
 	filter := bson.D{bson.E{Key: "createdat", Value: modelObj.CreatedAt},
 		bson.E{Key: "studentid", Value: modelObj.StudentId},
@@ -325,20 +332,23 @@ func (impl serviceImpl) CreateResult(userId string, model dtos.CreateResultReque
 	return modelObj, er
 }
 
-func (impl serviceImpl) PutResult(id string, User dtos.UpdateResultRequest) (interface{}, error) {
+func (impl serviceImpl) PutResult(id string, model dtos.UpdateResultRequest) (interface{}, error) {
 
 	log.Print("PutResult started")
 
 	objId := conversion.GetMongoId(id)
 	var updatedResult dtos.UpdateResultRequest
-	conversion.Convert(User, &updatedResult)
+	conversion.Convert(model, &updatedResult)
 	filter := bson.D{bson.E{Key: "_id", Value: objId}}
 	var modelObj models.Result
 
-	modelObj.CreatedAt = time.Now()
-	modelObj.CreatedDay = modelObj.CreatedAt.Day()
-	modelObj.CreatedMonth = int(modelObj.CreatedAt.Month())
-	modelObj.CreatedYear = modelObj.CreatedAt.Year()
+	splitCreatedAt := strings.Split(model.UpdatedAt, "/")
+	modelObj.CreatedDay, _ = strconv.Atoi(splitCreatedAt[2])
+	modelObj.CreatedMonth, _ = strconv.Atoi(splitCreatedAt[1])
+	modelObj.CreatedYear, _ = strconv.Atoi(splitCreatedAt[0])
+
+	modelObj.CreatedAt = time.Date(modelObj.CreatedYear,
+		time.Month(modelObj.CreatedMonth), modelObj.CreatedDay, 1, 10, 30, 0, time.UTC)
 
 	update := bson.D{bson.E{Key: "createdat", Value: modelObj.CreatedAt},
 		bson.E{Key: "studentid", Value: updatedResult.StudentId},
