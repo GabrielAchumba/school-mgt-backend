@@ -66,14 +66,28 @@ type GetResultsRequest struct {
 	AssessmentId  string         `json:"assessmentId"`
 	DesignationId string         `json:"designationId"`
 	RangeOfScores []RangeOfScore `json:"rangeOfScores"`
+	MonthYears    []MonthYear    `json:"monthYears"`
+	IsMonthly     bool           `json:"isMonthly"`
+}
+
+type AssesmentGroup struct {
+	AssessmentScore float64 `json:"assessmentScore"`
+	ScoreMax        float64 `json:"scoreMax"`
 }
 
 type SubJectResult struct {
-	Assessments  map[string]float64 `json:"assessments"`
-	SubjectScore float64            `json:"subjectScore"`
+	Assessments  map[string]AssesmentGroup `json:"assessments"`
+	SubjectScore float64                   `json:"subjectScore"`
 }
 
 type StudentResults struct {
 	StudentId string                   `json:"studentId"`
 	Subjects  map[string]SubJectResult `json:"subjects"`
+}
+
+type MonthYear struct {
+	Month         int `json:"month"`
+	Year          int `json:"year"`
+	Students      map[string][]ResultResponse
+	RangeOfScores []RangeOfScore `json:"rangeOfScores"`
 }

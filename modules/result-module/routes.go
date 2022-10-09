@@ -32,5 +32,9 @@ func (module *ResultModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker token
 		moduleRoute.GET("/:id", serverHttp(module.controller.GetResult))
 		moduleRoute.DELETE("/:id", serverHttp(module.controller.DeleteResult))
 		moduleRoute.POST("/summarizedresult", serverHttp(module.controller.ComputeSummaryResults))
+		moduleRoute.POST("/summarizedstudentsresult", serverHttp(module.controller.ComputeStudentsSummaryResults))
+		moduleRoute.POST("/summarizedstudentspositions", serverHttp(module.controller.SummaryStudentsPositions))
+		moduleRoute.POST("/summarizedstudentsresultbydate", serverHttp(module.controller.ComputeStudentsResultsByDateRange))
 	}
+
 }
