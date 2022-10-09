@@ -14,6 +14,7 @@ import (
 	classRoomServicePackage "github.com/GabrielAchumba/school-mgt-backend/modules/classroom-module/services"
 	"github.com/GabrielAchumba/school-mgt-backend/modules/result-module/dtos"
 	"github.com/GabrielAchumba/school-mgt-backend/modules/result-module/models"
+	"github.com/GabrielAchumba/school-mgt-backend/modules/result-module/utils"
 	staffServicePackage "github.com/GabrielAchumba/school-mgt-backend/modules/staff-module/services"
 	studentServicePackage "github.com/GabrielAchumba/school-mgt-backend/modules/student-module/services"
 	subjectServicePackage "github.com/GabrielAchumba/school-mgt-backend/modules/subject-module/services"
@@ -29,6 +30,8 @@ type ResultService interface {
 	GetResults() ([]dtos.ResultResponse, error)
 	PutResult(id string, item dtos.UpdateResultRequest) (interface{}, error)
 	ComputeSummaryResults(req dtos.GetResultsRequest) (interface{}, error)
+	ComputeStudentsSummaryResults(req dtos.GetResultsRequest) (interface{}, error)
+	SummaryStudentsPositions(req dtos.GetResultsRequest) (interface{}, error)
 }
 
 type serviceImpl struct {
@@ -40,6 +43,7 @@ type serviceImpl struct {
 	classRoomService  classRoomServicePackage.ClassRoomService
 	assessmentService assessmentServicePackage.AssessmentService
 	staffService      staffServicePackage.StaffService
+	resultUtils       utils.ResultUtils
 }
 
 func New(mongoClient *mongo.Client, config config.Settings, ctx context.Context,
@@ -160,56 +164,6 @@ func (impl serviceImpl) GetResults() ([]dtos.ResultResponse, error) {
 	return Results, err
 }
 
-func (impl serviceImpl) ViewSelectdResults(req dtos.GetResultsRequest) ([]dtos.ResultResponse, error) {
-
-	log.Print("Call to get results by range of date started")
-
-	var Results []dtos.ResultResponse
-	filter := bson.D{bson.E{Key: "createdat", Value: bson.D{bson.E{Key: "$gte", Value: req.StartDate}}},
-		bson.E{Key: "createdat", Value: bson.D{bson.E{Key: "$lte", Value: req.EndDate}}},
-		bson.E{Key: "subjectsid", Value: req.SubjectIds},
-		bson.E{Key: "teacherid", Value: req.TeacherId},
-		bson.E{Key: "studentid", Value: req.StudentId},
-		bson.E{Key: "classroomid", Value: req.ClassRoomId}}
-	cur, err := impl.collection.Find(impl.ctx, filter)
-
-	if err != nil {
-		Results = make([]dtos.ResultResponse, 0)
-		return Results, errors.Error("Results not found!")
-	}
-
-	err = cur.All(impl.ctx, &Results)
-	if err != nil {
-		return Results, err
-	}
-
-	cur.Close(impl.ctx)
-	length := len(Results)
-	if length == 0 {
-		Results = make([]dtos.ResultResponse, 0)
-	}
-
-	for i := 0; i < length; i++ {
-		student, _ := impl.studentService.GetStudent(Results[i].StudentId)
-		subject, _ := impl.subjectService.GetSubject(Results[i].SubjectId)
-		teacher, _ := impl.userService.GetUser(Results[i].TeacherId)
-		classRoom, _ := impl.classRoomService.GetClassRoom(Results[i].ClassRoomId)
-		assessment, _ := impl.assessmentService.GetAssessment(Results[i].AssessmentId)
-		designation, _ := impl.staffService.GetStaff(Results[i].DesignationId)
-
-		Results[i].StudentFullName = student.FirstName + " " + student.LastName
-		Results[i].SubjectFullName = subject.Type
-		Results[i].TeacherFullName = teacher.FirstName + " " + teacher.LastName
-		Results[i].ClassRoomFullName = classRoom.Type
-		Results[i].AssessmentFullName = assessment.Type
-		Results[i].DesignationFullName = designation.Type
-
-	}
-
-	log.Print("Call to get results by range of date completed")
-	return Results, err
-}
-
 func (impl serviceImpl) ComputeSummaryResults(req dtos.GetResultsRequest) (interface{}, error) {
 
 	log.Print("Call ComputeSummaryResults started")
@@ -292,6 +246,198 @@ func (impl serviceImpl) ComputeSummaryResults(req dtos.GetResultsRequest) (inter
 
 	log.Print("Call ComputeSummaryResults completed")
 	return subjectsScores, err
+
+}
+
+func (impl serviceImpl) SummaryStudentsPositions(req dtos.GetResultsRequest) (interface{}, error) {
+
+	log.Print("Call SummaryStudentsPositions started")
+
+	assessments, _ := impl.assessmentService.GetAssessments()
+	subjects, _ := impl.subjectService.GetSubjects()
+
+	splitStartDte := strings.Split(req.StartDate, "/")
+	startDay, _ := strconv.Atoi(splitStartDte[2])
+	startMonth, _ := strconv.Atoi(splitStartDte[1])
+	startYear, _ := strconv.Atoi(splitStartDte[0])
+
+	splitEndDate := strings.Split(req.EndDate, "/")
+	endDay, _ := strconv.Atoi(splitEndDate[2])
+	endMonth, _ := strconv.Atoi(splitEndDate[1])
+	endYear, _ := strconv.Atoi(splitEndDate[0])
+
+	startDate := time.Date(startYear, time.Month(startMonth), startDay, 1, 10, 30, 0, time.UTC)
+	endDate := time.Date(endYear, time.Month(endMonth), endDay, 1, 10, 30, 0, time.UTC)
+
+	var Results []dtos.ResultResponse
+	filter := bson.D{bson.E{Key: "createdat", Value: bson.D{bson.E{Key: "$gte", Value: startDate}}},
+		bson.E{Key: "createdat", Value: bson.D{bson.E{Key: "$lte", Value: endDate}}},
+		bson.E{Key: "subjectid", Value: bson.D{bson.E{Key: "$in", Value: req.SubjectIds}}},
+		bson.E{Key: "teacherid", Value: bson.D{bson.E{Key: "$in", Value: req.TeacherIds}}},
+		bson.E{Key: "studentid", Value: bson.D{bson.E{Key: "$in", Value: req.StudentIds}}},
+		bson.E{Key: "classroomid", Value: req.ClassRoomId}}
+
+	cur, err := impl.collection.Find(impl.ctx, filter)
+
+	if err != nil {
+		Results = make([]dtos.ResultResponse, 0)
+		return Results, errors.Error("Results not found!")
+	}
+
+	err = cur.All(impl.ctx, &Results)
+	if err != nil {
+		return Results, err
+	}
+
+	cur.Close(impl.ctx)
+	length := len(Results)
+	if length == 0 {
+		Results = make([]dtos.ResultResponse, 0)
+	}
+
+	grouppedStudents := impl.resultUtils.GroupByStudents(Results)
+	students := make([]dtos.StudentResults, 0)
+
+	for studentId, grouppedStudent := range grouppedStudents {
+		subjectsScores := make(map[string]dtos.SubJectResult, 0)
+		for _, subject := range subjects {
+			var subjectScore float64 = 0
+			isSubject := false
+			subjectAssessments := make(map[string]float64, 0)
+			for _, assessment := range assessments {
+				var assessmentScore float64 = 0
+				var assessmentCounter float64 = 0
+				for _, Result := range grouppedStudent {
+					if Result.AssessmentId == assessment.Id &&
+						Result.SubjectId == subject.Id {
+						if Result.ScoreMax > 0 {
+							assessmentScore = assessmentScore + (Result.Score / Result.ScoreMax)
+							assessmentCounter++
+						}
+					}
+				}
+
+				if assessmentCounter > 0 {
+					var totalAssementScore float64 = (assessmentScore / assessmentCounter) * assessment.Percentage
+					subjectAssessments[assessment.Type] = totalAssementScore
+					subjectScore = subjectScore + totalAssementScore
+					isSubject = true
+				}
+			}
+
+			if isSubject {
+				subjectsScores[subject.Type] = dtos.SubJectResult{
+					SubjectScore: subjectScore,
+					Assessments:  subjectAssessments,
+				}
+			}
+		}
+
+		student := dtos.StudentResults{
+			StudentId: studentId,
+			Subjects:  subjectsScores,
+		}
+
+		students = append(students, student)
+	}
+
+	log.Print("Call SummaryStudentsPositions completed")
+	return students, err
+
+}
+
+func (impl serviceImpl) ComputeStudentsSummaryResults(req dtos.GetResultsRequest) (interface{}, error) {
+
+	log.Print("Call ComputeStudentsSummaryResults started")
+
+	assessments, _ := impl.assessmentService.GetAssessments()
+
+	splitStartDte := strings.Split(req.StartDate, "/")
+	startDay, _ := strconv.Atoi(splitStartDte[2])
+	startMonth, _ := strconv.Atoi(splitStartDte[1])
+	startYear, _ := strconv.Atoi(splitStartDte[0])
+
+	splitEndDate := strings.Split(req.EndDate, "/")
+	endDay, _ := strconv.Atoi(splitEndDate[2])
+	endMonth, _ := strconv.Atoi(splitEndDate[1])
+	endYear, _ := strconv.Atoi(splitEndDate[0])
+
+	startDate := time.Date(startYear, time.Month(startMonth), startDay, 1, 10, 30, 0, time.UTC)
+	endDate := time.Date(endYear, time.Month(endMonth), endDay, 1, 10, 30, 0, time.UTC)
+
+	var Results []dtos.ResultResponse
+	filter := bson.D{bson.E{Key: "createdat", Value: bson.D{bson.E{Key: "$gte", Value: startDate}}},
+		bson.E{Key: "createdat", Value: bson.D{bson.E{Key: "$lte", Value: endDate}}},
+		bson.E{Key: "teacherid", Value: bson.D{bson.E{Key: "$in", Value: req.TeacherIds}}},
+		bson.E{Key: "subjectid", Value: req.StudentId},
+		bson.E{Key: "classroomid", Value: req.ClassRoomId}}
+
+	cur, err := impl.collection.Find(impl.ctx, filter)
+
+	if err != nil {
+		Results = make([]dtos.ResultResponse, 0)
+		return Results, errors.Error("Results not found!")
+	}
+
+	err = cur.All(impl.ctx, &Results)
+	if err != nil {
+		return Results, err
+	}
+
+	cur.Close(impl.ctx)
+	length := len(Results)
+	if length == 0 {
+		Results = make([]dtos.ResultResponse, 0)
+	}
+
+	grouppedStudents := impl.resultUtils.GroupByStudents(Results)
+	subjectScores := make([]float64, 0)
+
+	for _, StudentResults := range grouppedStudents {
+		var subjectScore float64 = 0
+		isSubject := false
+		for _, assessment := range assessments {
+			var assessmentScore float64 = 0
+			var assessmentCounter float64 = 0
+			for _, Result := range StudentResults {
+				if Result.AssessmentId == assessment.Id {
+					if Result.ScoreMax > 0 {
+						assessmentScore = assessmentScore + (Result.Score / Result.ScoreMax)
+						assessmentCounter++
+					}
+				}
+			}
+
+			if assessmentCounter > 0 {
+				var totalAssementScore float64 = (assessmentScore / assessmentCounter) * assessment.Percentage
+				subjectScore = subjectScore + totalAssementScore
+				isSubject = true
+			}
+		}
+
+		if isSubject {
+			subjectScores = append(subjectScores, subjectScore)
+		}
+	}
+
+	RangeOfScores := make([]dtos.RangeOfScore, 0)
+	copy(RangeOfScores, req.RangeOfScores)
+	counter := -1
+	counter2 := 0
+	for _, RangeOfScore := range RangeOfScores {
+		counter++
+		for _, subjectScore := range subjectScores {
+			if subjectScore >= RangeOfScore.From &&
+				subjectScore <= RangeOfScore.To {
+				counter2++
+			}
+		}
+
+		RangeOfScores[counter].NumberOfStudents = counter2
+	}
+
+	log.Print("Call ComputeStudentsSummaryResults completed")
+	return RangeOfScores, err
 
 }
 

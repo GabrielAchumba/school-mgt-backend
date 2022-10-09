@@ -46,20 +46,34 @@ type ResultResponse struct {
 	DesignationFullName string    `json:"designationFullName" binding:"required"`
 }
 
+type RangeOfScore struct {
+	From             float64 `json:"from"`
+	To               float64 `json:"to"`
+	NumberOfStudents int     `json:"numberOfStudents"`
+}
+
 type GetResultsRequest struct {
-	StartDate     string   `json:"startDate" binding:"required"`
-	EndDate       string   `json:"endDate" binding:"required"`
-	Score         float64  `json:"score"`
-	ScoreMax      float64  `json:"scoreMax"`
-	SubjectIds    []string `json:"subjectIds" binding:"required"`
-	StudentId     string   `json:"studentId" binding:"required"`
-	TeacherId     string   `json:"teacherId" binding:"required"`
-	ClassRoomId   string   `json:"classRoomId" binding:"required"`
-	AssessmentId  string   `json:"assessmentId"`
-	DesignationId string   `json:"designationId"`
+	StartDate     string         `json:"startDate"`
+	EndDate       string         `json:"endDate"`
+	Score         float64        `json:"score"`
+	ScoreMax      float64        `json:"scoreMax"`
+	SubjectIds    []string       `json:"subjectIds"`
+	StudentId     string         `json:"studentId"`
+	StudentIds    []string       `json:"studentIds"`
+	TeacherId     string         `json:"teacherId"`
+	TeacherIds    []string       `json:"teacherIds"`
+	ClassRoomId   string         `json:"classRoomId"`
+	AssessmentId  string         `json:"assessmentId"`
+	DesignationId string         `json:"designationId"`
+	RangeOfScores []RangeOfScore `json:"rangeOfScores"`
 }
 
 type SubJectResult struct {
 	Assessments  map[string]float64 `json:"assessments"`
 	SubjectScore float64            `json:"subjectScore"`
+}
+
+type StudentResults struct {
+	StudentId string                   `json:"studentId"`
+	Subjects  map[string]SubJectResult `json:"subjects"`
 }
