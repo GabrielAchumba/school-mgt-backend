@@ -65,6 +65,7 @@ func New(mongoClient *mongo.Client, config config.Settings, ctx context.Context,
 		classRoomService:  classRoomService,
 		assessmentService: assessmentService,
 		staffService:      staffService,
+		resultUtils:       utils.ResultUtilsImpl{},
 	}
 }
 
@@ -300,9 +301,18 @@ func (impl serviceImpl) SummaryStudentsPositions(req dtos.GetResultsRequest) (in
 	}
 
 	grouppedStudents := impl.resultUtils.GroupByStudents(Results)
+	studentIds := make([]string, 0)
+	for studentId := range grouppedStudents {
+		studentIds = append(studentIds, studentId)
+	}
+	selectedStudents, _ := impl.studentService.GetSelecedStudents(studentIds)
 	students := make([]dtos.StudentResults, 0)
 
+	i := -1
 	for studentId, grouppedStudent := range grouppedStudents {
+		i++
+		var overallScore float64 = 0
+		var overallScoreMax float64 = 0
 		subjectsScores := make(map[string]dtos.SubJectResult, 0)
 		for _, subject := range subjects {
 			var subjectScore float64 = 0
@@ -333,6 +343,8 @@ func (impl serviceImpl) SummaryStudentsPositions(req dtos.GetResultsRequest) (in
 			}
 
 			if isSubject {
+				overallScore = overallScore + subjectScore
+				overallScoreMax = overallScoreMax + 100
 				subjectsScores[subject.Type] = dtos.SubJectResult{
 					SubjectScore: subjectScore,
 					Assessments:  subjectAssessments,
@@ -341,8 +353,11 @@ func (impl serviceImpl) SummaryStudentsPositions(req dtos.GetResultsRequest) (in
 		}
 
 		student := dtos.StudentResults{
-			StudentId: studentId,
-			Subjects:  subjectsScores,
+			StudentId:       studentId,
+			FullName:        selectedStudents[i].FirstName + " " + selectedStudents[i].LastName,
+			OverallScore:    overallScore,
+			OverallScoreMax: overallScoreMax,
+			Subjects:        subjectsScores,
 		}
 
 		students = append(students, student)

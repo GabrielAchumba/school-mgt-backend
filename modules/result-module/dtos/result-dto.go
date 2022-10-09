@@ -81,8 +81,11 @@ type SubJectResult struct {
 }
 
 type StudentResults struct {
-	StudentId string                   `json:"studentId"`
-	Subjects  map[string]SubJectResult `json:"subjects"`
+	StudentId       string                   `json:"studentId"`
+	FullName        string                   `json:"fullName"`
+	OverallScore    float64                  `json:"overallScore"`
+	OverallScoreMax float64                  `json:"overallScoreMax"`
+	Subjects        map[string]SubJectResult `json:"subjects"`
 }
 
 type MonthYear struct {

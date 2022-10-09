@@ -13,6 +13,7 @@ import (
 	"github.com/GabrielAchumba/school-mgt-backend/modules/student-module/dtos"
 	"github.com/GabrielAchumba/school-mgt-backend/modules/student-module/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -22,6 +23,7 @@ type StudentService interface {
 	GetStudent(id string) (dtos.StudentResponse, error)
 	GetStudents() ([]dtos.StudentResponse, error)
 	PutStudent(id string, item dtos.UpdateStudentRequest) (interface{}, error)
+	GetSelecedStudents(Ids []string) ([]dtos.StudentResponse, error)
 }
 
 type serviceImpl struct {
@@ -100,6 +102,37 @@ func (impl serviceImpl) GetStudents() ([]dtos.StudentResponse, error) {
 	}
 
 	log.Print("Call to get all types of student completed.")
+	return Students, err
+}
+
+func (impl serviceImpl) GetSelecedStudents(Ids []string) ([]dtos.StudentResponse, error) {
+
+	objIds := make([]primitive.ObjectID, 0)
+	log.Print("Call GetSelecedStudents started.")
+	for _, id := range Ids {
+		objIds = append(objIds, conversion.GetMongoId(id))
+	}
+
+	var Students []dtos.StudentResponse
+	filter := bson.D{bson.E{Key: "_id", Value: bson.D{bson.E{Key: "$in", Value: objIds}}}}
+	cur, err := impl.collection.Find(impl.ctx, filter)
+
+	if err != nil {
+		Students = make([]dtos.StudentResponse, 0)
+		return Students, errors.Error("Types of student not found!")
+	}
+
+	err = cur.All(impl.ctx, &Students)
+	if err != nil {
+		return Students, err
+	}
+
+	cur.Close(impl.ctx)
+	if len(Students) == 0 {
+		Students = make([]dtos.StudentResponse, 0)
+	}
+
+	log.Print("Call GetSelecedStudents completed.")
 	return Students, err
 }
 

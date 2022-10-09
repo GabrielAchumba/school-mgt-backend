@@ -28,13 +28,13 @@ func (impl ResultUtilsImpl) GroupByStudents(results []dtos.ResultResponse) map[s
 	for _, v := range results {
 		skip := false
 		for _, u := range uniqueIds {
-			if v.Id == u {
+			if v.StudentId == u {
 				skip = true
 				break
 			}
 		}
 		if !skip {
-			uniqueIds = append(uniqueIds, v.Id)
+			uniqueIds = append(uniqueIds, v.StudentId)
 		}
 	}
 
@@ -43,7 +43,7 @@ func (impl ResultUtilsImpl) GroupByStudents(results []dtos.ResultResponse) map[s
 	for _, v := range uniqueIds {
 		studentResults := make([]dtos.ResultResponse, 0)
 		for _, u := range results {
-			if v == u.Id {
+			if v == u.StudentId {
 				studentResults = append(studentResults, u)
 			}
 		}
