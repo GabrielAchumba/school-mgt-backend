@@ -17,9 +17,9 @@ import (
 
 type ClassRoomService interface {
 	CreateClassRoom(userId string, requestModel dtos.CreateClassRoomRequest) (interface{}, error)
-	DeleteClassRoom(id string) (int64, error)
-	GetClassRoom(id string) (dtos.ClassRoomResponse, error)
-	GetClassRooms() ([]dtos.ClassRoomResponse, error)
+	DeleteClassRoom(id string, schoolId string) (int64, error)
+	GetClassRoom(id string, schoolId string) (dtos.ClassRoomResponse, error)
+	GetClassRooms(schoolId string) ([]dtos.ClassRoomResponse, error)
 	PutClassRoom(id string, item dtos.UpdateClassRoomRequest) (interface{}, error)
 }
 
@@ -37,11 +37,12 @@ func New(mongoClient *mongo.Client, config config.Settings, ctx context.Context)
 	}
 }
 
-func (impl serviceImpl) DeleteClassRoom(id string) (int64, error) {
+func (impl serviceImpl) DeleteClassRoom(id string, schoolId string) (int64, error) {
 
 	log.Print("Call to delete type of ClassRoom by id started.")
 	objId := conversion.GetMongoId(id)
-	filter := bson.D{bson.E{Key: "_id", Value: objId}}
+	filter := bson.D{bson.E{Key: "_id", Value: objId},
+		bson.E{Key: "schoolid", Value: schoolId}}
 
 	result, err := impl.collection.DeleteOne(impl.ctx, filter)
 
@@ -57,13 +58,14 @@ func (impl serviceImpl) DeleteClassRoom(id string) (int64, error) {
 	return result.DeletedCount, nil
 }
 
-func (impl serviceImpl) GetClassRoom(id string) (dtos.ClassRoomResponse, error) {
+func (impl serviceImpl) GetClassRoom(id string, schoolId string) (dtos.ClassRoomResponse, error) {
 
 	log.Print("Get Type of ClassRoom called")
 	objId := conversion.GetMongoId(id)
 	var ClassRoom dtos.ClassRoomResponse
 
-	filter := bson.D{bson.E{Key: "_id", Value: objId}}
+	filter := bson.D{bson.E{Key: "_id", Value: objId},
+		bson.E{Key: "schoolid", Value: schoolId}}
 
 	err := impl.collection.FindOne(impl.ctx, filter).Decode(&ClassRoom)
 	if err != nil {
@@ -75,12 +77,12 @@ func (impl serviceImpl) GetClassRoom(id string) (dtos.ClassRoomResponse, error) 
 
 }
 
-func (impl serviceImpl) GetClassRooms() ([]dtos.ClassRoomResponse, error) {
+func (impl serviceImpl) GetClassRooms(schoolId string) ([]dtos.ClassRoomResponse, error) {
 
 	log.Print("Call to get all types of ClassRoom started.")
 
 	var ClassRooms []dtos.ClassRoomResponse
-	filter := bson.D{}
+	filter := bson.D{bson.E{Key: "schoolid", Value: schoolId}}
 	cur, err := impl.collection.Find(impl.ctx, filter)
 
 	if err != nil {
@@ -142,7 +144,8 @@ func (impl serviceImpl) PutClassRoom(id string, item dtos.UpdateClassRoomRequest
 	filter := bson.D{bson.E{Key: "_id", Value: objId}}
 	var modelObj models.ClassRoom
 
-	update := bson.D{bson.E{Key: "type", Value: updatedClassRoom.Type}}
+	update := bson.D{bson.E{Key: "type", Value: updatedClassRoom.Type},
+		bson.E{Key: "schoolid", Value: updatedClassRoom.SchoolId}}
 	_, err := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
 
 	if err != nil {

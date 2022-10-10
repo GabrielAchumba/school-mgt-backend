@@ -30,6 +30,9 @@ import (
 	assessmentmodule "github.com/GabrielAchumba/school-mgt-backend/modules/assessment-module"
 	assessmentService "github.com/GabrielAchumba/school-mgt-backend/modules/assessment-module/services"
 
+	schoolmodule "github.com/GabrielAchumba/school-mgt-backend/modules/school-module"
+	schoolService "github.com/GabrielAchumba/school-mgt-backend/modules/school-module/services"
+
 	resultmodule "github.com/GabrielAchumba/school-mgt-backend/modules/result-module"
 	resultService "github.com/GabrielAchumba/school-mgt-backend/modules/result-module/services"
 
@@ -125,6 +128,9 @@ func main() {
 
 	_assessmentService := assessmentService.New(mongoClient, configSettings, ctx)
 	assessmentmodule.InjectService(_assessmentService).RegisterRoutes(apiBaseName, tokenMaker)
+
+	_schoolService := schoolService.New(mongoClient, configSettings, ctx)
+	schoolmodule.InjectService(_schoolService).RegisterRoutes(apiBaseName, tokenMaker)
 
 	_resultService := resultService.New(mongoClient, configSettings, ctx, _userService,
 		_studentService, _subjectService, _classRoomService, _assessmentService,

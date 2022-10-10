@@ -17,9 +17,9 @@ import (
 
 type AssessmentService interface {
 	CreateAssessment(userId string, requestModel dtos.CreateAssessmentRequest) (interface{}, error)
-	DeleteAssessment(id string) (int64, error)
-	GetAssessment(id string) (dtos.AssessmentResponse, error)
-	GetAssessments() ([]dtos.AssessmentResponse, error)
+	DeleteAssessment(id string, schoolId string) (int64, error)
+	GetAssessment(id string, schoolId string) (dtos.AssessmentResponse, error)
+	GetAssessments(schoolId string) ([]dtos.AssessmentResponse, error)
 	PutAssessment(id string, item dtos.UpdateAssessmentRequest) (interface{}, error)
 }
 
@@ -37,11 +37,12 @@ func New(mongoClient *mongo.Client, config config.Settings, ctx context.Context)
 	}
 }
 
-func (impl serviceImpl) DeleteAssessment(id string) (int64, error) {
+func (impl serviceImpl) DeleteAssessment(id string, schoolId string) (int64, error) {
 
 	log.Print("Call to delete type of Assessment by id started.")
 	objId := conversion.GetMongoId(id)
-	filter := bson.D{bson.E{Key: "_id", Value: objId}}
+	filter := bson.D{bson.E{Key: "_id", Value: objId},
+		bson.E{Key: "schoolid", Value: schoolId}}
 
 	result, err := impl.collection.DeleteOne(impl.ctx, filter)
 
@@ -57,13 +58,14 @@ func (impl serviceImpl) DeleteAssessment(id string) (int64, error) {
 	return result.DeletedCount, nil
 }
 
-func (impl serviceImpl) GetAssessment(id string) (dtos.AssessmentResponse, error) {
+func (impl serviceImpl) GetAssessment(id string, schoolId string) (dtos.AssessmentResponse, error) {
 
 	log.Print("Get Type of Assessment called")
 	objId := conversion.GetMongoId(id)
 	var Assessment dtos.AssessmentResponse
 
-	filter := bson.D{bson.E{Key: "_id", Value: objId}}
+	filter := bson.D{bson.E{Key: "_id", Value: objId},
+		bson.E{Key: "schoolid", Value: schoolId}}
 
 	err := impl.collection.FindOne(impl.ctx, filter).Decode(&Assessment)
 	if err != nil {
@@ -75,12 +77,12 @@ func (impl serviceImpl) GetAssessment(id string) (dtos.AssessmentResponse, error
 
 }
 
-func (impl serviceImpl) GetAssessments() ([]dtos.AssessmentResponse, error) {
+func (impl serviceImpl) GetAssessments(schoolId string) ([]dtos.AssessmentResponse, error) {
 
 	log.Print("Call to get all types of Assessment started.")
 
 	var Assessments []dtos.AssessmentResponse
-	filter := bson.D{}
+	filter := bson.D{bson.E{Key: "schoolid", Value: schoolId}}
 	cur, err := impl.collection.Find(impl.ctx, filter)
 
 	if err != nil {
@@ -143,7 +145,8 @@ func (impl serviceImpl) PutAssessment(id string, User dtos.UpdateAssessmentReque
 	var modelObj models.Assessment
 
 	update := bson.D{bson.E{Key: "type", Value: updatedAssessment.Type},
-		bson.E{Key: "percentage", Value: updatedAssessment.Percentage}}
+		bson.E{Key: "percentage", Value: updatedAssessment.Percentage},
+		bson.E{Key: "schoolid", Value: updatedAssessment.SchoolId}}
 	_, err := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
 
 	if err != nil {

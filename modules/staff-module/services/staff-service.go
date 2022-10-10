@@ -17,9 +17,9 @@ import (
 
 type StaffService interface {
 	CreateStaff(userId string, requestModel dtos.CreateStaffRequest) (interface{}, error)
-	DeleteStaff(id string) (int64, error)
-	GetStaff(id string) (dtos.StaffResponse, error)
-	GetStaffs() ([]dtos.StaffResponse, error)
+	DeleteStaff(id string, schoolId string) (int64, error)
+	GetStaff(id string, schoolId string) (dtos.StaffResponse, error)
+	GetStaffs(schoolId string) ([]dtos.StaffResponse, error)
 	PutStaff(id string, item dtos.UpdateStaffRequest) (interface{}, error)
 }
 
@@ -37,11 +37,12 @@ func New(mongoClient *mongo.Client, config config.Settings, ctx context.Context)
 	}
 }
 
-func (impl serviceImpl) DeleteStaff(id string) (int64, error) {
+func (impl serviceImpl) DeleteStaff(id string, schoolId string) (int64, error) {
 
 	log.Print("Call to delete type of staff by id started.")
 	objId := conversion.GetMongoId(id)
-	filter := bson.D{bson.E{Key: "_id", Value: objId}}
+	filter := bson.D{bson.E{Key: "_id", Value: objId},
+		bson.E{Key: "schoolid", Value: schoolId}}
 
 	result, err := impl.collection.DeleteOne(impl.ctx, filter)
 
@@ -57,13 +58,14 @@ func (impl serviceImpl) DeleteStaff(id string) (int64, error) {
 	return result.DeletedCount, nil
 }
 
-func (impl serviceImpl) GetStaff(id string) (dtos.StaffResponse, error) {
+func (impl serviceImpl) GetStaff(id string, schoolId string) (dtos.StaffResponse, error) {
 
 	log.Print("Get Type of Staff called")
 	objId := conversion.GetMongoId(id)
 	var Staff dtos.StaffResponse
 
-	filter := bson.D{bson.E{Key: "_id", Value: objId}}
+	filter := bson.D{bson.E{Key: "_id", Value: objId},
+		bson.E{Key: "schoolid", Value: schoolId}}
 
 	err := impl.collection.FindOne(impl.ctx, filter).Decode(&Staff)
 	if err != nil {
@@ -75,12 +77,12 @@ func (impl serviceImpl) GetStaff(id string) (dtos.StaffResponse, error) {
 
 }
 
-func (impl serviceImpl) GetStaffs() ([]dtos.StaffResponse, error) {
+func (impl serviceImpl) GetStaffs(schoolId string) ([]dtos.StaffResponse, error) {
 
 	log.Print("Call to get all types of staff started.")
 
 	var Staffs []dtos.StaffResponse
-	filter := bson.D{}
+	filter := bson.D{bson.E{Key: "schoolid", Value: schoolId}}
 	cur, err := impl.collection.Find(impl.ctx, filter)
 
 	if err != nil {
@@ -116,7 +118,8 @@ func (impl serviceImpl) CreateStaff(userId string, model dtos.CreateStaffRequest
 		return nil, errors.Error("Type of staff cannot be empty.")
 	}
 
-	filter := bson.D{bson.E{Key: "type", Value: modelObj.Type}}
+	filter := bson.D{bson.E{Key: "type", Value: modelObj.Type},
+		bson.E{Key: "schoolid", Value: modelObj.SchoolId}}
 
 	err := impl.collection.FindOne(impl.ctx, filter).Decode(&modelObj)
 	if err == nil {
@@ -140,7 +143,8 @@ func (impl serviceImpl) PutStaff(id string, item dtos.UpdateStaffRequest) (inter
 	filter := bson.D{bson.E{Key: "_id", Value: objId}}
 	var modelObj models.Staff
 
-	update := bson.D{bson.E{Key: "type", Value: updatedStaff.Type}}
+	update := bson.D{bson.E{Key: "type", Value: updatedStaff.Type},
+		bson.E{Key: "schoolid", Value: updatedStaff.SchoolId}}
 	_, err := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
 
 	if err != nil {

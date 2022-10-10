@@ -52,8 +52,9 @@ func (ctrl *controllerImpl) CreateClassRoom(ctx *gin.Context) *rest.Response {
 
 func (ctrl *controllerImpl) DeleteClassRoom(ctx *gin.Context) *rest.Response {
 	id := ctx.Param("id")
+	schoolId := ctx.Param("schoolId")
 
-	m, er := ctrl.ClassRoomService.DeleteClassRoom(id)
+	m, er := ctrl.ClassRoomService.DeleteClassRoom(id, schoolId)
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}
@@ -62,8 +63,9 @@ func (ctrl *controllerImpl) DeleteClassRoom(ctx *gin.Context) *rest.Response {
 
 func (ctrl *controllerImpl) GetClassRoom(ctx *gin.Context) *rest.Response {
 	id := ctx.Param("id")
+	schoolId := ctx.Param("schoolId")
 
-	m, er := ctrl.ClassRoomService.GetClassRoom(id)
+	m, er := ctrl.ClassRoomService.GetClassRoom(id, schoolId)
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}
@@ -72,7 +74,8 @@ func (ctrl *controllerImpl) GetClassRoom(ctx *gin.Context) *rest.Response {
 
 func (ctrl *controllerImpl) GetClassRooms(ctx *gin.Context) *rest.Response {
 
-	m, er := ctrl.ClassRoomService.GetClassRooms()
+	schoolId := ctx.Param("schoolId")
+	m, er := ctrl.ClassRoomService.GetClassRooms(schoolId)
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}

@@ -3,11 +3,13 @@ package dtos
 import "time"
 
 type CreateStaffRequest struct {
-	Type string `json:"type" binding:"required"`
+	Type     string `json:"type" binding:"required"`
+	SchoolId string `json:"schoolId" binding:"required"`
 }
 
 type UpdateStaffRequest struct {
-	Type string `json:"type" binding:"required"`
+	Type     string `json:"type" binding:"required"`
+	SchoolId string `json:"schoolId" binding:"required"`
 }
 
 type StaffResponse struct {
@@ -15,4 +17,5 @@ type StaffResponse struct {
 	CreatedAt time.Time `json:"createdAt"`
 	CreatedBy string    `json:"createdBy"`
 	Type      string    `json:"type" binding:"required"`
+	SchoolId  string    `json:"schoolId" binding:"required"`
 }

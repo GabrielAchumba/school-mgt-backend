@@ -25,9 +25,9 @@ import (
 
 type ResultService interface {
 	CreateResult(userId string, requestModel dtos.CreateResultRequest) (interface{}, error)
-	DeleteResult(id string) (int64, error)
-	GetResult(id string) (dtos.ResultResponse, error)
-	GetResults() ([]dtos.ResultResponse, error)
+	DeleteResult(id string, schoolId string) (int64, error)
+	GetResult(id string, schoolId string) (dtos.ResultResponse, error)
+	GetResults(schoolId string) ([]dtos.ResultResponse, error)
 	PutResult(id string, item dtos.UpdateResultRequest) (interface{}, error)
 	ComputeSummaryResults(req dtos.GetResultsRequest) (interface{}, error)
 	ComputeStudentsSummaryResults(req dtos.GetResultsRequest) (interface{}, error)
@@ -69,11 +69,12 @@ func New(mongoClient *mongo.Client, config config.Settings, ctx context.Context,
 	}
 }
 
-func (impl serviceImpl) DeleteResult(id string) (int64, error) {
+func (impl serviceImpl) DeleteResult(id string, schoolId string) (int64, error) {
 
 	log.Print("Call to delete type of Result by id started.")
 	objId := conversion.GetMongoId(id)
-	filter := bson.D{bson.E{Key: "_id", Value: objId}}
+	filter := bson.D{bson.E{Key: "_id", Value: objId},
+		bson.E{Key: "schoolid", Value: schoolId}}
 
 	result, err := impl.collection.DeleteOne(impl.ctx, filter)
 
@@ -89,25 +90,26 @@ func (impl serviceImpl) DeleteResult(id string) (int64, error) {
 	return result.DeletedCount, nil
 }
 
-func (impl serviceImpl) GetResult(id string) (dtos.ResultResponse, error) {
+func (impl serviceImpl) GetResult(id string, schoolId string) (dtos.ResultResponse, error) {
 
 	log.Print("Get Type of Result called")
 	objId := conversion.GetMongoId(id)
 	var Result dtos.ResultResponse
 
-	filter := bson.D{bson.E{Key: "_id", Value: objId}}
+	filter := bson.D{bson.E{Key: "_id", Value: objId},
+		bson.E{Key: "schoolid", Value: schoolId}}
 
 	err := impl.collection.FindOne(impl.ctx, filter).Decode(&Result)
 	if err != nil {
 		return Result, errors.Error("could not find type of Result by id")
 	}
 
-	student, _ := impl.studentService.GetStudent(Result.StudentId)
-	subject, _ := impl.subjectService.GetSubject(Result.SubjectId)
-	teacher, _ := impl.userService.GetUser(Result.TeacherId)
-	_classRoom, _ := impl.classRoomService.GetClassRoom(Result.ClassRoomId)
-	assessment, _ := impl.assessmentService.GetAssessment(Result.AssessmentId)
-	designation, _ := impl.staffService.GetStaff(Result.DesignationId)
+	student, _ := impl.studentService.GetStudent(Result.StudentId, Result.SchoolId)
+	subject, _ := impl.subjectService.GetSubject(Result.SubjectId, Result.SchoolId)
+	teacher, _ := impl.userService.GetUser(Result.TeacherId, Result.SchoolId)
+	_classRoom, _ := impl.classRoomService.GetClassRoom(Result.ClassRoomId, Result.SchoolId)
+	assessment, _ := impl.assessmentService.GetAssessment(Result.AssessmentId, Result.SchoolId)
+	designation, _ := impl.staffService.GetStaff(Result.DesignationId, Result.SchoolId)
 
 	Result.StudentFullName = student.FirstName + " " + student.LastName
 	Result.SubjectFullName = subject.Type
@@ -121,12 +123,12 @@ func (impl serviceImpl) GetResult(id string) (dtos.ResultResponse, error) {
 
 }
 
-func (impl serviceImpl) GetResults() ([]dtos.ResultResponse, error) {
+func (impl serviceImpl) GetResults(schoolId string) ([]dtos.ResultResponse, error) {
 
 	log.Print("Call to get all types of Result started.")
 
 	var Results []dtos.ResultResponse
-	filter := bson.D{}
+	filter := bson.D{bson.E{Key: "schoolid", Value: schoolId}}
 	cur, err := impl.collection.Find(impl.ctx, filter)
 
 	if err != nil {
@@ -146,12 +148,12 @@ func (impl serviceImpl) GetResults() ([]dtos.ResultResponse, error) {
 	}
 
 	for i := 0; i < length; i++ {
-		designation, _ := impl.staffService.GetStaff(Results[i].DesignationId)
-		student, _ := impl.studentService.GetStudent(Results[i].StudentId)
-		subject, _ := impl.subjectService.GetSubject(Results[i].SubjectId)
-		teacher, _ := impl.userService.GetUser(Results[i].TeacherId)
-		classRoom, _ := impl.classRoomService.GetClassRoom(Results[i].ClassRoomId)
-		assessment, _ := impl.assessmentService.GetAssessment(Results[i].AssessmentId)
+		designation, _ := impl.staffService.GetStaff(Results[i].DesignationId, Results[i].SchoolId)
+		student, _ := impl.studentService.GetStudent(Results[i].StudentId, Results[i].SchoolId)
+		subject, _ := impl.subjectService.GetSubject(Results[i].SubjectId, Results[i].SchoolId)
+		teacher, _ := impl.userService.GetUser(Results[i].TeacherId, Results[i].SchoolId)
+		classRoom, _ := impl.classRoomService.GetClassRoom(Results[i].ClassRoomId, Results[i].SchoolId)
+		assessment, _ := impl.assessmentService.GetAssessment(Results[i].AssessmentId, Results[i].SchoolId)
 
 		Results[i].StudentFullName = student.FirstName + " " + student.LastName
 		Results[i].SubjectFullName = subject.Type
@@ -170,8 +172,8 @@ func (impl serviceImpl) ComputeSummaryResults(req dtos.GetResultsRequest) (inter
 
 	log.Print("Call ComputeSummaryResults started")
 
-	assessments, _ := impl.assessmentService.GetAssessments()
-	subjects, _ := impl.subjectService.GetSubjects()
+	assessments, _ := impl.assessmentService.GetAssessments(req.SchoolId)
+	subjects, _ := impl.subjectService.GetSubjects(req.SchoolId)
 
 	splitStartDte := strings.Split(req.StartDate, "/")
 	startDay, _ := strconv.Atoi(splitStartDte[2])
@@ -258,8 +260,8 @@ func (impl serviceImpl) SummaryStudentsPositions(req dtos.GetResultsRequest) (in
 
 	log.Print("Call SummaryStudentsPositions started")
 
-	assessments, _ := impl.assessmentService.GetAssessments()
-	subjects, _ := impl.subjectService.GetSubjects()
+	assessments, _ := impl.assessmentService.GetAssessments(req.SchoolId)
+	subjects, _ := impl.subjectService.GetSubjects(req.SchoolId)
 
 	splitStartDte := strings.Split(req.StartDate, "/")
 	startDay, _ := strconv.Atoi(splitStartDte[2])
@@ -372,7 +374,7 @@ func (impl serviceImpl) ComputeStudentsSummaryResults(req dtos.GetResultsRequest
 
 	log.Print("Call ComputeStudentsSummaryResults started")
 
-	assessments, _ := impl.assessmentService.GetAssessments()
+	assessments, _ := impl.assessmentService.GetAssessments(req.SchoolId)
 
 	splitStartDte := strings.Split(req.StartDate, "/")
 	startDay, _ := strconv.Atoi(splitStartDte[2])
@@ -467,7 +469,7 @@ func (impl serviceImpl) ComputeStudentsResultsByDateRange(req dtos.GetResultsReq
 
 	log.Print("Call ComputeStudentsResultsByDateRange started")
 
-	assessments, _ := impl.assessmentService.GetAssessments()
+	assessments, _ := impl.assessmentService.GetAssessments(req.SchoolId)
 
 	splitStartDte := strings.Split(req.StartDate, "/")
 	startDay, _ := strconv.Atoi(splitStartDte[2])
@@ -592,7 +594,8 @@ func (impl serviceImpl) CreateResult(userId string, model dtos.CreateResultReque
 		bson.E{Key: "studentid", Value: modelObj.StudentId},
 		bson.E{Key: "subjectid", Value: modelObj.SubjectId},
 		bson.E{Key: "teacherid", Value: modelObj.TeacherId},
-		bson.E{Key: "classroomid", Value: modelObj.ClassRoomId}}
+		bson.E{Key: "classroomid", Value: modelObj.ClassRoomId},
+		bson.E{Key: "schoolid", Value: modelObj.SchoolId}}
 	count, err := impl.collection.CountDocuments(impl.ctx, filter)
 	if err != nil {
 		return nil, err
@@ -637,7 +640,8 @@ func (impl serviceImpl) PutResult(id string, model dtos.UpdateResultRequest) (in
 		bson.E{Key: "scoremax", Value: updatedResult.ScoreMax},
 		bson.E{Key: "createdyear", Value: modelObj.CreatedYear},
 		bson.E{Key: "createdmonth", Value: modelObj.CreatedMonth},
-		bson.E{Key: "createdday", Value: modelObj.CreatedDay}}
+		bson.E{Key: "createdday", Value: modelObj.CreatedDay},
+		bson.E{Key: "schoolid", Value: modelObj.SchoolId}}
 	_, err := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
 
 	if err != nil {

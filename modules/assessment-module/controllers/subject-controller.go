@@ -52,8 +52,9 @@ func (ctrl *controllerImpl) CreateAssessment(ctx *gin.Context) *rest.Response {
 
 func (ctrl *controllerImpl) DeleteAssessment(ctx *gin.Context) *rest.Response {
 	id := ctx.Param("id")
+	schoolId := ctx.Param("schoolId")
 
-	m, er := ctrl.AssessmentService.DeleteAssessment(id)
+	m, er := ctrl.AssessmentService.DeleteAssessment(id, schoolId)
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}
@@ -62,8 +63,9 @@ func (ctrl *controllerImpl) DeleteAssessment(ctx *gin.Context) *rest.Response {
 
 func (ctrl *controllerImpl) GetAssessment(ctx *gin.Context) *rest.Response {
 	id := ctx.Param("id")
+	schoolId := ctx.Param("schoolId")
 
-	m, er := ctrl.AssessmentService.GetAssessment(id)
+	m, er := ctrl.AssessmentService.GetAssessment(id, schoolId)
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}
@@ -72,7 +74,8 @@ func (ctrl *controllerImpl) GetAssessment(ctx *gin.Context) *rest.Response {
 
 func (ctrl *controllerImpl) GetAssessments(ctx *gin.Context) *rest.Response {
 
-	m, er := ctrl.AssessmentService.GetAssessments()
+	schoolId := ctx.Param("schoolId")
+	m, er := ctrl.AssessmentService.GetAssessments(schoolId)
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}

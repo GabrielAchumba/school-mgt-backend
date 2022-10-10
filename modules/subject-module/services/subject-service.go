@@ -17,9 +17,9 @@ import (
 
 type SubjectService interface {
 	CreateSubject(userId string, requestModel dtos.CreateSubjectRequest) (interface{}, error)
-	DeleteSubject(id string) (int64, error)
-	GetSubject(id string) (dtos.SubjectResponse, error)
-	GetSubjects() ([]dtos.SubjectResponse, error)
+	DeleteSubject(id string, schoolId string) (int64, error)
+	GetSubject(id string, schoolId string) (dtos.SubjectResponse, error)
+	GetSubjects(schoolId string) ([]dtos.SubjectResponse, error)
 	PutSubject(id string, item dtos.UpdateSubjectRequest) (interface{}, error)
 }
 
@@ -37,11 +37,12 @@ func New(mongoClient *mongo.Client, config config.Settings, ctx context.Context)
 	}
 }
 
-func (impl serviceImpl) DeleteSubject(id string) (int64, error) {
+func (impl serviceImpl) DeleteSubject(id string, schoolId string) (int64, error) {
 
 	log.Print("Call to delete type of Subject by id started.")
 	objId := conversion.GetMongoId(id)
-	filter := bson.D{bson.E{Key: "_id", Value: objId}}
+	filter := bson.D{bson.E{Key: "_id", Value: objId},
+		bson.E{Key: "schoolid", Value: schoolId}}
 
 	result, err := impl.collection.DeleteOne(impl.ctx, filter)
 
@@ -57,13 +58,14 @@ func (impl serviceImpl) DeleteSubject(id string) (int64, error) {
 	return result.DeletedCount, nil
 }
 
-func (impl serviceImpl) GetSubject(id string) (dtos.SubjectResponse, error) {
+func (impl serviceImpl) GetSubject(id string, schoolId string) (dtos.SubjectResponse, error) {
 
 	log.Print("Get Type of Subject called")
 	objId := conversion.GetMongoId(id)
 	var Subject dtos.SubjectResponse
 
-	filter := bson.D{bson.E{Key: "_id", Value: objId}}
+	filter := bson.D{bson.E{Key: "_id", Value: objId},
+		bson.E{Key: "schoolid", Value: schoolId}}
 
 	err := impl.collection.FindOne(impl.ctx, filter).Decode(&Subject)
 	if err != nil {
@@ -75,12 +77,12 @@ func (impl serviceImpl) GetSubject(id string) (dtos.SubjectResponse, error) {
 
 }
 
-func (impl serviceImpl) GetSubjects() ([]dtos.SubjectResponse, error) {
+func (impl serviceImpl) GetSubjects(schoolId string) ([]dtos.SubjectResponse, error) {
 
 	log.Print("Call to get all types of Subject started.")
 
 	var Subjects []dtos.SubjectResponse
-	filter := bson.D{}
+	filter := bson.D{bson.E{Key: "schoolid", Value: schoolId}}
 	cur, err := impl.collection.Find(impl.ctx, filter)
 
 	if err != nil {
@@ -142,7 +144,8 @@ func (impl serviceImpl) PutSubject(id string, User dtos.UpdateSubjectRequest) (i
 	filter := bson.D{bson.E{Key: "_id", Value: objId}}
 	var modelObj models.Subject
 
-	update := bson.D{bson.E{Key: "type", Value: updatedSubject.Type}}
+	update := bson.D{bson.E{Key: "type", Value: updatedSubject.Type},
+		bson.E{Key: "schoolid", Value: updatedSubject.SchoolId}}
 	_, err := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
 
 	if err != nil {

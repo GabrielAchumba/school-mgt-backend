@@ -25,12 +25,12 @@ import (
 type UserService interface {
 	LoginUser(requestModel dtos.LoginUserRequest) (interface{}, error)
 	RegisterUser(userId string, requestModel dtos.CreateUserRequest) (interface{}, error)
-	GetUsers() ([]dtos.UserResponse, error)
-	GetUser(id string) (dtos.UserResponse, error)
-	GetUsersByCategory(category string) ([]dtos.UserResponse, error)
+	GetUsers(schoolId string) ([]dtos.UserResponse, error)
+	GetUser(id string, schoolId string) (dtos.UserResponse, error)
+	GetUsersByCategory(category string, schoolId string) ([]dtos.UserResponse, error)
 	PutUser(id string, User dtos.UpdateUserRequest) (interface{}, error)
 	PostUser(User dtos.CreateUserRequest) (interface{}, error)
-	DeleteUser(id string) (int64, error)
+	DeleteUser(id string, schoolId string) (int64, error)
 	GetSelectedUser(filter primitive.D) (interface{}, interface{})
 	UpdateAdminDTO(id string, adminDTO dtos.AdminDTO) (dtos.AdminDTO, error)
 	ForgotPassword(forgotPasswordInput dtos.ForgotPasswordInput) (dtos.ForgotPasswordInput, error)
@@ -70,6 +70,7 @@ func (impl serviceImpl) SeedAdmin() {
 		UserName:      "admin@school.com",
 		UserType:      "Admin",
 		DesignationId: "CEO",
+		SchoolId:      "CEO",
 	}
 
 	filter := bson.D{bson.E{Key: "username", Value: admin.UserName}}
@@ -119,6 +120,7 @@ func (impl serviceImpl) LoginUser(requestModel dtos.LoginUserRequest) (interface
 			DesignationId: modelDto.DesignationId,
 			CreatedAt:     modelDto.CreatedAt,
 			Base64String:  modelDto.Base64String,
+			SchoolId:      modelDto.SchoolId,
 		},
 	}
 
@@ -170,11 +172,12 @@ func (impl serviceImpl) RegisterUser(userId string, model dtos.CreateUserRequest
 	return modelObj, er
 }
 
-func (impl serviceImpl) DeleteUser(id string) (int64, error) {
+func (impl serviceImpl) DeleteUser(id string, schoolId string) (int64, error) {
 
 	log.Print("Call to delete User by id started.")
 	objId := conversion.GetMongoId(id)
-	filter := bson.D{bson.E{Key: "_id", Value: objId}}
+	filter := bson.D{bson.E{Key: "_id", Value: objId},
+		bson.E{Key: "schoolid", Value: schoolId}}
 
 	result, err := impl.collection.DeleteOne(impl.ctx, filter)
 
@@ -190,33 +193,34 @@ func (impl serviceImpl) DeleteUser(id string) (int64, error) {
 	return result.DeletedCount, nil
 }
 
-func (impl serviceImpl) GetUser(id string) (dtos.UserResponse, error) {
+func (impl serviceImpl) GetUser(id string, schoolId string) (dtos.UserResponse, error) {
 
-	log.Print("Get Adminstrator called")
+	log.Print("Get GetUser called")
 	objId := conversion.GetMongoId(id)
 	var User dtos.UserResponse
 
-	filter := bson.D{bson.E{Key: "_id", Value: objId}}
+	filter := bson.D{bson.E{Key: "_id", Value: objId},
+		bson.E{Key: "schoolid", Value: schoolId}}
 
 	err := impl.collection.FindOne(impl.ctx, filter).Decode(&User)
 	if err != nil {
-		return User, errors.Error("could not find adminstrator by id")
+		return User, errors.Error("could not find user by id")
 	}
 
-	staff, _ := impl.staffService.GetStaff(User.DesignationId)
+	staff, _ := impl.staffService.GetStaff(User.DesignationId, schoolId)
 	User.Designation = staff.Type
 
-	log.Print("Get Adminstrator completed")
+	log.Print("Call GetUser completed")
 	return User, err
 
 }
 
-func (impl serviceImpl) GetUsers() ([]dtos.UserResponse, error) {
+func (impl serviceImpl) GetUsers(schoolId string) ([]dtos.UserResponse, error) {
 
 	log.Print("Call to get all Users started.")
 
 	var Users []dtos.UserResponse
-	filter := bson.D{}
+	filter := bson.D{bson.E{Key: "schoolid", Value: schoolId}}
 	cur, err := impl.collection.Find(impl.ctx, filter)
 
 	if err != nil {
@@ -236,7 +240,7 @@ func (impl serviceImpl) GetUsers() ([]dtos.UserResponse, error) {
 	}
 
 	for i := 0; i < length; i++ {
-		staff, _ := impl.staffService.GetStaff(Users[i].DesignationId)
+		staff, _ := impl.staffService.GetStaff(Users[i].DesignationId, schoolId)
 		Users[i].Designation = staff.Type
 	}
 
@@ -244,12 +248,13 @@ func (impl serviceImpl) GetUsers() ([]dtos.UserResponse, error) {
 	return Users, err
 }
 
-func (impl serviceImpl) GetUsersByCategory(category string) ([]dtos.UserResponse, error) {
+func (impl serviceImpl) GetUsersByCategory(category string, schoolId string) ([]dtos.UserResponse, error) {
 
 	log.Print("Call to get Users by category started.")
 
 	var Users []dtos.UserResponse
-	filter := bson.D{bson.E{Key: "designationid", Value: category}}
+	filter := bson.D{bson.E{Key: "designationid", Value: category},
+		bson.E{Key: "schoolid", Value: schoolId}}
 	cur, err := impl.collection.Find(impl.ctx, filter)
 
 	if err != nil {
@@ -269,7 +274,7 @@ func (impl serviceImpl) GetUsersByCategory(category string) ([]dtos.UserResponse
 	}
 
 	for i := 0; i < length; i++ {
-		staff, _ := impl.staffService.GetStaff(Users[i].DesignationId)
+		staff, _ := impl.staffService.GetStaff(Users[i].DesignationId, schoolId)
 		Users[i].Designation = staff.Type
 	}
 
@@ -320,7 +325,8 @@ func (impl serviceImpl) PutUser(id string, User dtos.UpdateUserRequest) (interfa
 		bson.E{Key: "password", Value: updatedUser.Password},
 		bson.E{Key: "phoneNumber", Value: updatedUser.PhoneNumber},
 		bson.E{Key: "username", Value: updatedUser.UserName},
-		bson.E{Key: "userType", Value: updatedUser.UserType}}
+		bson.E{Key: "userType", Value: updatedUser.UserType},
+		bson.E{Key: "schoolid", Value: updatedUser.SchoolId}}
 
 	_, err := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
 	if err != nil {

@@ -12,6 +12,7 @@ type CreateResultRequest struct {
 	AssessmentId  string  `json:"assessmentId" binding:"required"`
 	DesignationId string  `json:"designationId" binding:"required"`
 	CreatedAt     string  `json:"createdAt" binding:"required"`
+	SchoolId      string  `json:"schoolId" binding:"required"`
 }
 
 type UpdateResultRequest struct {
@@ -24,6 +25,7 @@ type UpdateResultRequest struct {
 	AssessmentId  string  `json:"assessmentId" binding:"required"`
 	DesignationId string  `json:"designationId" binding:"required"`
 	UpdatedAt     string  `json:"updatedAt" binding:"required"`
+	SchoolId      string  `json:"schoolId" binding:"required"`
 }
 
 type ResultResponse struct {
@@ -44,6 +46,7 @@ type ResultResponse struct {
 	ClassRoomFullName   string    `json:"classRoomFullName" binding:"required"`
 	AssessmentFullName  string    `json:"assessmentFullName" binding:"required"`
 	DesignationFullName string    `json:"designationFullName" binding:"required"`
+	SchoolId            string    `json:"schoolId" binding:"required"`
 }
 
 type RangeOfScore struct {
@@ -68,6 +71,7 @@ type GetResultsRequest struct {
 	RangeOfScores []RangeOfScore `json:"rangeOfScores"`
 	MonthYears    []MonthYear    `json:"monthYears"`
 	IsMonthly     bool           `json:"isMonthly"`
+	SchoolId      string         `json:"schoolId" binding:"required"`
 }
 
 type AssesmentGroup struct {

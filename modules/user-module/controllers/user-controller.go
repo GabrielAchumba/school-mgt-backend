@@ -80,8 +80,9 @@ func (ctrl *controllerImpl) RegisterUser(ctx *gin.Context) *rest.Response {
 
 func (ctrl *controllerImpl) DeleteUser(ctx *gin.Context) *rest.Response {
 	id := ctx.Param("id")
+	schoolId := ctx.Param("schoolId")
 
-	m, er := ctrl.userService.DeleteUser(id)
+	m, er := ctrl.userService.DeleteUser(id, schoolId)
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}
@@ -90,8 +91,9 @@ func (ctrl *controllerImpl) DeleteUser(ctx *gin.Context) *rest.Response {
 
 func (ctrl *controllerImpl) GetUser(ctx *gin.Context) *rest.Response {
 	id := ctx.Param("id")
+	schoolId := ctx.Param("schoolId")
 
-	m, er := ctrl.userService.GetUser(id)
+	m, er := ctrl.userService.GetUser(id, schoolId)
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}
@@ -101,8 +103,9 @@ func (ctrl *controllerImpl) GetUser(ctx *gin.Context) *rest.Response {
 func (ctrl *controllerImpl) GetUsersByCategory(ctx *gin.Context) *rest.Response {
 
 	category := ctx.Param("category")
+	schoolId := ctx.Param("schoolId")
 
-	m, er := ctrl.userService.GetUsersByCategory(category)
+	m, er := ctrl.userService.GetUsersByCategory(category, schoolId)
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}
@@ -111,7 +114,8 @@ func (ctrl *controllerImpl) GetUsersByCategory(ctx *gin.Context) *rest.Response 
 
 func (ctrl *controllerImpl) GetUsers(ctx *gin.Context) *rest.Response {
 
-	m, er := ctrl.userService.GetUsers()
+	schoolId := ctx.Param("schoolId")
+	m, er := ctrl.userService.GetUsers(schoolId)
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}

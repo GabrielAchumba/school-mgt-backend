@@ -52,8 +52,9 @@ func (ctrl *controllerImpl) CreateSubject(ctx *gin.Context) *rest.Response {
 
 func (ctrl *controllerImpl) DeleteSubject(ctx *gin.Context) *rest.Response {
 	id := ctx.Param("id")
+	schoolId := ctx.Param("schoolId")
 
-	m, er := ctrl.SubjectService.DeleteSubject(id)
+	m, er := ctrl.SubjectService.DeleteSubject(id, schoolId)
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}
@@ -62,8 +63,9 @@ func (ctrl *controllerImpl) DeleteSubject(ctx *gin.Context) *rest.Response {
 
 func (ctrl *controllerImpl) GetSubject(ctx *gin.Context) *rest.Response {
 	id := ctx.Param("id")
+	schoolId := ctx.Param("schoolId")
 
-	m, er := ctrl.SubjectService.GetSubject(id)
+	m, er := ctrl.SubjectService.GetSubject(id, schoolId)
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}
@@ -72,7 +74,9 @@ func (ctrl *controllerImpl) GetSubject(ctx *gin.Context) *rest.Response {
 
 func (ctrl *controllerImpl) GetSubjects(ctx *gin.Context) *rest.Response {
 
-	m, er := ctrl.SubjectService.GetSubjects()
+	schoolId := ctx.Param("schoolId")
+
+	m, er := ctrl.SubjectService.GetSubjects(schoolId)
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}

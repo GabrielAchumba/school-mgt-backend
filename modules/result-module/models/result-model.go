@@ -16,4 +16,5 @@ type Result struct {
 	ClassRoomId   string    `json:"classRoomId" binding:"required"`
 	AssessmentId  string    `json:"assessmentId" binding:"required"`
 	DesignationId string    `json:"designationId" binding:"required"`
+	SchoolId      string    `json:"schoolId" binding:"required"`
 }

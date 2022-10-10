@@ -26,6 +26,7 @@ type UserInternalOperation struct {
 	Password      string    `json:"password"`
 	CreatedAt     time.Time `json:"createdAt"`
 	Base64String  string    `json:"base64String"`
+	SchoolId      string    `json:"schoolId" binding:"required"`
 }
 
 type CreateUserRequest struct {
@@ -40,6 +41,7 @@ type CreateUserRequest struct {
 	DesignationId        string `json:"designationId" binding:"required"`
 	UserName             string `json:"userName"  binding:"required"`
 	Password             string `json:"password"  binding:"required"`
+	SchoolId             string `json:"schoolId" binding:"required"`
 }
 
 type UpdateUserRequest struct {
@@ -54,6 +56,7 @@ type UpdateUserRequest struct {
 	DesignationId        string `json:"designationId"`
 	UserName             string `json:"userName"`
 	Password             string `json:"password"`
+	SchoolId             string `json:"schoolId"`
 }
 
 type UserResponse struct {
@@ -72,6 +75,7 @@ type UserResponse struct {
 	DesignationId        string    `json:"designationId,omitempty"`
 	UserName             string    `json:"userName,omitempty"`
 	Password             string    `json:"password,omitempty"`
+	SchoolId             string    `json:"schoolId" binding:"required"`
 }
 
 type ForgotPasswordInput struct {

@@ -7,4 +7,5 @@ type Assessment struct {
 	CreatedBy  string    `json:"createdBy"`
 	Type       string    `json:"type" binding:"required"`
 	Percentage float64   `json:"percentage" binding:"required"`
+	SchoolId   string    `json:"schoolId" binding:"required"`
 }

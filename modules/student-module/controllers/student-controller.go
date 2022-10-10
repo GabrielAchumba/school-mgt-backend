@@ -52,8 +52,9 @@ func (ctrl *controllerImpl) CreateStudent(ctx *gin.Context) *rest.Response {
 
 func (ctrl *controllerImpl) DeleteStudent(ctx *gin.Context) *rest.Response {
 	id := ctx.Param("id")
+	schoolId := ctx.Param("schoolId")
 
-	m, er := ctrl.StudentService.DeleteStudent(id)
+	m, er := ctrl.StudentService.DeleteStudent(id, schoolId)
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}
@@ -62,8 +63,9 @@ func (ctrl *controllerImpl) DeleteStudent(ctx *gin.Context) *rest.Response {
 
 func (ctrl *controllerImpl) GetStudent(ctx *gin.Context) *rest.Response {
 	id := ctx.Param("id")
+	schoolId := ctx.Param("schoolId")
 
-	m, er := ctrl.StudentService.GetStudent(id)
+	m, er := ctrl.StudentService.GetStudent(id, schoolId)
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}
@@ -72,7 +74,9 @@ func (ctrl *controllerImpl) GetStudent(ctx *gin.Context) *rest.Response {
 
 func (ctrl *controllerImpl) GetStudents(ctx *gin.Context) *rest.Response {
 
-	m, er := ctrl.StudentService.GetStudents()
+	schoolId := ctx.Param("schoolId")
+
+	m, er := ctrl.StudentService.GetStudents(schoolId)
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}

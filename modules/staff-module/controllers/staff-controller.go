@@ -52,8 +52,9 @@ func (ctrl *controllerImpl) CreateStaff(ctx *gin.Context) *rest.Response {
 
 func (ctrl *controllerImpl) DeleteStaff(ctx *gin.Context) *rest.Response {
 	id := ctx.Param("id")
+	schoolId := ctx.Param("schoolId")
 
-	m, er := ctrl.staffService.DeleteStaff(id)
+	m, er := ctrl.staffService.DeleteStaff(id, schoolId)
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}
@@ -62,8 +63,9 @@ func (ctrl *controllerImpl) DeleteStaff(ctx *gin.Context) *rest.Response {
 
 func (ctrl *controllerImpl) GetStaff(ctx *gin.Context) *rest.Response {
 	id := ctx.Param("id")
+	schoolId := ctx.Param("schoolId")
 
-	m, er := ctrl.staffService.GetStaff(id)
+	m, er := ctrl.staffService.GetStaff(id, schoolId)
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}
@@ -72,7 +74,8 @@ func (ctrl *controllerImpl) GetStaff(ctx *gin.Context) *rest.Response {
 
 func (ctrl *controllerImpl) GetStaffs(ctx *gin.Context) *rest.Response {
 
-	m, er := ctrl.staffService.GetStaffs()
+	schoolId := ctx.Param("schoolId")
+	m, er := ctrl.staffService.GetStaffs(schoolId)
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}

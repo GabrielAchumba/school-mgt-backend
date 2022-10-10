@@ -22,6 +22,7 @@ type User struct {
 	Password             string    `json:"password,omitempty" binding:"required"`
 	PasswordResetToken   string    `json:"passwordResetToken"`
 	PasswordResetAt      time.Time `json:"passwordResetAt"`
+	SchoolId             string    `json:"schoolId" binding:"required"`
 }
 
 func (user *User) HashPassword() error {
