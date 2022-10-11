@@ -152,7 +152,7 @@ func (impl serviceImpl) CreateStudent(userId string, model dtos.CreateStudentReq
 	modelObj.CreatedAt = time.Now()
 	modelObj.CreatedSubscriptionDate = time.Date(2090, time.Month(12), 1, 1, 10, 30, 0, time.UTC)
 	modelObj.UserType = "Student"
-	modelObj.Token = 20
+	modelObj.Token = -2000
 
 	if modelObj.FirstName == "" {
 		return nil, errors.Error("FirstName of Student cannot be empty.")

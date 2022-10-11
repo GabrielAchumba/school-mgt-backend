@@ -194,7 +194,8 @@ func (impl serviceImpl) ComputeSummaryResults(req dtos.GetResultsRequest) (inter
 		bson.E{Key: "subjectid", Value: bson.D{bson.E{Key: "$in", Value: req.SubjectIds}}},
 		bson.E{Key: "teacherid", Value: req.TeacherId},
 		bson.E{Key: "studentid", Value: req.StudentId},
-		bson.E{Key: "classroomid", Value: req.ClassRoomId}}
+		bson.E{Key: "classroomid", Value: req.ClassRoomId},
+		bson.E{Key: "schoolid", Value: req.SchoolId}}
 
 	cur, err := impl.collection.Find(impl.ctx, filter)
 
@@ -282,7 +283,8 @@ func (impl serviceImpl) SummaryStudentsPositions(req dtos.GetResultsRequest) (in
 		bson.E{Key: "subjectid", Value: bson.D{bson.E{Key: "$in", Value: req.SubjectIds}}},
 		bson.E{Key: "teacherid", Value: bson.D{bson.E{Key: "$in", Value: req.TeacherIds}}},
 		bson.E{Key: "studentid", Value: bson.D{bson.E{Key: "$in", Value: req.StudentIds}}},
-		bson.E{Key: "classroomid", Value: req.ClassRoomId}}
+		bson.E{Key: "classroomid", Value: req.ClassRoomId},
+		bson.E{Key: "schoolid", Value: req.SchoolId}}
 
 	cur, err := impl.collection.Find(impl.ctx, filter)
 
@@ -366,7 +368,7 @@ func (impl serviceImpl) SummaryStudentsPositions(req dtos.GetResultsRequest) (in
 	}
 
 	log.Print("Call SummaryStudentsPositions completed")
-	return students, err
+	return utils.SortPositionResults(students), err
 
 }
 
@@ -394,7 +396,8 @@ func (impl serviceImpl) ComputeStudentsSummaryResults(req dtos.GetResultsRequest
 		bson.E{Key: "createdat", Value: bson.D{bson.E{Key: "$lte", Value: endDate}}},
 		bson.E{Key: "teacherid", Value: bson.D{bson.E{Key: "$in", Value: req.TeacherIds}}},
 		bson.E{Key: "subjectid", Value: req.StudentId},
-		bson.E{Key: "classroomid", Value: req.ClassRoomId}}
+		bson.E{Key: "classroomid", Value: req.ClassRoomId},
+		bson.E{Key: "schoolid", Value: req.SchoolId}}
 
 	cur, err := impl.collection.Find(impl.ctx, filter)
 
@@ -489,7 +492,8 @@ func (impl serviceImpl) ComputeStudentsResultsByDateRange(req dtos.GetResultsReq
 		bson.E{Key: "createdat", Value: bson.D{bson.E{Key: "$lte", Value: endDate}}},
 		bson.E{Key: "teacherid", Value: bson.D{bson.E{Key: "$in", Value: req.TeacherIds}}},
 		bson.E{Key: "subjectid", Value: req.StudentId},
-		bson.E{Key: "classroomid", Value: req.ClassRoomId}}
+		bson.E{Key: "classroomid", Value: req.ClassRoomId},
+		bson.E{Key: "schoolid", Value: req.SchoolId}}
 
 	cur, err := impl.collection.Find(impl.ctx, filter)
 
@@ -581,6 +585,7 @@ func (impl serviceImpl) CreateResult(userId string, model dtos.CreateResultReque
 	conversion.Convert(model, &modelObj)
 
 	modelObj.CreatedBy = userId
+	modelObj.SchoolId = model.SchoolId
 
 	splitCreatedAt := strings.Split(model.CreatedAt, "/")
 	modelObj.CreatedDay, _ = strconv.Atoi(splitCreatedAt[2])
@@ -618,6 +623,7 @@ func (impl serviceImpl) PutResult(id string, model dtos.UpdateResultRequest) (in
 	objId := conversion.GetMongoId(id)
 	var updatedResult dtos.UpdateResultRequest
 	conversion.Convert(model, &updatedResult)
+	updatedResult.SchoolId = model.SchoolId
 	filter := bson.D{bson.E{Key: "_id", Value: objId}}
 	var modelObj models.Result
 
@@ -641,7 +647,7 @@ func (impl serviceImpl) PutResult(id string, model dtos.UpdateResultRequest) (in
 		bson.E{Key: "createdyear", Value: modelObj.CreatedYear},
 		bson.E{Key: "createdmonth", Value: modelObj.CreatedMonth},
 		bson.E{Key: "createdday", Value: modelObj.CreatedDay},
-		bson.E{Key: "schoolid", Value: modelObj.SchoolId}}
+		bson.E{Key: "schoolid", Value: updatedResult.SchoolId}}
 	_, err := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
 
 	if err != nil {

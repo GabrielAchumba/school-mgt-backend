@@ -28,8 +28,8 @@ func (module *ClassRoomModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker to
 	{
 		moduleRoute.POST("/create", serverHttp(module.controller.CreateClassRoom))
 		moduleRoute.PUT("/:id", serverHttp(module.controller.PutClassRoom))
-		moduleRoute.GET("", serverHttp(module.controller.GetClassRooms))
-		moduleRoute.GET("/:id", serverHttp(module.controller.GetClassRoom))
+		moduleRoute.GET("/:schoolId", serverHttp(module.controller.GetClassRooms))
+		//moduleRoute.GET("/:id", serverHttp(module.controller.GetClassRoom))
 		moduleRoute.DELETE("/:id", serverHttp(module.controller.DeleteClassRoom))
 	}
 }

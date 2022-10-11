@@ -17,7 +17,7 @@ type User struct {
 	PhoneNumber          string    `json:"phoneNumber" binding:"required"`
 	Email                string    `json:"email"`
 	UserType             string    `json:"userType,omitempty" binding:"required"`
-	DesignationId        string    `json:"designationId,omitempty" binding:"required"`
+	DesignationId        string    `json:"designationId"`
 	UserName             string    `json:"userName,omitempty" binding:"required"`
 	Password             string    `json:"password,omitempty" binding:"required"`
 	PasswordResetToken   string    `json:"passwordResetToken"`

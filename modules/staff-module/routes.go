@@ -28,8 +28,8 @@ func (module *staffModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker token.
 	{
 		moduleRoute.POST("/create", serverHttp(module.controller.CreateStaff))
 		moduleRoute.PUT("/:id", serverHttp(module.controller.PutStaff))
-		moduleRoute.GET("", serverHttp(module.controller.GetStaffs))
-		moduleRoute.GET("/:id", serverHttp(module.controller.GetStaff))
+		moduleRoute.GET("/:schoolId", serverHttp(module.controller.GetStaffs))
+		//moduleRoute.GET("/:id", serverHttp(module.controller.GetStaff))
 		moduleRoute.DELETE("/:id", serverHttp(module.controller.DeleteStaff))
 	}
 }

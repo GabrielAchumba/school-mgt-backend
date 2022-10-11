@@ -8,7 +8,7 @@ type CreateStudentRequest struct {
 	BirthYear        int    `json:"birthYear" binding:"required"`
 	BirthMonth       int    `json:"birthMonth" binding:"required"`
 	BirthDay         int    `json:"birthDay" binding:"required"`
-	SubscriptionType string `json:"subscriptionType" binding:"required"`
+	SubscriptionType int    `json:"subscriptionType" binding:"required"`
 	SchoolId         string `json:"schoolId"`
 }
 
@@ -19,7 +19,7 @@ type UpdateStudentRequest struct {
 	BirthMonth       int      `json:"birthMonth"`
 	BirthDay         int      `json:"birthDay"`
 	Token            int      `json:"token"`
-	SubscriptionType string   `json:"subscriptionType"`
+	SubscriptionType int      `json:"subscriptionType"`
 	StudentIds       []string `json:"studentIds"`
 	SchoolId         string   `json:"schoolId"`
 }
@@ -35,7 +35,7 @@ type StudentResponse struct {
 	BirthDay                  int       `json:"birthDay" binding:"required"`
 	UserType                  string    `json:"userType" binding:"required"`
 	Token                     int       `json:"token" binding:"required"`
-	SubscriptionType          string    `json:"subscriptionType" binding:"required"`
+	SubscriptionType          int       `json:"subscriptionType" binding:"required"`
 	RemainingSubscriptionDays int       `json:"remainingSubscriptionDays"`
 	SchoolId                  string    `json:"schoolId"`
 }

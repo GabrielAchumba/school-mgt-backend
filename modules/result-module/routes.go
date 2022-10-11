@@ -28,8 +28,8 @@ func (module *ResultModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker token
 	{
 		moduleRoute.POST("/create", serverHttp(module.controller.CreateResult))
 		moduleRoute.PUT("/:id", serverHttp(module.controller.PutResult))
-		moduleRoute.GET("", serverHttp(module.controller.GetResults))
-		moduleRoute.GET("/:id", serverHttp(module.controller.GetResult))
+		moduleRoute.GET("/:schoolId", serverHttp(module.controller.GetResults))
+		//moduleRoute.GET("/:id", serverHttp(module.controller.GetResult))
 		moduleRoute.DELETE("/:id", serverHttp(module.controller.DeleteResult))
 		moduleRoute.POST("/summarizedresult", serverHttp(module.controller.ComputeSummaryResults))
 		moduleRoute.POST("/summarizedstudentsresult", serverHttp(module.controller.ComputeStudentsSummaryResults))

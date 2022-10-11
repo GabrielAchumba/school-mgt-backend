@@ -38,7 +38,7 @@ type CreateUserRequest struct {
 	CountryCode          string `json:"countryCode" binding:"required"`
 	Email                string `json:"email"`
 	UserType             string `json:"userType" binding:"required"`
-	DesignationId        string `json:"designationId" binding:"required"`
+	DesignationId        string `json:"designationId"`
 	UserName             string `json:"userName"  binding:"required"`
 	Password             string `json:"password"  binding:"required"`
 	SchoolId             string `json:"schoolId" binding:"required"`
