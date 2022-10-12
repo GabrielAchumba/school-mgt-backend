@@ -24,11 +24,13 @@ func (module *SchoolModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker token
 	moduleRoute := rg.Group("/school")
 	serverHttp := rest.ServeHTTP
 
+	moduleRoute.POST("/create", serverHttp(module.controller.CreateSchool))
+	moduleRoute.GET("", serverHttp(module.controller.GetSchools))
+
 	moduleRoute.Use(middleware.AuthMiddleware(tokenMaker))
 	{
-		moduleRoute.POST("/create", serverHttp(module.controller.CreateSchool))
+
 		moduleRoute.PUT("/:id", serverHttp(module.controller.PutSchool))
-		moduleRoute.GET("", serverHttp(module.controller.GetSchools))
 		moduleRoute.GET("/:id", serverHttp(module.controller.GetSchool))
 		moduleRoute.DELETE("/:id", serverHttp(module.controller.DeleteSchool))
 	}

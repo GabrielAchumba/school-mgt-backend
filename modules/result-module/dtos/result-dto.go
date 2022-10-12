@@ -61,6 +61,7 @@ type GetResultsRequest struct {
 	Score         float64        `json:"score"`
 	ScoreMax      float64        `json:"scoreMax"`
 	SubjectIds    []string       `json:"subjectIds"`
+	SubjectId     string         `json:"subjectId"`
 	StudentId     string         `json:"studentId"`
 	StudentIds    []string       `json:"studentIds"`
 	TeacherId     string         `json:"teacherId"`

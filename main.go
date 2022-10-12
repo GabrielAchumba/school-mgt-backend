@@ -36,6 +36,9 @@ import (
 	resultmodule "github.com/GabrielAchumba/school-mgt-backend/modules/result-module"
 	resultService "github.com/GabrielAchumba/school-mgt-backend/modules/result-module/services"
 
+	paymentmodule "github.com/GabrielAchumba/school-mgt-backend/modules/payment-module"
+	paymentService "github.com/GabrielAchumba/school-mgt-backend/modules/payment-module/services"
+
 	"github.com/GabrielAchumba/school-mgt-backend/authentication/token"
 	"github.com/gin-gonic/gin"
 	cors "github.com/itsjamie/gin-cors"
@@ -131,6 +134,9 @@ func main() {
 
 	_schoolService := schoolService.New(mongoClient, configSettings, ctx)
 	schoolmodule.InjectService(_schoolService).RegisterRoutes(apiBaseName, tokenMaker)
+
+	_paymentService := paymentService.New(mongoClient, configSettings, ctx)
+	paymentmodule.InjectService(_paymentService).RegisterRoutes(apiBaseName, tokenMaker)
 
 	_resultService := resultService.New(mongoClient, configSettings, ctx, _userService,
 		_studentService, _subjectService, _classRoomService, _assessmentService,

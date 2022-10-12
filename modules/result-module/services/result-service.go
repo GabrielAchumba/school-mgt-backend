@@ -395,7 +395,7 @@ func (impl serviceImpl) ComputeStudentsSummaryResults(req dtos.GetResultsRequest
 	filter := bson.D{bson.E{Key: "createdat", Value: bson.D{bson.E{Key: "$gte", Value: startDate}}},
 		bson.E{Key: "createdat", Value: bson.D{bson.E{Key: "$lte", Value: endDate}}},
 		bson.E{Key: "teacherid", Value: bson.D{bson.E{Key: "$in", Value: req.TeacherIds}}},
-		bson.E{Key: "subjectid", Value: req.StudentId},
+		bson.E{Key: "subjectid", Value: req.SubjectId},
 		bson.E{Key: "classroomid", Value: req.ClassRoomId},
 		bson.E{Key: "schoolid", Value: req.SchoolId}}
 
