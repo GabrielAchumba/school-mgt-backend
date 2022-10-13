@@ -17,12 +17,15 @@ var _response rest.Response
 
 type UserController interface {
 	RegisterUser(ctx *gin.Context) *rest.Response
+	RegisterAdminOrReferal(ctx *gin.Context) *rest.Response
 	Login(ctx *gin.Context) *rest.Response
 	DeleteUser(ctx *gin.Context) *rest.Response
 	GetUser(ctx *gin.Context) *rest.Response
 	GetUsersByCategory(ctx *gin.Context) *rest.Response
+	GetRerals(ctx *gin.Context) *rest.Response
 	GetUsers(ctx *gin.Context) *rest.Response
 	PutUser(ctx *gin.Context) *rest.Response
+	PutReferal(ctx *gin.Context) *rest.Response
 	UpdateAdminDTO(ctx *gin.Context) *rest.Response
 	UploadPhoto(ctx *gin.Context) *rest.Response
 	ForgotPassword(ctx *gin.Context) *rest.Response
@@ -78,6 +81,20 @@ func (ctrl *controllerImpl) RegisterUser(ctx *gin.Context) *rest.Response {
 	}
 }
 
+func (ctrl *controllerImpl) RegisterAdminOrReferal(ctx *gin.Context) *rest.Response {
+	var model dtos.CreateUserRequest
+
+	if er := ctx.BindJSON(&model); er != nil {
+		return _response.GetError(http.StatusBadRequest, er.Error())
+	}
+
+	if m, er := ctrl.userService.RegisterAdminOrReferal(model); er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	} else {
+		return _response.GetSuccess(http.StatusOK, m)
+	}
+}
+
 func (ctrl *controllerImpl) DeleteUser(ctx *gin.Context) *rest.Response {
 	id := ctx.Param("id")
 	schoolId := ctx.Param("schoolId")
@@ -94,6 +111,15 @@ func (ctrl *controllerImpl) GetUser(ctx *gin.Context) *rest.Response {
 	schoolId := ctx.Param("schoolId")
 
 	m, er := ctrl.userService.GetUser(id, schoolId)
+	if er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	}
+	return _response.GetSuccess(http.StatusOK, m)
+}
+
+func (ctrl *controllerImpl) GetRerals(ctx *gin.Context) *rest.Response {
+
+	m, er := ctrl.userService.GetRerals()
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}
@@ -130,6 +156,20 @@ func (ctrl *controllerImpl) PutUser(ctx *gin.Context) *rest.Response {
 	}
 
 	if m, er := ctrl.userService.PutUser(id, model); er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	} else {
+		return _response.GetSuccess(http.StatusOK, m)
+	}
+}
+
+func (ctrl *controllerImpl) PutReferal(ctx *gin.Context) *rest.Response {
+	id := ctx.Param("id")
+	var model dtos.UpdateUserRequest
+	if er := ctx.BindJSON(&model); er != nil {
+		return _response.GetError(http.StatusBadRequest, er.Error())
+	}
+
+	if m, er := ctrl.userService.PutReferal(id, model); er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	} else {
 		return _response.GetSuccess(http.StatusOK, m)

@@ -5,6 +5,7 @@ import "time"
 type CreateSchoolRequest struct {
 	SchoolName string `json:"schoolName" binding:"required"`
 	Address    string `json:"address" binding:"required"`
+	ReferedBy  string `json:"referedBy" binding:"required"`
 }
 
 type UpdateSchoolRequest struct {
@@ -15,7 +16,7 @@ type UpdateSchoolRequest struct {
 type SchoolResponse struct {
 	Id         string    `json:"id"  bson:"_id"`
 	CreatedAt  time.Time `json:"createdAt"`
-	CreatedBy  string    `json:"createdBy"`
 	SchoolName string    `json:"schoolName" binding:"required"`
 	Address    string    `json:"address" binding:"required"`
+	ReferedBy  string    `json:"referedBy" binding:"required"`
 }

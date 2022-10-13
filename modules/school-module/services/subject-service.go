@@ -16,9 +16,10 @@ import (
 )
 
 type SchoolService interface {
-	CreateSchool(userId string, requestModel dtos.CreateSchoolRequest) (interface{}, error)
+	CreateSchool(requestModel dtos.CreateSchoolRequest) (interface{}, error)
 	DeleteSchool(id string) (int64, error)
 	GetSchool(id string) (dtos.SchoolResponse, error)
+	GetSchoolByReferal(referalId string) ([]dtos.SchoolResponse, error)
 	GetSchools() ([]dtos.SchoolResponse, error)
 	PutSchool(id string, item dtos.UpdateSchoolRequest) (interface{}, error)
 }
@@ -102,21 +103,49 @@ func (impl serviceImpl) GetSchools() ([]dtos.SchoolResponse, error) {
 	return Schools, err
 }
 
-func (impl serviceImpl) CreateSchool(userId string, model dtos.CreateSchoolRequest) (interface{}, error) {
+func (impl serviceImpl) GetSchoolByReferal(referalId string) ([]dtos.SchoolResponse, error) {
+
+	log.Print("Call to get all types of School by referalId started.")
+
+	var Schools []dtos.SchoolResponse
+	filter := bson.D{bson.E{Key: "referedby", Value: referalId}}
+	cur, err := impl.collection.Find(impl.ctx, filter)
+
+	if err != nil {
+		Schools = make([]dtos.SchoolResponse, 0)
+		return Schools, errors.Error("Types of School by referalId not found!")
+	}
+
+	err = cur.All(impl.ctx, &Schools)
+	if err != nil {
+		return Schools, err
+	}
+
+	cur.Close(impl.ctx)
+	if len(Schools) == 0 {
+		Schools = make([]dtos.SchoolResponse, 0)
+	}
+
+	log.Print("Call to get all types of School  by referalId  completed.")
+	return Schools, err
+}
+
+func (impl serviceImpl) CreateSchool(model dtos.CreateSchoolRequest) (interface{}, error) {
 
 	log.Print("Call to create School started.")
 
 	var modelObj models.School
 	conversion.Convert(model, &modelObj)
 
-	modelObj.CreatedBy = userId
 	modelObj.CreatedAt = time.Now()
 
 	if modelObj.SchoolName == "" {
 		return nil, errors.Error("School cannot be empty.")
 	}
 
-	filter := bson.D{bson.E{Key: "type", Value: modelObj.SchoolName}}
+	filter := bson.D{bson.E{Key: "type", Value: modelObj.SchoolName},
+		bson.E{Key: "address", Value: modelObj.Address},
+		bson.E{Key: "referedby", Value: modelObj.ReferedBy}}
 	count, err := impl.collection.CountDocuments(impl.ctx, filter)
 	if err != nil {
 		return nil, err

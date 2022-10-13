@@ -25,10 +25,13 @@ import (
 type UserService interface {
 	LoginUser(requestModel dtos.LoginUserRequest) (interface{}, error)
 	RegisterUser(userId string, requestModel dtos.CreateUserRequest) (interface{}, error)
+	RegisterAdminOrReferal(model dtos.CreateUserRequest) (interface{}, error)
 	GetUsers(schoolId string) ([]dtos.UserResponse, error)
 	GetUser(id string, schoolId string) (dtos.UserResponse, error)
 	GetUsersByCategory(category string, schoolId string) ([]dtos.UserResponse, error)
+	GetRerals() ([]dtos.UserResponse, error)
 	PutUser(id string, User dtos.UpdateUserRequest) (interface{}, error)
+	PutReferal(id string, User dtos.UpdateUserRequest) (interface{}, error)
 	PostUser(User dtos.CreateUserRequest) (interface{}, error)
 	DeleteUser(id string, schoolId string) (int64, error)
 	GetSelectedUser(filter primitive.D) (interface{}, interface{})
@@ -121,6 +124,7 @@ func (impl serviceImpl) LoginUser(requestModel dtos.LoginUserRequest) (interface
 			CreatedAt:     modelDto.CreatedAt,
 			Base64String:  modelDto.Base64String,
 			SchoolId:      modelDto.SchoolId,
+			CountryCode:   modelDto.CountryCode,
 		},
 	}
 
@@ -169,6 +173,49 @@ func (impl serviceImpl) RegisterUser(userId string, model dtos.CreateUserRequest
 		return nil, errors.Error("Error in registering user.")
 	}
 	log.Print("Call to register user completed.")
+	return modelObj, er
+}
+
+func (impl serviceImpl) RegisterAdminOrReferal(model dtos.CreateUserRequest) (interface{}, error) {
+
+	log.Print("Call to register admin started.")
+
+	var modelObj models.User
+	conversion.Convert(model, &modelObj)
+
+	modelObj.CreatedAt = time.Now()
+
+	if modelObj.UserName == "" {
+		return nil, errors.Error("UserName cannot be empty.")
+	}
+	if modelObj.Password == "" {
+		return nil, errors.Error("Password cannot be empty.")
+	}
+	if modelObj.FirstName == "" {
+		return nil, errors.Error("FirstName cannot be empty.")
+	}
+	if modelObj.LastName == "" {
+		return nil, errors.Error("LastName cannot be empty.")
+	}
+
+	er := modelObj.HashPassword()
+	if er != nil {
+		return nil, er
+	}
+
+	filter := bson.D{bson.E{Key: "username", Value: modelObj.UserName}}
+	count, err := impl.collection.CountDocuments(impl.ctx, filter)
+	if err != nil {
+		return nil, err //exception.Error("Checking if title exist.")
+	}
+	if count > 0 {
+		return nil, errors.Error(fmt.Sprintf("UserName '%v'already exist.", model.UserName))
+	}
+	_, er = impl.collection.InsertOne(impl.ctx, modelObj)
+	if er != nil {
+		return nil, errors.Error("Error in registering user.")
+	}
+	log.Print("Call to register admin completed.")
 	return modelObj, er
 }
 
@@ -248,6 +295,34 @@ func (impl serviceImpl) GetUsers(schoolId string) ([]dtos.UserResponse, error) {
 	return Users, err
 }
 
+func (impl serviceImpl) GetRerals() ([]dtos.UserResponse, error) {
+
+	log.Print("Call to get all Referals started.")
+
+	var Users []dtos.UserResponse
+	filter := bson.D{bson.E{Key: "usertype", Value: "Referal"}}
+	cur, err := impl.collection.Find(impl.ctx, filter)
+
+	if err != nil {
+		Users = make([]dtos.UserResponse, 0)
+		return Users, errors.Error("Referals not found!")
+	}
+
+	err = cur.All(impl.ctx, &Users)
+	if err != nil {
+		return Users, err
+	}
+
+	cur.Close(impl.ctx)
+	length := len(Users)
+	if length == 0 {
+		Users = make([]dtos.UserResponse, 0)
+	}
+
+	log.Print("Call to get all Referals completed.")
+	return Users, err
+}
+
 func (impl serviceImpl) GetUsersByCategory(category string, schoolId string) ([]dtos.UserResponse, error) {
 
 	log.Print("Call to get Users by category started.")
@@ -318,14 +393,14 @@ func (impl serviceImpl) PutUser(id string, User dtos.UpdateUserRequest) (interfa
 	filter := bson.D{bson.E{Key: "_id", Value: objId}}
 	var modelObj models.User
 
-	update := bson.D{bson.E{Key: "designationId", Value: updatedUser.DesignationId},
-		bson.E{Key: "firstName", Value: updatedUser.FirstName},
-		bson.E{Key: "isPhotographUploaded", Value: updatedUser.IsPhotographUploaded},
-		bson.E{Key: "lastName", Value: updatedUser.LastName},
+	update := bson.D{bson.E{Key: "designationyd", Value: updatedUser.DesignationId},
+		bson.E{Key: "firstname", Value: updatedUser.FirstName},
+		bson.E{Key: "isPhotographuploaded", Value: updatedUser.IsPhotographUploaded},
+		bson.E{Key: "lastname", Value: updatedUser.LastName},
 		bson.E{Key: "password", Value: updatedUser.Password},
-		bson.E{Key: "phoneNumber", Value: updatedUser.PhoneNumber},
+		bson.E{Key: "phonenumber", Value: updatedUser.PhoneNumber},
 		bson.E{Key: "username", Value: updatedUser.UserName},
-		bson.E{Key: "userType", Value: updatedUser.UserType},
+		bson.E{Key: "usertype", Value: updatedUser.UserType},
 		bson.E{Key: "schoolid", Value: updatedUser.SchoolId}}
 
 	_, err := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
@@ -334,6 +409,31 @@ func (impl serviceImpl) PutUser(id string, User dtos.UpdateUserRequest) (interfa
 	}
 
 	log.Print("PutUser completed")
+	return modelObj, nil
+}
+
+func (impl serviceImpl) PutReferal(id string, User dtos.UpdateUserRequest) (interface{}, error) {
+
+	log.Print("PutUser PutReferal")
+
+	objId := conversion.GetMongoId(id)
+	var updatedUser dtos.UpdateUserRequest
+	conversion.Convert(User, &updatedUser)
+	filter := bson.D{bson.E{Key: "_id", Value: objId}}
+	var modelObj models.User
+
+	update := bson.D{bson.E{Key: "firstname", Value: updatedUser.FirstName},
+		bson.E{Key: "lastname", Value: updatedUser.LastName},
+		bson.E{Key: "phonenumber", Value: updatedUser.PhoneNumber},
+		bson.E{Key: "username", Value: updatedUser.UserName},
+		bson.E{Key: "countrycode", Value: updatedUser.CountryCode}}
+
+	_, err := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
+	if err != nil {
+		return modelObj, errors.Error("Could not upadte referal")
+	}
+
+	log.Print("PutReferal completed")
 	return modelObj, nil
 }
 

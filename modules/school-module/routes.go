@@ -31,7 +31,7 @@ func (module *SchoolModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker token
 	{
 
 		moduleRoute.PUT("/:id", serverHttp(module.controller.PutSchool))
-		moduleRoute.GET("/:id", serverHttp(module.controller.GetSchool))
+		moduleRoute.GET("/:referalId", serverHttp(module.controller.GetSchoolByReferal))
 		moduleRoute.DELETE("/:id", serverHttp(module.controller.DeleteSchool))
 	}
 }

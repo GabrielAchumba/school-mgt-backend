@@ -4,7 +4,7 @@ import "time"
 
 type School struct {
 	CreatedAt  time.Time `json:"createdAt"`
-	CreatedBy  string    `json:"createdBy"`
 	SchoolName string    `json:"schoolName" binding:"required"`
 	Address    string    `json:"address" binding:"required"`
+	ReferedBy  string    `json:"referedBy" binding:"required"`
 }

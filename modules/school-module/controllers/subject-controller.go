@@ -3,7 +3,6 @@ package controllers
 import (
 	"net/http"
 
-	"github.com/GabrielAchumba/school-mgt-backend/authentication/middleware"
 	"github.com/GabrielAchumba/school-mgt-backend/common/rest"
 	"github.com/GabrielAchumba/school-mgt-backend/modules/school-module/dtos"
 	"github.com/GabrielAchumba/school-mgt-backend/modules/school-module/services"
@@ -17,6 +16,7 @@ type SchoolController interface {
 	DeleteSchool(ctx *gin.Context) *rest.Response
 	GetSchool(ctx *gin.Context) *rest.Response
 	GetSchools(ctx *gin.Context) *rest.Response
+	GetSchoolByReferal(ctx *gin.Context) *rest.Response
 	PutSchool(ctx *gin.Context) *rest.Response
 }
 
@@ -37,13 +37,7 @@ func (ctrl *controllerImpl) CreateSchool(ctx *gin.Context) *rest.Response {
 		return _response.GetError(http.StatusBadRequest, er.Error())
 	}
 
-	payload, _ := middleware.GetAuthorizationPayload(ctx)
-	var userId string = payload.UserId
-	if userId == "" {
-		return _response.NotAuthorized()
-	}
-
-	if m, er := ctrl.SchoolService.CreateSchool(userId, model); er != nil {
+	if m, er := ctrl.SchoolService.CreateSchool(model); er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	} else {
 		return _response.GetSuccess(http.StatusOK, m)
@@ -73,6 +67,16 @@ func (ctrl *controllerImpl) GetSchool(ctx *gin.Context) *rest.Response {
 func (ctrl *controllerImpl) GetSchools(ctx *gin.Context) *rest.Response {
 
 	m, er := ctrl.SchoolService.GetSchools()
+	if er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	}
+	return _response.GetSuccess(http.StatusOK, m)
+}
+
+func (ctrl *controllerImpl) GetSchoolByReferal(ctx *gin.Context) *rest.Response {
+
+	referalId := ctx.Param("referalId")
+	m, er := ctrl.SchoolService.GetSchoolByReferal(referalId)
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}

@@ -29,11 +29,14 @@ func (module *userModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker token.M
 	moduleRoute.POST("/login", serverHttp(module.controller.Login))
 	moduleRoute.POST("/forgotpassword", serverHttp(module.controller.ForgotPassword))
 	moduleRoute.POST("/resetpassword", serverHttp(module.controller.ResetPassword))
+	moduleRoute.POST("/create-admin", serverHttp(module.controller.RegisterAdminOrReferal))
+	moduleRoute.GET("/referals", serverHttp(module.controller.GetRerals))
 
 	moduleRoute.Use(middleware.AuthMiddleware(tokenMaker))
 	{
 		moduleRoute.POST("/create", serverHttp(module.controller.RegisterUser))
 		moduleRoute.PUT("/:id", serverHttp(module.controller.PutUser))
+		moduleRoute.PUT("/update-referal/:id", serverHttp(module.controller.PutReferal))
 		moduleRoute.GET("/:schoolId", serverHttp(module.controller.GetUsers))
 		//moduleRoute.GET("/:id", serverHttp(module.controller.GetUser))
 		moduleRoute.GET("category/:category/:schoolId", serverHttp(module.controller.GetUsersByCategory))

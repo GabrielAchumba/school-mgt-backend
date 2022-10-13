@@ -27,6 +27,7 @@ type UserInternalOperation struct {
 	CreatedAt     time.Time `json:"createdAt"`
 	Base64String  string    `json:"base64String"`
 	SchoolId      string    `json:"schoolId" binding:"required"`
+	CountryCode   string    `json:"countryCode" binding:"required"`
 }
 
 type CreateUserRequest struct {
