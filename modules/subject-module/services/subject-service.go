@@ -118,7 +118,8 @@ func (impl serviceImpl) CreateSubject(userId string, model dtos.CreateSubjectReq
 		return nil, errors.Error("Type of Subject cannot be empty.")
 	}
 
-	filter := bson.D{bson.E{Key: "type", Value: modelObj.Type}}
+	filter := bson.D{bson.E{Key: "type", Value: modelObj.Type},
+		bson.E{Key: "schoolid", Value: modelObj.SchoolId}}
 	count, err := impl.collection.CountDocuments(impl.ctx, filter)
 	if err != nil {
 		return nil, err

@@ -163,7 +163,8 @@ func (impl serviceImpl) CreateStudent(userId string, model dtos.CreateStudentReq
 
 	filter := bson.D{bson.E{Key: "firstname", Value: modelObj.FirstName},
 		bson.E{Key: "lastname", Value: modelObj.LastName},
-		bson.E{Key: "token", Value: modelObj.Token}}
+		bson.E{Key: "token", Value: modelObj.Token},
+		bson.E{Key: "schoolid", Value: modelObj.SchoolId}}
 	count, err := impl.collection.CountDocuments(impl.ctx, filter)
 	if err != nil {
 		return nil, err
