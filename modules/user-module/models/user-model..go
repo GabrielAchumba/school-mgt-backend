@@ -11,10 +11,10 @@ type User struct {
 	IsPhotographUploaded int       `json:"isPhotographUploaded"`
 	CreatedAt            time.Time `json:"createdAt"`
 	CreatedBy            string    `json:"createdBy"`
-	CountryCode          string    `json:"countryCode" binding:"required"`
+	CountryCode          string    `json:"countryCode"`
 	FirstName            string    `json:"firstName" binding:"required"`
 	LastName             string    `json:"lastName" binding:"required"`
-	PhoneNumber          string    `json:"phoneNumber" binding:"required"`
+	PhoneNumber          string    `json:"phoneNumber"`
 	Email                string    `json:"email"`
 	UserType             string    `json:"userType,omitempty" binding:"required"`
 	DesignationId        string    `json:"designationId"`

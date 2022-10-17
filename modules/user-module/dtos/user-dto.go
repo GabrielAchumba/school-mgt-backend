@@ -27,22 +27,22 @@ type UserInternalOperation struct {
 	CreatedAt     time.Time `json:"createdAt"`
 	Base64String  string    `json:"base64String"`
 	SchoolId      string    `json:"schoolId" binding:"required"`
-	CountryCode   string    `json:"countryCode" binding:"required"`
+	CountryCode   string    `json:"countryCode"`
 }
 
 type CreateUserRequest struct {
 	Base64String         string `json:"base64String,omitempty"`
 	IsPhotographUploaded int64  `json:"isPhotographUploaded,omitempty"`
-	FirstName            string `json:"firstName"  binding:"required"`
-	LastName             string `json:"lastName"  binding:"required"`
-	PhoneNumber          string `json:"phoneNumber" binding:"required"`
-	CountryCode          string `json:"countryCode" binding:"required"`
+	FirstName            string `json:"firstName"`
+	LastName             string `json:"lastName"`
+	PhoneNumber          string `json:"phoneNumber"`
+	CountryCode          string `json:"countryCode"`
 	Email                string `json:"email"`
-	UserType             string `json:"userType" binding:"required"`
+	UserType             string `json:"userType"`
 	DesignationId        string `json:"designationId"`
-	UserName             string `json:"userName"  binding:"required"`
-	Password             string `json:"password"  binding:"required"`
-	SchoolId             string `json:"schoolId" binding:"required"`
+	UserName             string `json:"userName"`
+	Password             string `json:"password"`
+	SchoolId             string `json:"schoolId"`
 }
 
 type UpdateUserRequest struct {

@@ -18,6 +18,8 @@ var _response rest.Response
 type UserController interface {
 	RegisterUser(ctx *gin.Context) *rest.Response
 	RegisterAdminOrReferal(ctx *gin.Context) *rest.Response
+	UserIsExist(ctx *gin.Context) *rest.Response
+	UserIsExist2(ctx *gin.Context) *rest.Response
 	Login(ctx *gin.Context) *rest.Response
 	DeleteUser(ctx *gin.Context) *rest.Response
 	GetUser(ctx *gin.Context) *rest.Response
@@ -89,6 +91,34 @@ func (ctrl *controllerImpl) RegisterAdminOrReferal(ctx *gin.Context) *rest.Respo
 	}
 
 	if m, er := ctrl.userService.RegisterAdminOrReferal(model); er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	} else {
+		return _response.GetSuccess(http.StatusOK, m)
+	}
+}
+
+func (ctrl *controllerImpl) UserIsExist(ctx *gin.Context) *rest.Response {
+	var model dtos.CreateUserRequest
+
+	if er := ctx.BindJSON(&model); er != nil {
+		return _response.GetError(http.StatusBadRequest, er.Error())
+	}
+
+	if m, er := ctrl.userService.UserIsExist(model); er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	} else {
+		return _response.GetSuccess(http.StatusOK, m)
+	}
+}
+
+func (ctrl *controllerImpl) UserIsExist2(ctx *gin.Context) *rest.Response {
+	var model dtos.CreateUserRequest
+
+	if er := ctx.BindJSON(&model); er != nil {
+		return _response.GetError(http.StatusBadRequest, er.Error())
+	}
+
+	if m, er := ctrl.userService.UserIsExist2(model); er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	} else {
 		return _response.GetSuccess(http.StatusOK, m)

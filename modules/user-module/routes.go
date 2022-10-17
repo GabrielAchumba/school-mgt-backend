@@ -31,6 +31,8 @@ func (module *userModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker token.M
 	moduleRoute.POST("/resetpassword", serverHttp(module.controller.ResetPassword))
 	moduleRoute.POST("/create-admin", serverHttp(module.controller.RegisterAdminOrReferal))
 	moduleRoute.GET("/referals", serverHttp(module.controller.GetRerals))
+	moduleRoute.POST("/user-is-exist", serverHttp(module.controller.UserIsExist))
+	moduleRoute.POST("/user-is-exist2", serverHttp(module.controller.UserIsExist2))
 
 	moduleRoute.Use(middleware.AuthMiddleware(tokenMaker))
 	{

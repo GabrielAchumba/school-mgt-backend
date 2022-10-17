@@ -25,6 +25,8 @@ import (
 type UserService interface {
 	LoginUser(requestModel dtos.LoginUserRequest) (interface{}, error)
 	RegisterUser(userId string, requestModel dtos.CreateUserRequest) (interface{}, error)
+	UserIsExist(requestModel dtos.CreateUserRequest) (interface{}, error)
+	UserIsExist2(requestModel dtos.CreateUserRequest) (interface{}, error)
 	RegisterAdminOrReferal(model dtos.CreateUserRequest) (interface{}, error)
 	GetUsers(schoolId string) ([]dtos.UserResponse, error)
 	GetUser(id string, schoolId string) (dtos.UserResponse, error)
@@ -217,6 +219,80 @@ func (impl serviceImpl) RegisterAdminOrReferal(model dtos.CreateUserRequest) (in
 	}
 	log.Print("Call to register admin completed.")
 	return modelObj, er
+}
+
+func (impl serviceImpl) UserIsExist(requestModel dtos.CreateUserRequest) (interface{}, error) {
+
+	log.Print("UserIsExist started.")
+
+	var modelObj models.User
+	conversion.Convert(requestModel, &modelObj)
+
+	modelObj.CreatedAt = time.Now()
+
+	if modelObj.UserName == "" {
+		return nil, errors.Error("UserName cannot be empty.")
+	}
+	if modelObj.Password == "" {
+		return nil, errors.Error("Password cannot be empty.")
+	}
+	if modelObj.FirstName == "" {
+		return nil, errors.Error("FirstName cannot be empty.")
+	}
+	if modelObj.LastName == "" {
+		return nil, errors.Error("LastName cannot be empty.")
+	}
+
+	er := modelObj.HashPassword()
+	if er != nil {
+		return nil, er
+	}
+
+	filter := bson.D{bson.E{Key: "username", Value: modelObj.UserName}}
+	count, err := impl.collection.CountDocuments(impl.ctx, filter)
+	if err != nil {
+		return nil, err //exception.Error("Checking if title exist.")
+	}
+	if count > 0 {
+		return true, nil
+	}
+
+	log.Print("UserIsExist completed.")
+	return false, er
+}
+
+func (impl serviceImpl) UserIsExist2(requestModel dtos.CreateUserRequest) (interface{}, error) {
+
+	log.Print("UserIsExist2 started.")
+
+	var modelObj models.User
+	conversion.Convert(requestModel, &modelObj)
+
+	modelObj.CreatedAt = time.Now()
+
+	if modelObj.UserName == "" {
+		return nil, errors.Error("UserName cannot be empty.")
+	}
+	if modelObj.PhoneNumber == "" {
+		return nil, errors.Error("PhoneNumber cannot be empty.")
+	}
+	if modelObj.CountryCode == "" {
+		return nil, errors.Error("CountryCode cannot be empty.")
+	}
+
+	filter := bson.D{bson.E{Key: "username", Value: modelObj.UserName},
+		bson.E{Key: "phonenumber", Value: modelObj.PhoneNumber},
+		bson.E{Key: "countrycode", Value: modelObj.CountryCode}}
+	count, err := impl.collection.CountDocuments(impl.ctx, filter)
+	if err != nil {
+		return nil, err //exception.Error("Checking if title exist.")
+	}
+	if count > 0 {
+		return true, nil
+	}
+
+	log.Print("UserIsExist2 completed.")
+	return false, err
 }
 
 func (impl serviceImpl) DeleteUser(id string, schoolId string) (int64, error) {
@@ -558,37 +634,38 @@ func (impl serviceImpl) ResetPassword(userCredential dtos.ResetPasswordInput) (s
 		return "Error", er
 	}
 
-	resetToken := userCredential.ResetToken
+	//resetToken := userCredential.ResetToken
 
 	var user models.User
 	filter := bson.D{bson.E{Key: "username", Value: userCredential.UserName}}
 	err := impl.collection.FindOne(impl.ctx, filter).Decode(&user)
 
 	if err != nil {
-		return "Error", errors.Error("Could not upadte adminstrator's details")
+		return "Error", errors.Error("Could not upadte user's password")
 	}
 
-	passwordResetToken, err := utils.Decode(user.PasswordResetToken)
+	/* 	passwordResetToken, err := utils.Decode(user.PasswordResetToken)
 
-	if err != nil {
-		return "Error", errors.Error("Invalid or expired token")
-	}
+	   	if err != nil {
+	   		return "Error", errors.Error("Invalid or expired token")
+	   	}
 
-	if passwordResetToken != resetToken {
-		return "Error", errors.Error("Invalid or expired token")
-	}
+	   	if passwordResetToken != resetToken {
+	   		return "Error", errors.Error("Invalid or expired token")
+	   	}
 
-	now := time.Now()
-	if now.Sub(user.PasswordResetAt).Minutes() > 10 {
-		return "Error", errors.Error("Toke life expired. Please generate another one")
-	}
+	   	now := time.Now()
+	   	if now.Sub(user.PasswordResetAt).Minutes() > 10 {
+	   		return "Error", errors.Error("Toke life expired. Please generate another one")
+	   	} */
 
 	// Update User in Database
 	query := bson.D{{Key: "username", Value: userCredential.UserName}}
 	update := bson.D{{Key: "$set", Value: bson.D{
-		bson.E{Key: "password", Value: modelObj.Password},
-		bson.E{Key: "passwordresettoken", Value: ""},
-		bson.E{Key: "passwordresetat", Value: now}}}}
+		bson.E{Key: "password", Value: modelObj.Password}}}}
+
+	/* bson.E{Key: "passwordresettoken", Value: ""},
+	bson.E{Key: "passwordresetat", Value: now} */
 
 	_, err = impl.collection.UpdateOne(impl.ctx, query, update)
 
