@@ -30,6 +30,6 @@ func (module *AssessmentModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker t
 		moduleRoute.PUT("/:id", serverHttp(module.controller.PutAssessment))
 		moduleRoute.GET("/:schoolId", serverHttp(module.controller.GetAssessments))
 		//moduleRoute.GET("/:id", serverHttp(module.controller.GetAssessment))
-		moduleRoute.DELETE("/:id", serverHttp(module.controller.DeleteAssessment))
+		moduleRoute.DELETE("/:id/:schoolId", serverHttp(module.controller.DeleteAssessment))
 	}
 }

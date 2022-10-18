@@ -29,6 +29,6 @@ func (module *PaymentModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker toke
 		moduleRoute.POST("/create", serverHttp(module.controller.CreatePayment))
 		moduleRoute.GET("/:schoolId", serverHttp(module.controller.GetPayments))
 		//moduleRoute.GET("/:id", serverHttp(module.controller.GetPayment))
-		moduleRoute.DELETE("/:id", serverHttp(module.controller.DeletePayment))
+		moduleRoute.DELETE("/:id/:schoolId", serverHttp(module.controller.DeletePayment))
 	}
 }

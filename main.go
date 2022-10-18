@@ -116,6 +116,9 @@ func main() {
 	_staffService := staffService.New(mongoClient, configSettings, ctx)
 	staffmodule.InjectService(_staffService).RegisterRoutes(apiBaseName, tokenMaker)
 
+	_schoolService := schoolService.New(mongoClient, configSettings, ctx)
+	schoolmodule.InjectService(_schoolService).RegisterRoutes(apiBaseName, tokenMaker)
+
 	_userService := userService.New(mongoClient, configSettings, ctx, tokenMaker, emailData,
 		_staffService)
 	usermodule.InjectService(_userService).RegisterRoutes(apiBaseName, tokenMaker)
@@ -131,9 +134,6 @@ func main() {
 
 	_assessmentService := assessmentService.New(mongoClient, configSettings, ctx)
 	assessmentmodule.InjectService(_assessmentService).RegisterRoutes(apiBaseName, tokenMaker)
-
-	_schoolService := schoolService.New(mongoClient, configSettings, ctx)
-	schoolmodule.InjectService(_schoolService).RegisterRoutes(apiBaseName, tokenMaker)
 
 	_paymentService := paymentService.New(mongoClient, configSettings, ctx)
 	paymentmodule.InjectService(_paymentService).RegisterRoutes(apiBaseName, tokenMaker)

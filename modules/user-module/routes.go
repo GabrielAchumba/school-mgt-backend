@@ -42,7 +42,7 @@ func (module *userModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker token.M
 		moduleRoute.GET("/:schoolId", serverHttp(module.controller.GetUsers))
 		//moduleRoute.GET("/:id", serverHttp(module.controller.GetUser))
 		moduleRoute.GET("category/:category/:schoolId", serverHttp(module.controller.GetUsersByCategory))
-		moduleRoute.DELETE("/:id", serverHttp(module.controller.DeleteUser))
+		moduleRoute.DELETE("/:id/:schoolId", serverHttp(module.controller.DeleteUser))
 		moduleRoute.POST("/registeradministrator", serverHttp(module.controller.RegisterUser))
 		moduleRoute.PUT("/updateadministratordto/:id", serverHttp(module.controller.UpdateAdminDTO))
 		moduleRoute.POST("/uploadphoto", serverHttp(module.controller.UploadPhoto))

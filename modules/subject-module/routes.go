@@ -30,6 +30,6 @@ func (module *SubjectModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker toke
 		moduleRoute.PUT("/:id", serverHttp(module.controller.PutSubject))
 		moduleRoute.GET("/:schoolId", serverHttp(module.controller.GetSubjects))
 		//moduleRoute.GET("/:id", serverHttp(module.controller.GetSubject))
-		moduleRoute.DELETE("/:id", serverHttp(module.controller.DeleteSubject))
+		moduleRoute.DELETE("/:id/:schoolId", serverHttp(module.controller.DeleteSubject))
 	}
 }
