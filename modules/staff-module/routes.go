@@ -1,4 +1,4 @@
-package Usermodule
+package staffmodule
 
 import (
 	"github.com/GabrielAchumba/school-mgt-backend/common/rest"

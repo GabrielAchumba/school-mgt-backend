@@ -2,7 +2,10 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"math/rand"
+	"strconv"
 	"time"
 
 	"github.com/GabrielAchumba/school-mgt-backend/common/config"
@@ -17,7 +20,7 @@ import (
 type PaymentService interface {
 	CreatePayment(userId string, requestModel dtos.CreatePaymentRequest) (interface{}, error)
 	DeletePayment(id string, schoolId string) (int64, error)
-	GetPayment(id string, schoolId string) (dtos.PaymentResponse, error)
+	GetPayment(schoolId string) (dtos.PaymentResponse, error)
 	GetPayments(schoolId string) ([]dtos.PaymentResponse, error)
 }
 
@@ -56,14 +59,12 @@ func (impl serviceImpl) DeletePayment(id string, schoolId string) (int64, error)
 	return result.DeletedCount, nil
 }
 
-func (impl serviceImpl) GetPayment(id string, schoolId string) (dtos.PaymentResponse, error) {
+func (impl serviceImpl) GetPayment(schoolId string) (dtos.PaymentResponse, error) {
 
 	log.Print("Get Type of Payment called")
-	objId := conversion.GetMongoId(id)
 	var Payment dtos.PaymentResponse
 
-	filter := bson.D{bson.E{Key: "_id", Value: objId},
-		bson.E{Key: "schoolid", Value: schoolId}}
+	filter := bson.D{bson.E{Key: "schoolid", Value: schoolId}}
 
 	err := impl.collection.FindOne(impl.ctx, filter).Decode(&Payment)
 	if err != nil {
@@ -106,21 +107,34 @@ func (impl serviceImpl) CreatePayment(userId string, model dtos.CreatePaymentReq
 
 	log.Print("Call to create Payment started.")
 
-	var modelObj []models.Payment
-	var documents []interface{}
-	conversion.Convert(model.CreatePayments, &modelObj)
+	var modelObj models.Payment
+	conversion.Convert(model, &modelObj)
 
-	for i := 0; i < len(modelObj); i++ {
-		modelObj[i].CreatedBy = userId
-		modelObj[i].CreatedAt = time.Now()
+	modelObj.CreatedBy = userId
+	modelObj.CreatedAt = time.Now()
+	hours := modelObj.CreatedAt.Hour()
+	minutes := modelObj.CreatedAt.Minute()
+	seconds := modelObj.CreatedAt.Second()
+	modelObj.CreatedTime = strconv.Itoa(hours) + ":" + strconv.Itoa(minutes) + ":" + strconv.Itoa(seconds)
+	modelObj.PaymentStatus.Value = "PENDING"
+	modelObj.PaymentMessage.Value = "Please wait for our administartion team to verify and approve your payment. It takes less than 24 hours. Thanks"
+	min := 1234567
+	max := 123456789
+	modelObj.ReceiptNo.Value = strconv.Itoa(rand.Intn(max-min) + min)
 
-		documents = append(documents, modelObj[i])
+	filter := bson.D{bson.E{Key: "schoolid", Value: modelObj.SchoolId}}
+	count, err := impl.collection.CountDocuments(impl.ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	if count > 0 {
+		return nil, errors.Error(fmt.Sprintf("Subscription already exist."))
 	}
 
-	_, er := impl.collection.InsertMany(impl.ctx, documents)
+	_, er := impl.collection.InsertOne(impl.ctx, modelObj)
 	if er != nil {
-		return nil, errors.Error("Error in creating Payments.")
+		return nil, errors.Error("Error in creating Payment.")
 	}
-	log.Print("Call to create Payments completed.")
+	log.Print("Call to create Payment completed.")
 	return modelObj, er
 }

@@ -1,4 +1,4 @@
-package Usermodule
+package paymentmodule
 
 import (
 	"github.com/GabrielAchumba/school-mgt-backend/common/rest"
@@ -26,9 +26,10 @@ func (module *PaymentModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker toke
 
 	moduleRoute.Use(middleware.AuthMiddleware(tokenMaker))
 	{
+		moduleRoute.POST("/uploadphoto", serverHttp(module.controller.UploadPhoto))
 		moduleRoute.POST("/create", serverHttp(module.controller.CreatePayment))
-		moduleRoute.GET("/:schoolId", serverHttp(module.controller.GetPayments))
-		//moduleRoute.GET("/:id", serverHttp(module.controller.GetPayment))
+		//moduleRoute.GET("/:schoolId", serverHttp(module.controller.GetPayments))
+		moduleRoute.GET("/:schoolId", serverHttp(module.controller.GetPayment))
 		moduleRoute.DELETE("/:id/:schoolId", serverHttp(module.controller.DeletePayment))
 	}
 }

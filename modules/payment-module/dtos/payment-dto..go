@@ -1,36 +1,82 @@
 package dtos
 
-import "time"
+import (
+	"time"
+
+	"github.com/GabrielAchumba/school-mgt-backend/modules/payment-module/models"
+)
 
 type CreatePaymentRequest struct {
-	CreatePayments []CreatePayment `json:"createPayments" binding:"required"`
-}
-
-type CreatePayment struct {
-	SchoolId     string `json:"schoolId" binding:"required"`
-	Message      string `json:"message" binding:"required"`
-	Reference    string `json:"reference" binding:"required"`
-	Status       string `json:"status" binding:"required"`
-	Trans        string `json:"trans" binding:"required"`
-	Transactions string `json:"transactions" binding:"required"`
-	Trxref       string `json:"trxref" binding:"required"`
-	TotalAmount  string `json:"totalAmount" binding:"required"`
+	SchoolId                     string              `json:"schoolId"`
+	Message                      string              `json:"message"`
+	Reference                    string              `json:"reference"`
+	Status                       string              `json:"status"`
+	Trans                        string              `json:"trans"`
+	Transactions                 string              `json:"transactions"`
+	Trxref                       string              `json:"trxref"`
+	ResultSubscription           models.Subscription `json:"resultSubscription"`
+	ExamsAndQuizSubscription     models.Subscription `json:"examsAndQuizSubscription"`
+	FileManagementSubscription   models.Subscription `json:"fileManagementSubscription"`
+	AppCustomizationSubscription models.Subscription `json:"appCustomizationSubscription"`
+	OnLineLearningSubscription   models.Subscription `json:"onLineLearningSubscription"`
+	AllSubscriptions             models.Subscription `json:"allSubscriptions"`
+	PaymentStatus                models.Subscription `json:"paymentStatus"`
+	PaymentMessage               models.Subscription `json:"paymentMessage"`
+	ReceiptNo                    models.Subscription `json:"receiptNo"`
+	BankNamePaidFrom             string              `json:"bankNamePaidFrom"`
+	AccountNamePaidFrom          string              `json:"accountNamePaidFrom"`
+	AccountNumberPaidFrom        string              `json:"accountNumberPaidFrom"`
+	Base64String                 string              `json:"base64String"`
+	FileName                     string              `json:"fileName"`
 }
 
 type UpdatePaymentRequest struct {
-	UpdatePayments []CreatePayment `json:"createPayments" binding:"required"`
+	SchoolId                     string              `json:"schoolId"`
+	Message                      string              `json:"message"`
+	Reference                    string              `json:"reference"`
+	Status                       string              `json:"status"`
+	Trans                        string              `json:"trans"`
+	Transactions                 string              `json:"transactions"`
+	Trxref                       string              `json:"trxref"`
+	ResultSubscription           models.Subscription `json:"resultSubscription"`
+	ExamsAndQuizSubscription     models.Subscription `json:"examsAndQuizSubscription"`
+	FileManagementSubscription   models.Subscription `json:"fileManagementSubscription"`
+	AppCustomizationSubscription models.Subscription `json:"appCustomizationSubscription"`
+	OnLineLearningSubscription   models.Subscription `json:"onLineLearningSubscription"`
+	AllSubscriptions             models.Subscription `json:"allSubscriptions"`
+	PaymentStatus                models.Subscription `json:"paymentStatus"`
+	PaymentMessage               models.Subscription `json:"paymentMessage"`
+	ReceiptNo                    models.Subscription `json:"receiptNo"`
+	BankNamePaidFrom             string              `json:"bankNamePaidFrom"`
+	AccountNamePaidFrom          string              `json:"accountNamePaidFrom"`
+	AccountNumberPaidFrom        string              `json:"accountNumberPaidFrom"`
+	Base64String                 string              `json:"base64String"`
+	FileName                     string              `json:"fileName"`
 }
 
 type PaymentResponse struct {
-	Id           string    `json:"id"  bson:"_id"`
-	CreatedAt    time.Time `json:"createdAt"`
-	CreatedBy    string    `json:"createdBy"`
-	SchoolId     string    `json:"schoolId" binding:"required"`
-	Message      string    `json:"message" binding:"required"`
-	Reference    string    `json:"reference" binding:"required"`
-	Status       string    `json:"status" binding:"required"`
-	Trans        string    `json:"trans" binding:"required"`
-	Transactions string    `json:"transactions" binding:"required"`
-	Trxref       string    `json:"trxref" binding:"required"`
-	TotalAmount  string    `json:"totalAmount" binding:"required"`
+	Id                           string              `json:"id"  bson:"_id"`
+	CreatedAt                    time.Time           `json:"createdAt"`
+	CreatedBy                    string              `json:"createdBy"`
+	SchoolId                     string              `json:"schoolId"`
+	Message                      string              `json:"message"`
+	Reference                    string              `json:"reference"`
+	Status                       string              `json:"status"`
+	Trans                        string              `json:"trans"`
+	Transactions                 string              `json:"transactions"`
+	Trxref                       string              `json:"trxref"`
+	ResultSubscription           models.Subscription `json:"resultSubscription"`
+	ExamsAndQuizSubscription     models.Subscription `json:"examsAndQuizSubscription"`
+	FileManagementSubscription   models.Subscription `json:"fileManagementSubscription"`
+	AppCustomizationSubscription models.Subscription `json:"appCustomizationSubscription"`
+	OnLineLearningSubscription   models.Subscription `json:"onLineLearningSubscription"`
+	AllSubscriptions             models.Subscription `json:"allSubscriptions"`
+	PaymentStatus                models.Subscription `json:"paymentStatus"`
+	PaymentMessage               models.Subscription `json:"paymentMessage"`
+	ReceiptNo                    models.Subscription `json:"receiptNo"`
+	BankNamePaidFrom             string              `json:"bankNamePaidFrom"`
+	AccountNamePaidFrom          string              `json:"accountNamePaidFrom"`
+	AccountNumberPaidFrom        string              `json:"accountNumberPaidFrom"`
+	Base64String                 string              `json:"base64String"`
+	FileName                     string              `json:"fileName"`
 }
