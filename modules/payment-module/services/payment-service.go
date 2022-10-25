@@ -21,7 +21,9 @@ type PaymentService interface {
 	CreatePayment(userId string, requestModel dtos.CreatePaymentRequest) (interface{}, error)
 	DeletePayment(id string, schoolId string) (int64, error)
 	GetPayment(schoolId string) (dtos.PaymentResponse, error)
-	GetPayments(schoolId string) ([]dtos.PaymentResponse, error)
+	GetPendingPayments() ([]dtos.PaymentResponse, error)
+	CheckResultSubscription(schoolId string) (bool, error)
+	PutPayment(id string) (interface{}, error)
 }
 
 type serviceImpl struct {
@@ -76,12 +78,52 @@ func (impl serviceImpl) GetPayment(schoolId string) (dtos.PaymentResponse, error
 
 }
 
-func (impl serviceImpl) GetPayments(schoolId string) ([]dtos.PaymentResponse, error) {
+func (impl serviceImpl) CheckResultSubscription(schoolId string) (bool, error) {
 
-	log.Print("Call to get all types of Payment started.")
+	log.Print("CheckResultSubscriptioncalled")
+	var Payment dtos.PaymentResponse
+
+	filter := bson.D{bson.E{Key: "schoolid", Value: schoolId}}
+
+	err := impl.collection.FindOne(impl.ctx, filter).Decode(&Payment)
+	if err != nil {
+		return false, errors.Error("You have not subscribed for result analysis")
+	}
+
+	if Payment.PaymentStatus.Value == "PENDING" {
+		return false, errors.Error("Subscription is yet to be approved")
+	}
+
+	check := true
+	today := time.Now()
+
+	days := today.Sub(Payment.CreatedAt).Hours() / 24
+	switch Payment.ResultSubscription.Variable {
+	case "Results Analysis (90 Days)":
+		if days > 90 {
+			check = false
+		}
+	case "Results Analysis (180 Days)":
+		if days > 180 {
+			check = false
+		}
+	case "Results Analysis (360 Days)":
+		if days > 360 {
+			check = false
+		}
+	}
+
+	log.Print("CheckResultSubscription completed")
+	return check, err
+
+}
+
+func (impl serviceImpl) GetPendingPayments() ([]dtos.PaymentResponse, error) {
+
+	log.Print("GetPendingPayments started.")
 
 	var Payments []dtos.PaymentResponse
-	filter := bson.D{bson.E{Key: "schoolid", Value: schoolId}}
+	filter := bson.D{}
 	cur, err := impl.collection.Find(impl.ctx, filter)
 
 	if err != nil {
@@ -99,8 +141,15 @@ func (impl serviceImpl) GetPayments(schoolId string) ([]dtos.PaymentResponse, er
 		Payments = make([]dtos.PaymentResponse, 0)
 	}
 
-	log.Print("Call to get all types of Payment completed.")
-	return Payments, err
+	pendingPayments := make([]dtos.PaymentResponse, 0)
+	for _, payment := range Payments {
+		if payment.PaymentStatus.Value == "PENDING" {
+			pendingPayments = append(pendingPayments, payment)
+		}
+	}
+
+	log.Print("GetPendingPayments completed.")
+	return pendingPayments, err
 }
 
 func (impl serviceImpl) CreatePayment(userId string, model dtos.CreatePaymentRequest) (interface{}, error) {
@@ -137,4 +186,24 @@ func (impl serviceImpl) CreatePayment(userId string, model dtos.CreatePaymentReq
 	}
 	log.Print("Call to create Payment completed.")
 	return modelObj, er
+}
+
+func (impl serviceImpl) PutPayment(id string) (interface{}, error) {
+
+	log.Print("PutPayment started")
+	objId := conversion.GetMongoId(id)
+	filter := bson.D{bson.E{Key: "_id", Value: objId}}
+	var modelObj models.Payment
+	modelObj.CreatedAt = time.Now()
+
+	update := bson.D{bson.E{Key: "paymentstatus.value", Value: "APPROVED"},
+		bson.E{Key: "createdat", Value: modelObj.CreatedAt}}
+	_, err := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
+
+	if err != nil {
+		return modelObj, errors.Error("Could not upadte type of staff")
+	}
+
+	log.Print("PutStaff completed")
+	return modelObj, nil
 }

@@ -8,6 +8,7 @@ import (
 
 type CreatePaymentRequest struct {
 	SchoolId                     string              `json:"schoolId"`
+	StudentIds                   []string            `json:"studentIds"`
 	Message                      string              `json:"message"`
 	Reference                    string              `json:"reference"`
 	Status                       string              `json:"status"`
@@ -32,6 +33,7 @@ type CreatePaymentRequest struct {
 
 type UpdatePaymentRequest struct {
 	SchoolId                     string              `json:"schoolId"`
+	StudentIds                   []string            `json:"studentIds"`
 	Message                      string              `json:"message"`
 	Reference                    string              `json:"reference"`
 	Status                       string              `json:"status"`
@@ -59,6 +61,7 @@ type PaymentResponse struct {
 	CreatedAt                    time.Time           `json:"createdAt"`
 	CreatedBy                    string              `json:"createdBy"`
 	SchoolId                     string              `json:"schoolId"`
+	StudentIds                   []string            `json:"studentIds"`
 	Message                      string              `json:"message"`
 	Reference                    string              `json:"reference"`
 	Status                       string              `json:"status"`

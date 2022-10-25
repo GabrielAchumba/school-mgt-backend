@@ -14,6 +14,7 @@ type Payment struct {
 	CreatedBy                    string       `json:"createdBy"`
 	CreatedTime                  string       `json:"createdTime"`
 	SchoolId                     string       `json:"schoolId"`
+	StudentIds                   []string     `json:"studentIds"`
 	Message                      string       `json:"message"`
 	Reference                    string       `json:"reference"`
 	Status                       string       `json:"status"`

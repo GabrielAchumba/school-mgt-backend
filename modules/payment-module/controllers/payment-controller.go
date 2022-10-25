@@ -19,7 +19,9 @@ type PaymentController interface {
 	CreatePayment(ctx *gin.Context) *rest.Response
 	DeletePayment(ctx *gin.Context) *rest.Response
 	GetPayment(ctx *gin.Context) *rest.Response
-	GetPayments(ctx *gin.Context) *rest.Response
+	GetPendingPayments(ctx *gin.Context) *rest.Response
+	CheckResultSubscription(ctx *gin.Context) *rest.Response
+	PutPayment(ctx *gin.Context) *rest.Response
 }
 
 type ImageName struct {
@@ -154,12 +156,35 @@ func (ctrl *controllerImpl) GetPayment(ctx *gin.Context) *rest.Response {
 	return _response.GetSuccess(http.StatusOK, m)
 }
 
-func (ctrl *controllerImpl) GetPayments(ctx *gin.Context) *rest.Response {
+func (ctrl *controllerImpl) GetPendingPayments(ctx *gin.Context) *rest.Response {
 
-	schoolId := ctx.Param("schoolId")
-	m, er := ctrl.PaymentService.GetPayments(schoolId)
+	m, er := ctrl.PaymentService.GetPendingPayments()
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}
 	return _response.GetSuccess(http.StatusOK, m)
+}
+
+func (ctrl *controllerImpl) CheckResultSubscription(ctx *gin.Context) *rest.Response {
+	schoolId := ctx.Param("schoolId")
+
+	m, er := ctrl.PaymentService.CheckResultSubscription(schoolId)
+	if er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	}
+	return _response.GetSuccess(http.StatusOK, m)
+}
+
+func (ctrl *controllerImpl) PutPayment(ctx *gin.Context) *rest.Response {
+	id := ctx.Param("id")
+	var model dtos.UpdatePaymentRequest
+	if er := ctx.BindJSON(&model); er != nil {
+		return _response.GetError(http.StatusBadRequest, er.Error())
+	}
+
+	if m, er := ctrl.PaymentService.PutPayment(id); er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	} else {
+		return _response.GetSuccess(http.StatusOK, m)
+	}
 }

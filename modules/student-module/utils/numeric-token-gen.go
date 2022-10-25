@@ -4,7 +4,7 @@ import "math/rand"
 
 type NumericTokenGenerator interface {
 	isToken(tokens []int, newToken int) bool
-	generateToken(tokens []int) int
+	GenerateToken(tokens []int) int
 }
 
 type implService struct {
@@ -27,9 +27,9 @@ func (impl implService) isToken(tokens []int, newToken int) bool {
 	return check
 }
 
-func (impl implService) generateToken(tokens []int) int {
+func (impl implService) GenerateToken(tokens []int) int {
 
-	min := 1234567
+	min := 12345
 	max := 123456789
 
 	for {

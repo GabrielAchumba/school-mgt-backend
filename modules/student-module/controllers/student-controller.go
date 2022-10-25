@@ -18,6 +18,7 @@ type StudentController interface {
 	GetStudent(ctx *gin.Context) *rest.Response
 	GetStudents(ctx *gin.Context) *rest.Response
 	PutStudent(ctx *gin.Context) *rest.Response
+	GenerateTokens(ctx *gin.Context) *rest.Response
 }
 
 type controllerImpl struct {
@@ -91,6 +92,20 @@ func (ctrl *controllerImpl) PutStudent(ctx *gin.Context) *rest.Response {
 	}
 
 	if m, er := ctrl.StudentService.PutStudent(id, model); er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	} else {
+		return _response.GetSuccess(http.StatusOK, m)
+	}
+}
+
+func (ctrl *controllerImpl) GenerateTokens(ctx *gin.Context) *rest.Response {
+	var model dtos.UpdateStudentRequest
+
+	if er := ctx.BindJSON(&model); er != nil {
+		return _response.GetError(http.StatusBadRequest, er.Error())
+	}
+
+	if m, er := ctrl.StudentService.GenerateTokens(model.StudentIds); er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	} else {
 		return _response.GetSuccess(http.StatusOK, m)

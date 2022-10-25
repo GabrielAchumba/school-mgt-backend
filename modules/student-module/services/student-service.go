@@ -25,6 +25,7 @@ type StudentService interface {
 	GetStudents(schoolId string) ([]dtos.StudentResponse, error)
 	PutStudent(id string, item dtos.UpdateStudentRequest) (interface{}, error)
 	GetSelecedStudents(Ids []string) ([]dtos.StudentResponse, error)
+	GenerateTokens(studentIds []string) (interface{}, error)
 }
 
 type serviceImpl struct {
@@ -209,9 +210,9 @@ func (impl serviceImpl) PutStudent(id string, User dtos.UpdateStudentRequest) (i
 	return modelObj, nil
 }
 
-func (impl serviceImpl) Payment(studentIds []string) (interface{}, error) {
+func (impl serviceImpl) GenerateTokens(studentIds []string) (interface{}, error) {
 
-	log.Print("Payment started")
+	log.Print("GenerateTokens started")
 
 	objIds := make([]primitive.ObjectID, 0)
 	for _, studentId := range studentIds {
@@ -227,19 +228,26 @@ func (impl serviceImpl) Payment(studentIds []string) (interface{}, error) {
 		schoolIds = append(schoolIds, selectedStudent.SchoolId)
 	}
 
-	filter := bson.D{bson.E{Key: "_id", Value: bson.D{bson.E{Key: "$in", Value: objIds}}}}
+	//filter := bson.D{bson.E{Key: "_id", Value: bson.D{bson.E{Key: "$in", Value: objIds}}}
 	var modelObj models.Student
 	CreatedSubscriptionDate := time.Now()
-
-	update := bson.D{bson.E{Key: "createdsubscriptiondate", Value: CreatedSubscriptionDate},
-		bson.E{Key: "schoolid", Value: bson.D{bson.E{Key: "$in", Value: schoolIds}}},
-		bson.E{Key: "token", Value: bson.D{bson.E{Key: "$in", Value: tokens}}}}
-	_, err := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
-
-	if err != nil {
-		return modelObj, errors.Error("Could not upadte student")
+	newTokens := make([]int, 0)
+	for i := 0; i < len(selectedStudents); i++ {
+		newTokens = append(newTokens, impl.utils.GenerateToken(tokens))
+		filter := bson.D{bson.E{Key: "_id", Value: objIds[i]}}
+		update := bson.D{bson.E{Key: "createdsubscriptiondate", Value: CreatedSubscriptionDate},
+			bson.E{Key: "schoolid", Value: schoolIds[i]},
+			bson.E{Key: "token", Value: newTokens[i]}}
+		_, err := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
+		if err != nil {
+			return modelObj, errors.Error("Could not upadte students")
+		}
 	}
 
-	log.Print("Payment completed")
+	/* update := bson.D{bson.E{Key: "createdsubscriptiondate", Value: CreatedSubscriptionDate},
+	bson.E{Key: "schoolid", Value: bson.D{bson.E{Key: "$in", Value: schoolIds}}},
+	bson.E{Key: "token", Value: bson.D{bson.E{Key: "$in", Value: newTokens}}}} */
+
+	log.Print("GenerateTokens completed")
 	return modelObj, nil
 }
