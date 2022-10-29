@@ -20,7 +20,7 @@ type PaymentController interface {
 	DeletePayment(ctx *gin.Context) *rest.Response
 	GetPayment(ctx *gin.Context) *rest.Response
 	GetPendingPayments(ctx *gin.Context) *rest.Response
-	CheckResultSubscription(ctx *gin.Context) *rest.Response
+	CheckSubscription(ctx *gin.Context) *rest.Response
 	PutPayment(ctx *gin.Context) *rest.Response
 }
 
@@ -165,10 +165,10 @@ func (ctrl *controllerImpl) GetPendingPayments(ctx *gin.Context) *rest.Response 
 	return _response.GetSuccess(http.StatusOK, m)
 }
 
-func (ctrl *controllerImpl) CheckResultSubscription(ctx *gin.Context) *rest.Response {
+func (ctrl *controllerImpl) CheckSubscription(ctx *gin.Context) *rest.Response {
 	schoolId := ctx.Param("schoolId")
 
-	m, er := ctrl.PaymentService.CheckResultSubscription(schoolId)
+	m, er := ctrl.PaymentService.CheckSubscription(schoolId)
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}

@@ -31,7 +31,7 @@ func (module *PaymentModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker toke
 		moduleRoute.PUT("/:id", serverHttp(module.controller.PutPayment))
 		moduleRoute.GET("pending-payments", serverHttp(module.controller.GetPendingPayments))
 		moduleRoute.GET("/:schoolId", serverHttp(module.controller.GetPayment))
-		moduleRoute.GET("check-results-subscription/:schoolId", serverHttp(module.controller.CheckResultSubscription))
+		moduleRoute.GET("check-results-subscription/:schoolId", serverHttp(module.controller.CheckSubscription))
 		moduleRoute.DELETE("/:id/:schoolId", serverHttp(module.controller.DeletePayment))
 	}
 }

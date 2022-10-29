@@ -22,7 +22,7 @@ type PaymentService interface {
 	DeletePayment(id string, schoolId string) (int64, error)
 	GetPayment(schoolId string) (dtos.PaymentResponse, error)
 	GetPendingPayments() ([]dtos.PaymentResponse, error)
-	CheckResultSubscription(schoolId string) (bool, error)
+	CheckSubscription(schoolId string) (dtos.CheckSubscription, error)
 	PutPayment(id string) (interface{}, error)
 }
 
@@ -78,43 +78,133 @@ func (impl serviceImpl) GetPayment(schoolId string) (dtos.PaymentResponse, error
 
 }
 
-func (impl serviceImpl) CheckResultSubscription(schoolId string) (bool, error) {
+func (impl serviceImpl) CheckSubscription(schoolId string) (dtos.CheckSubscription, error) {
 
-	log.Print("CheckResultSubscriptioncalled")
+	log.Print("CheckSubscription called")
 	var Payment dtos.PaymentResponse
+	var CheckSubscription dtos.CheckSubscription = dtos.CheckSubscription{
+		IsResultsAnalysis: false,
+		IsFileManagement:  false,
+		IsAdvertizement:   false,
+		IsExamsQuiz:       false,
+		IsOnlineLearning:  false,
+	}
 
 	filter := bson.D{bson.E{Key: "schoolid", Value: schoolId}}
 
 	err := impl.collection.FindOne(impl.ctx, filter).Decode(&Payment)
 	if err != nil {
-		return false, errors.Error("You have not subscribed for result analysis")
+		return CheckSubscription, errors.Error("You have not subscribed for paid features")
 	}
 
 	if Payment.PaymentStatus.Value == "PENDING" {
-		return false, errors.Error("Subscription is yet to be approved")
+		return CheckSubscription, errors.Error("Subscription is yet to be approved")
 	}
 
-	check := true
-	today := time.Now()
+	CheckSubscription.IsAdvertizement = true
+	CheckSubscription.IsExamsQuiz = true
+	CheckSubscription.IsFileManagement = true
+	CheckSubscription.IsOnlineLearning = true
+	CheckSubscription.IsResultsAnalysis = true
 
+	today := time.Now()
 	days := today.Sub(Payment.CreatedAt).Hours() / 24
+
 	switch Payment.ResultSubscription.Variable {
 	case "Results Analysis (90 Days)":
 		if days > 90 {
-			check = false
+			CheckSubscription.IsResultsAnalysis = false
 		}
 	case "Results Analysis (180 Days)":
 		if days > 180 {
-			check = false
+			CheckSubscription.IsResultsAnalysis = false
 		}
 	case "Results Analysis (360 Days)":
 		if days > 360 {
-			check = false
+			CheckSubscription.IsResultsAnalysis = false
 		}
 	}
 
-	log.Print("CheckResultSubscription completed")
-	return check, err
+	switch Payment.FileManagementSubscription.Variable {
+	case "File Management 10GB (Quaterly)":
+		if days > 90 {
+			CheckSubscription.IsFileManagement = false
+		}
+	case "File Management 20GB (Quaterly)":
+		if days > 90 {
+			CheckSubscription.IsFileManagement = false
+		}
+	case "File Management 80GB (Quaterly)":
+		if days > 90 {
+			CheckSubscription.IsFileManagement = false
+		}
+	case "File Management 10GB (Semi-Annually)":
+		if days > 180 {
+			CheckSubscription.IsFileManagement = false
+		}
+	case "File Management 20GB (Semi-Annually)":
+		if days > 180 {
+			CheckSubscription.IsFileManagement = false
+		}
+	case "File Management 80GB (Semi-Annually)":
+		if days > 180 {
+			CheckSubscription.IsFileManagement = false
+		}
+	case "File Management 10GB (Annually)":
+		if days > 360 {
+			CheckSubscription.IsFileManagement = false
+		}
+	case "File Management 20GB (Annually)":
+		if days > 360 {
+			CheckSubscription.IsFileManagement = false
+		}
+	case "File Management 80GB (Annually)":
+		if days > 360 {
+			CheckSubscription.IsFileManagement = false
+		}
+	}
+
+	switch Payment.AppCustomizationSubscription.Variable {
+	case "App Customization 10GB (Quaterly)":
+		if days > 90 {
+			CheckSubscription.IsAdvertizement = false
+		}
+	case "App Customization 20GB (Quaterly)":
+		if days > 90 {
+			CheckSubscription.IsAdvertizement = false
+		}
+	case "App Customization 80GB (Quaterly)":
+		if days > 90 {
+			CheckSubscription.IsAdvertizement = false
+		}
+	case "App Customization 10GB (Semi-Annually)":
+		if days > 180 {
+			CheckSubscription.IsAdvertizement = false
+		}
+	case "App Customization 20GB (Semi-Annually)":
+		if days > 180 {
+			CheckSubscription.IsAdvertizement = false
+		}
+	case "App Customization 80GB (Semi-Annually)":
+		if days > 180 {
+			CheckSubscription.IsAdvertizement = false
+		}
+	case "App Customization 10GB (Annually)":
+		if days > 360 {
+			CheckSubscription.IsAdvertizement = false
+		}
+	case "App Customization 20GB (Annually)":
+		if days > 360 {
+			CheckSubscription.IsAdvertizement = false
+		}
+	case "App Customization 80GB (Annually)":
+		if days > 360 {
+			CheckSubscription.IsAdvertizement = false
+		}
+	}
+
+	log.Print("CheckSubscription completed")
+	return CheckSubscription, err
 
 }
 

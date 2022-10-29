@@ -83,3 +83,11 @@ type PaymentResponse struct {
 	Base64String                 string              `json:"base64String"`
 	FileName                     string              `json:"fileName"`
 }
+
+type CheckSubscription struct {
+	IsResultsAnalysis bool `json:"isResultsAnalysis"`
+	IsFileManagement  bool `json:"isFileManagement"`
+	IsAdvertizement   bool `json:"isAdvertizement"`
+	IsExamsQuiz       bool `json:"isExamsQuiz"`
+	IsOnlineLearning  bool `json:"isOnlineLearning"`
+}
