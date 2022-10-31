@@ -26,6 +26,7 @@ type StudentService interface {
 	PutStudent(id string, item dtos.UpdateStudentRequest) (interface{}, error)
 	GetSelecedStudents(Ids []string) ([]dtos.StudentResponse, error)
 	GenerateTokens(studentIds []string) (interface{}, error)
+	GetStudentByToken(token int, schoolId string) (dtos.StudentResponse, error)
 }
 
 type serviceImpl struct {
@@ -63,6 +64,24 @@ func (impl serviceImpl) DeleteStudent(id string, schoolId string) (int64, error)
 
 	log.Print("Call to delete type of student by id completed.")
 	return result.DeletedCount, nil
+}
+
+func (impl serviceImpl) GetStudentByToken(token int, schoolId string) (dtos.StudentResponse, error) {
+
+	log.Print("GetStudentByToken called")
+	var Student dtos.StudentResponse
+
+	filter := bson.D{bson.E{Key: "token", Value: token},
+		bson.E{Key: "schoolid", Value: schoolId}}
+
+	err := impl.collection.FindOne(impl.ctx, filter).Decode(&Student)
+	if err != nil {
+		return Student, errors.Error("could not find type of student by token")
+	}
+
+	log.Print("GetStudentByToken completed")
+	return Student, err
+
 }
 
 func (impl serviceImpl) GetStudent(id string, schoolId string) (dtos.StudentResponse, error) {

@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/GabrielAchumba/school-mgt-backend/authentication/middleware"
 	"github.com/GabrielAchumba/school-mgt-backend/common/rest"
@@ -19,6 +20,7 @@ type StudentController interface {
 	GetStudents(ctx *gin.Context) *rest.Response
 	PutStudent(ctx *gin.Context) *rest.Response
 	GenerateTokens(ctx *gin.Context) *rest.Response
+	GetStudentByToken(ctx *gin.Context) *rest.Response
 }
 
 type controllerImpl struct {
@@ -67,6 +69,17 @@ func (ctrl *controllerImpl) GetStudent(ctx *gin.Context) *rest.Response {
 	schoolId := ctx.Param("schoolId")
 
 	m, er := ctrl.StudentService.GetStudent(id, schoolId)
+	if er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	}
+	return _response.GetSuccess(http.StatusOK, m)
+}
+
+func (ctrl *controllerImpl) GetStudentByToken(ctx *gin.Context) *rest.Response {
+	token, _ := strconv.Atoi(ctx.Param("token"))
+	schoolId := ctx.Param("schoolId")
+
+	m, er := ctrl.StudentService.GetStudentByToken(token, schoolId)
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}
