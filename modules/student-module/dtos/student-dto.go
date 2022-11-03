@@ -39,3 +39,9 @@ type StudentResponse struct {
 	RemainingSubscriptionDays int       `json:"remainingSubscriptionDays"`
 	SchoolId                  string    `json:"schoolId"`
 }
+
+type LoginStudentResponse struct {
+	Token     string          `json:"token"`
+	ExpiresAt time.Time       `json:"expiresAt"`
+	User      StudentResponse `json:"user"`
+}

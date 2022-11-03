@@ -123,7 +123,7 @@ func main() {
 		_staffService)
 	usermodule.InjectService(_userService).RegisterRoutes(apiBaseName, tokenMaker)
 
-	_studentService := studentService.New(mongoClient, configSettings, ctx)
+	_studentService := studentService.New(mongoClient, configSettings, ctx, tokenMaker)
 	studentmodule.InjectService(_studentService).RegisterRoutes(apiBaseName, tokenMaker)
 
 	_subjectService := subjectService.New(mongoClient, configSettings, ctx)

@@ -24,7 +24,7 @@ func (module *StudentModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker toke
 	moduleRoute := rg.Group("/student")
 	serverHttp := rest.ServeHTTP
 
-	moduleRoute.GET("/get/:token/:schoolId", serverHttp(module.controller.GetStudentByToken))
+	moduleRoute.GET("/loginstudent/:token/:schoolId", serverHttp(module.controller.LogInStudent))
 
 	moduleRoute.Use(middleware.AuthMiddleware(tokenMaker))
 	{
@@ -32,6 +32,7 @@ func (module *StudentModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker toke
 		moduleRoute.POST("/generatetokens", serverHttp(module.controller.GenerateTokens))
 		moduleRoute.PUT("/:id", serverHttp(module.controller.PutStudent))
 		moduleRoute.GET("/:schoolId", serverHttp(module.controller.GetStudents))
+		moduleRoute.GET("/get/:token/:schoolId", serverHttp(module.controller.GetStudentByToken))
 		//moduleRoute.GET("/:id", serverHttp(module.controller.GetStudent))
 		moduleRoute.DELETE("/:id/:schoolId", serverHttp(module.controller.DeleteStudent))
 	}

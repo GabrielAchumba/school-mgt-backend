@@ -21,6 +21,7 @@ type StudentController interface {
 	PutStudent(ctx *gin.Context) *rest.Response
 	GenerateTokens(ctx *gin.Context) *rest.Response
 	GetStudentByToken(ctx *gin.Context) *rest.Response
+	LogInStudent(ctx *gin.Context) *rest.Response
 }
 
 type controllerImpl struct {
@@ -69,6 +70,17 @@ func (ctrl *controllerImpl) GetStudent(ctx *gin.Context) *rest.Response {
 	schoolId := ctx.Param("schoolId")
 
 	m, er := ctrl.StudentService.GetStudent(id, schoolId)
+	if er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	}
+	return _response.GetSuccess(http.StatusOK, m)
+}
+
+func (ctrl *controllerImpl) LogInStudent(ctx *gin.Context) *rest.Response {
+	token, _ := strconv.Atoi(ctx.Param("token"))
+	schoolId := ctx.Param("schoolId")
+
+	m, er := ctrl.StudentService.LogInStudent(token, schoolId)
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}

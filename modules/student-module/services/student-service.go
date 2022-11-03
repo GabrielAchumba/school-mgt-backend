@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/GabrielAchumba/school-mgt-backend/authentication/token"
 	"github.com/GabrielAchumba/school-mgt-backend/common/config"
 	"github.com/GabrielAchumba/school-mgt-backend/common/conversion"
 	errors "github.com/GabrielAchumba/school-mgt-backend/common/errors"
@@ -27,21 +29,25 @@ type StudentService interface {
 	GetSelecedStudents(Ids []string) ([]dtos.StudentResponse, error)
 	GenerateTokens(studentIds []string) (interface{}, error)
 	GetStudentByToken(token int, schoolId string) (dtos.StudentResponse, error)
+	LogInStudent(token int, schoolId string) (dtos.LoginStudentResponse, error)
 }
 
 type serviceImpl struct {
 	ctx        context.Context
 	collection *mongo.Collection
 	utils      utils.NumericTokenGenerator
+	tokenMaker token.Maker
 }
 
-func New(mongoClient *mongo.Client, config config.Settings, ctx context.Context) StudentService {
+func New(mongoClient *mongo.Client, config config.Settings, ctx context.Context,
+	tokenMaker token.Maker) StudentService {
 	collection := mongoClient.Database(config.Database.DatabaseName).Collection(config.TableNames.Student)
 
 	return &serviceImpl{
 		collection: collection,
 		ctx:        ctx,
 		utils:      utils.New(),
+		tokenMaker: tokenMaker,
 	}
 }
 
@@ -84,6 +90,41 @@ func (impl serviceImpl) GetStudentByToken(token int, schoolId string) (dtos.Stud
 
 }
 
+func (impl serviceImpl) LogInStudent(token int, schoolId string) (dtos.LoginStudentResponse, error) {
+
+	var Student dtos.StudentResponse
+
+	filter := bson.D{bson.E{Key: "token", Value: token},
+		bson.E{Key: "schoolid", Value: schoolId}}
+
+	err := impl.collection.FindOne(impl.ctx, filter).Decode(&Student)
+	if err != nil {
+		return dtos.LoginStudentResponse{}, errors.Error("could not find type of student by token")
+	}
+
+	accessToken, accessPayload, accessError := impl.tokenMaker.CreateToken(Student.Id, strconv.Itoa(token))
+	if accessError != nil {
+		return dtos.LoginStudentResponse{}, errors.Error("Internal server error.")
+	}
+
+	rsp := dtos.LoginStudentResponse{
+		Token:     accessToken,
+		ExpiresAt: accessPayload.ExpiredAt,
+		User: dtos.StudentResponse{
+			Id:        Student.Id,
+			FirstName: Student.FirstName,
+			LastName:  Student.LastName,
+			UserType:  Student.UserType,
+			CreatedAt: Student.CreatedAt,
+			SchoolId:  Student.SchoolId,
+			Token:     token,
+		},
+	}
+
+	log.Print("Get type of student completed")
+	return rsp, err
+}
+
 func (impl serviceImpl) GetStudent(id string, schoolId string) (dtos.StudentResponse, error) {
 
 	log.Print("Get Type of Student called")
@@ -100,7 +141,6 @@ func (impl serviceImpl) GetStudent(id string, schoolId string) (dtos.StudentResp
 
 	log.Print("Get type of student completed")
 	return Student, err
-
 }
 
 func (impl serviceImpl) GetStudents(schoolId string) ([]dtos.StudentResponse, error) {
