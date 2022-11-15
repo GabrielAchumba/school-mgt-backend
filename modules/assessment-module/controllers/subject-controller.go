@@ -14,6 +14,7 @@ var _response rest.Response
 
 type AssessmentController interface {
 	CreateAssessment(ctx *gin.Context) *rest.Response
+	CreateAssessments(ctx *gin.Context) *rest.Response
 	DeleteAssessment(ctx *gin.Context) *rest.Response
 	GetAssessment(ctx *gin.Context) *rest.Response
 	GetAssessments(ctx *gin.Context) *rest.Response
@@ -44,6 +45,26 @@ func (ctrl *controllerImpl) CreateAssessment(ctx *gin.Context) *rest.Response {
 	}
 
 	if m, er := ctrl.AssessmentService.CreateAssessment(userId, model); er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	} else {
+		return _response.GetSuccess(http.StatusOK, m)
+	}
+}
+
+func (ctrl *controllerImpl) CreateAssessments(ctx *gin.Context) *rest.Response {
+	var models []dtos.CreateAssessmentRequest
+
+	if er := ctx.BindJSON(&models); er != nil {
+		return _response.GetError(http.StatusBadRequest, er.Error())
+	}
+
+	payload, _ := middleware.GetAuthorizationPayload(ctx)
+	var userId string = payload.UserId
+	if userId == "" {
+		return _response.NotAuthorized()
+	}
+
+	if m, er := ctrl.AssessmentService.CreateAssessments(userId, models); er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	} else {
 		return _response.GetSuccess(http.StatusOK, m)

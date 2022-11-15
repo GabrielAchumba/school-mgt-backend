@@ -5,12 +5,14 @@ import "time"
 type CreateAssessmentRequest struct {
 	Type       string  `json:"type" binding:"required"`
 	Percentage float64 `json:"percentage" binding:"required"`
+	SubjectId  string  `json:"subjectId"`
 	SchoolId   string  `json:"schoolId" binding:"required"`
 }
 
 type UpdateAssessmentRequest struct {
 	Type       string  `json:"type" binding:"required"`
 	Percentage float64 `json:"percentage" binding:"required"`
+	SubjectId  string  `json:"subjectId"`
 	SchoolId   string  `json:"schoolId" binding:"required"`
 }
 
@@ -19,6 +21,7 @@ type AssessmentResponse struct {
 	CreatedAt  time.Time `json:"createdAt"`
 	CreatedBy  string    `json:"createdBy"`
 	Type       string    `json:"type" binding:"required"`
+	SubjectId  string    `json:"subjectId"`
 	Percentage float64   `json:"percentage" binding:"required"`
 	SchoolId   string    `json:"schoolId" binding:"required"`
 }

@@ -27,6 +27,7 @@ func (module *staffModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker token.
 	moduleRoute.Use(middleware.AuthMiddleware(tokenMaker))
 	{
 		moduleRoute.POST("/create", serverHttp(module.controller.CreateStaff))
+		moduleRoute.POST("/createmany", serverHttp(module.controller.CreateManyStaff))
 		moduleRoute.PUT("/:id", serverHttp(module.controller.PutStaff))
 		moduleRoute.GET("/:schoolId", serverHttp(module.controller.GetStaffs))
 		//moduleRoute.GET("/:id", serverHttp(module.controller.GetStaff))

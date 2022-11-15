@@ -17,6 +17,7 @@ var _response rest.Response
 
 type UserController interface {
 	RegisterUser(ctx *gin.Context) *rest.Response
+	RegisterUsers(ctx *gin.Context) *rest.Response
 	RegisterAdminOrReferal(ctx *gin.Context) *rest.Response
 	UserIsExist(ctx *gin.Context) *rest.Response
 	UserIsExist2(ctx *gin.Context) *rest.Response
@@ -77,6 +78,26 @@ func (ctrl *controllerImpl) RegisterUser(ctx *gin.Context) *rest.Response {
 	}
 
 	if m, er := ctrl.userService.RegisterUser(userId, model); er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	} else {
+		return _response.GetSuccess(http.StatusOK, m)
+	}
+}
+
+func (ctrl *controllerImpl) RegisterUsers(ctx *gin.Context) *rest.Response {
+	var model []dtos.CreateUserRequest
+
+	if er := ctx.BindJSON(&model); er != nil {
+		return _response.GetError(http.StatusBadRequest, er.Error())
+	}
+
+	payload, _ := middleware.GetAuthorizationPayload(ctx)
+	var userId string = payload.UserId
+	if userId == "" {
+		return _response.NotAuthorized()
+	}
+
+	if m, er := ctrl.userService.RegisterUsers(userId, model); er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	} else {
 		return _response.GetSuccess(http.StatusOK, m)

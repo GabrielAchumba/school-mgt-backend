@@ -17,6 +17,7 @@ import (
 
 type AssessmentService interface {
 	CreateAssessment(userId string, requestModel dtos.CreateAssessmentRequest) (interface{}, error)
+	CreateAssessments(userId string, requestModel []dtos.CreateAssessmentRequest) (interface{}, error)
 	DeleteAssessment(id string, schoolId string) (int64, error)
 	GetAssessment(id string, schoolId string) (dtos.AssessmentResponse, error)
 	GetAssessments(schoolId string) ([]dtos.AssessmentResponse, error)
@@ -119,6 +120,7 @@ func (impl serviceImpl) CreateAssessment(userId string, model dtos.CreateAssessm
 	}
 
 	filter := bson.D{bson.E{Key: "type", Value: modelObj.Type},
+		bson.E{Key: "subjectid", Value: modelObj.SubjectId},
 		bson.E{Key: "schoolid", Value: modelObj.SchoolId}}
 	count, err := impl.collection.CountDocuments(impl.ctx, filter)
 	if err != nil {
@@ -135,6 +137,27 @@ func (impl serviceImpl) CreateAssessment(userId string, model dtos.CreateAssessm
 	return modelObj, er
 }
 
+func (impl serviceImpl) CreateAssessments(userId string, _models []dtos.CreateAssessmentRequest) (interface{}, error) {
+
+	log.Print("Call to create assessments started.")
+
+	modelObjs := make([]interface{}, 0)
+	for _, model := range _models {
+		var modelObj models.Assessment
+		modelObj.CreatedBy = userId
+		modelObj.CreatedAt = time.Now()
+		conversion.Convert(model, &modelObj)
+		modelObjs = append(modelObjs, modelObj)
+	}
+
+	_, er := impl.collection.InsertMany(impl.ctx, modelObjs)
+	if er != nil {
+		return nil, errors.Error("Error in creating assessments.")
+	}
+	log.Print("Call to create assessments completed.")
+	return modelObjs, er
+}
+
 func (impl serviceImpl) PutAssessment(id string, User dtos.UpdateAssessmentRequest) (interface{}, error) {
 
 	log.Print("PutAssessment started")
@@ -147,6 +170,7 @@ func (impl serviceImpl) PutAssessment(id string, User dtos.UpdateAssessmentReque
 
 	update := bson.D{bson.E{Key: "type", Value: updatedAssessment.Type},
 		bson.E{Key: "percentage", Value: updatedAssessment.Percentage},
+		bson.E{Key: "subjectid", Value: updatedAssessment.SubjectId},
 		bson.E{Key: "schoolid", Value: updatedAssessment.SchoolId}}
 	_, err := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
 

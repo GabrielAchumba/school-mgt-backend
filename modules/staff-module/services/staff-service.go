@@ -17,6 +17,7 @@ import (
 
 type StaffService interface {
 	CreateStaff(userId string, requestModel dtos.CreateStaffRequest) (interface{}, error)
+	CreateManyStaff(userId string, _models []dtos.CreateStaffRequest) (interface{}, error)
 	DeleteStaff(id string, schoolId string) (int64, error)
 	GetStaff(id string, schoolId string) (dtos.StaffResponse, error)
 	GetStaffs(schoolId string) ([]dtos.StaffResponse, error)
@@ -132,6 +133,27 @@ func (impl serviceImpl) CreateStaff(userId string, model dtos.CreateStaffRequest
 	}
 	log.Print("Call to create staff completed.")
 	return modelObj, er
+}
+
+func (impl serviceImpl) CreateManyStaff(userId string, _models []dtos.CreateStaffRequest) (interface{}, error) {
+
+	log.Print("Call to create many staff started.")
+
+	modelObjs := make([]interface{}, 0)
+	for _, model := range _models {
+		var modelObj models.Staff
+		modelObj.CreatedBy = userId
+		modelObj.CreatedAt = time.Now()
+		conversion.Convert(model, &modelObj)
+		modelObjs = append(modelObjs, modelObj)
+	}
+
+	_, er := impl.collection.InsertMany(impl.ctx, modelObjs)
+	if er != nil {
+		return nil, errors.Error("Error in creating many staff.")
+	}
+	log.Print("Call to create many staff completed.")
+	return modelObjs, er
 }
 
 func (impl serviceImpl) PutStaff(id string, item dtos.UpdateStaffRequest) (interface{}, error) {

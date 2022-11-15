@@ -14,6 +14,7 @@ var _response rest.Response
 
 type StaffController interface {
 	CreateStaff(ctx *gin.Context) *rest.Response
+	CreateManyStaff(ctx *gin.Context) *rest.Response
 	DeleteStaff(ctx *gin.Context) *rest.Response
 	GetStaff(ctx *gin.Context) *rest.Response
 	GetStaffs(ctx *gin.Context) *rest.Response
@@ -44,6 +45,26 @@ func (ctrl *controllerImpl) CreateStaff(ctx *gin.Context) *rest.Response {
 	}
 
 	if m, er := ctrl.staffService.CreateStaff(userId, model); er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	} else {
+		return _response.GetSuccess(http.StatusOK, m)
+	}
+}
+
+func (ctrl *controllerImpl) CreateManyStaff(ctx *gin.Context) *rest.Response {
+	var model []dtos.CreateStaffRequest
+
+	if er := ctx.BindJSON(&model); er != nil {
+		return _response.GetError(http.StatusBadRequest, er.Error())
+	}
+
+	payload, _ := middleware.GetAuthorizationPayload(ctx)
+	var userId string = payload.UserId
+	if userId == "" {
+		return _response.NotAuthorized()
+	}
+
+	if m, er := ctrl.staffService.CreateManyStaff(userId, model); er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	} else {
 		return _response.GetSuccess(http.StatusOK, m)

@@ -17,6 +17,7 @@ import (
 
 type ClassRoomService interface {
 	CreateClassRoom(userId string, requestModel dtos.CreateClassRoomRequest) (interface{}, error)
+	CreateClassRooms(userId string, _models []dtos.CreateClassRoomRequest) (interface{}, error)
 	DeleteClassRoom(id string, schoolId string) (int64, error)
 	GetClassRoom(id string, schoolId string) (dtos.ClassRoomResponse, error)
 	GetClassRooms(schoolId string) ([]dtos.ClassRoomResponse, error)
@@ -133,6 +134,27 @@ func (impl serviceImpl) CreateClassRoom(userId string, model dtos.CreateClassRoo
 	}
 	log.Print("Call to create ClassRoom completed.")
 	return modelObj, er
+}
+
+func (impl serviceImpl) CreateClassRooms(userId string, _models []dtos.CreateClassRoomRequest) (interface{}, error) {
+
+	log.Print("Call to create class rooms started.")
+
+	modelObjs := make([]interface{}, 0)
+	for _, model := range _models {
+		var modelObj models.ClassRoom
+		modelObj.CreatedBy = userId
+		modelObj.CreatedAt = time.Now()
+		conversion.Convert(model, &modelObj)
+		modelObjs = append(modelObjs, modelObj)
+	}
+
+	_, er := impl.collection.InsertMany(impl.ctx, modelObjs)
+	if er != nil {
+		return nil, errors.Error("Error in creating class rooms.")
+	}
+	log.Print("Call to create class rooms completed.")
+	return modelObjs, er
 }
 
 func (impl serviceImpl) PutClassRoom(id string, item dtos.UpdateClassRoomRequest) (interface{}, error) {

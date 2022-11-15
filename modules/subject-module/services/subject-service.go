@@ -17,6 +17,7 @@ import (
 
 type SubjectService interface {
 	CreateSubject(userId string, requestModel dtos.CreateSubjectRequest) (interface{}, error)
+	CreateSubjects(userId string, _models []dtos.CreateSubjectRequest) (interface{}, error)
 	DeleteSubject(id string, schoolId string) (int64, error)
 	GetSubject(id string, schoolId string) (dtos.SubjectResponse, error)
 	GetSubjects(schoolId string) ([]dtos.SubjectResponse, error)
@@ -133,6 +134,27 @@ func (impl serviceImpl) CreateSubject(userId string, model dtos.CreateSubjectReq
 	}
 	log.Print("Call to create Subject completed.")
 	return modelObj, er
+}
+
+func (impl serviceImpl) CreateSubjects(userId string, _models []dtos.CreateSubjectRequest) (interface{}, error) {
+
+	log.Print("Call to create subjects started.")
+
+	modelObjs := make([]interface{}, 0)
+	for _, model := range _models {
+		var modelObj models.Subject
+		modelObj.CreatedBy = userId
+		modelObj.CreatedAt = time.Now()
+		conversion.Convert(model, &modelObj)
+		modelObjs = append(modelObjs, modelObj)
+	}
+
+	_, er := impl.collection.InsertMany(impl.ctx, modelObjs)
+	if er != nil {
+		return nil, errors.Error("Error in creating subjects.")
+	}
+	log.Print("Call to create subjects completed.")
+	return modelObjs, er
 }
 
 func (impl serviceImpl) PutSubject(id string, User dtos.UpdateSubjectRequest) (interface{}, error) {

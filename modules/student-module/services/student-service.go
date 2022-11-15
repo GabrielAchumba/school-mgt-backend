@@ -22,6 +22,7 @@ import (
 
 type StudentService interface {
 	CreateStudent(userId string, requestModel dtos.CreateStudentRequest) (interface{}, error)
+	CreateStudents(userId string, _models []dtos.CreateStudentRequest) (interface{}, error)
 	DeleteStudent(id string, schoolId string) (int64, error)
 	GetStudent(id string, schoolId string) (dtos.StudentResponse, error)
 	GetStudents(schoolId string) ([]dtos.StudentResponse, error)
@@ -239,6 +240,27 @@ func (impl serviceImpl) CreateStudent(userId string, model dtos.CreateStudentReq
 	}
 	log.Print("Call to create student completed.")
 	return modelObj, er
+}
+
+func (impl serviceImpl) CreateStudents(userId string, _models []dtos.CreateStudentRequest) (interface{}, error) {
+
+	log.Print("Call to create students started.")
+
+	modelObjs := make([]interface{}, 0)
+	for _, model := range _models {
+		var modelObj models.Student
+		modelObj.CreatedBy = userId
+		modelObj.CreatedAt = time.Now()
+		conversion.Convert(model, &modelObj)
+		modelObjs = append(modelObjs, modelObj)
+	}
+
+	_, er := impl.collection.InsertMany(impl.ctx, modelObjs)
+	if er != nil {
+		return nil, errors.Error("Error in creating students.")
+	}
+	log.Print("Call to create students completed.")
+	return modelObjs, er
 }
 
 func (impl serviceImpl) PutStudent(id string, User dtos.UpdateStudentRequest) (interface{}, error) {

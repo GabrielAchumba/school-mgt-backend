@@ -27,6 +27,7 @@ func (module *SubjectModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker toke
 	moduleRoute.Use(middleware.AuthMiddleware(tokenMaker))
 	{
 		moduleRoute.POST("/create", serverHttp(module.controller.CreateSubject))
+		moduleRoute.POST("/createmany", serverHttp(module.controller.CreateSubjects))
 		moduleRoute.PUT("/:id", serverHttp(module.controller.PutSubject))
 		moduleRoute.GET("/:schoolId", serverHttp(module.controller.GetSubjects))
 		//moduleRoute.GET("/:id", serverHttp(module.controller.GetSubject))

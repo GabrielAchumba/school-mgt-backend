@@ -25,6 +25,7 @@ import (
 type UserService interface {
 	LoginUser(requestModel dtos.LoginUserRequest) (interface{}, error)
 	RegisterUser(userId string, requestModel dtos.CreateUserRequest) (interface{}, error)
+	RegisterUsers(userId string, requestModel []dtos.CreateUserRequest) (interface{}, error)
 	UserIsExist(requestModel dtos.CreateUserRequest) (interface{}, error)
 	UserIsExist2(requestModel dtos.CreateUserRequest) (interface{}, error)
 	RegisterAdminOrReferal(model dtos.CreateUserRequest) (interface{}, error)
@@ -176,6 +177,50 @@ func (impl serviceImpl) RegisterUser(userId string, model dtos.CreateUserRequest
 	}
 	log.Print("Call to register user completed.")
 	return modelObj, er
+}
+
+func (impl serviceImpl) RegisterUsers(userId string, _models []dtos.CreateUserRequest) (interface{}, error) {
+
+	log.Print("Call to create users started.")
+
+	usernames := make([]string, 0)
+	var Users []dtos.UserResponse
+	for _, model := range _models {
+		usernames = append(usernames, model.UserName)
+	}
+
+	filter := bson.D{bson.E{Key: "username", Value: bson.E{Key: "$in", Value: usernames}}}
+
+	cur, _ := impl.collection.Find(impl.ctx, filter)
+
+	_ = cur.All(impl.ctx, &Users)
+	cur.Close(impl.ctx)
+
+	modelObjs := make([]interface{}, 0)
+	for _, model := range _models {
+		var modelObj models.User
+		modelObj.CreatedBy = userId
+		modelObj.CreatedAt = time.Now()
+		check := false
+		for _, user := range Users {
+			if model.UserName == user.UserName {
+				check = true
+				break
+			}
+		}
+
+		if !check {
+			conversion.Convert(model, &modelObj)
+			modelObjs = append(modelObjs, modelObj)
+		}
+	}
+
+	_, er := impl.collection.InsertMany(impl.ctx, modelObjs)
+	if er != nil {
+		return nil, errors.Error("Error in creating users.")
+	}
+	log.Print("Call to create users completed.")
+	return modelObjs, er
 }
 
 func (impl serviceImpl) RegisterAdminOrReferal(model dtos.CreateUserRequest) (interface{}, error) {

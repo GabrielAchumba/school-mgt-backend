@@ -67,6 +67,11 @@ type GetResultsRequest struct {
 	TeacherId     string         `json:"teacherId"`
 	TeacherIds    []string       `json:"teacherIds"`
 	ClassRoomId   string         `json:"classRoomId"`
+	ClassRoomIds  string         `json:"classRoomIds"`
+	SessionId     string         `json:"sessionId"`
+	SessionIds    string         `json:"sessionIds"`
+	LevelId       string         `json:"levelId"`
+	LevelsIds     string         `json:"levelIds"`
 	AssessmentId  string         `json:"assessmentId"`
 	DesignationId string         `json:"designationId"`
 	RangeOfScores []RangeOfScore `json:"rangeOfScores"`
@@ -83,6 +88,8 @@ type AssesmentGroup struct {
 type SubJectResult struct {
 	Assessments  map[string]AssesmentGroup `json:"assessments"`
 	SubjectScore float64                   `json:"subjectScore"`
+	Grade        string                    `json:"grade"`
+	Point        float64                   `json:"point"`
 }
 
 type StudentResults struct {
@@ -90,6 +97,8 @@ type StudentResults struct {
 	FullName        string                   `json:"fullName"`
 	OverallScore    float64                  `json:"overallScore"`
 	OverallScoreMax float64                  `json:"overallScoreMax"`
+	CGPA            float64                  `json:"cGPA"`
+	CGPAMax         float64                  `json:"cGPAMax"`
 	Subjects        map[string]SubJectResult `json:"subjects"`
 }
 

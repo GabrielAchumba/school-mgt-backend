@@ -14,6 +14,7 @@ var _response rest.Response
 
 type ClassRoomController interface {
 	CreateClassRoom(ctx *gin.Context) *rest.Response
+	CreateClassRooms(ctx *gin.Context) *rest.Response
 	DeleteClassRoom(ctx *gin.Context) *rest.Response
 	GetClassRoom(ctx *gin.Context) *rest.Response
 	GetClassRooms(ctx *gin.Context) *rest.Response
@@ -44,6 +45,26 @@ func (ctrl *controllerImpl) CreateClassRoom(ctx *gin.Context) *rest.Response {
 	}
 
 	if m, er := ctrl.ClassRoomService.CreateClassRoom(userId, model); er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	} else {
+		return _response.GetSuccess(http.StatusOK, m)
+	}
+}
+
+func (ctrl *controllerImpl) CreateClassRooms(ctx *gin.Context) *rest.Response {
+	var model []dtos.CreateClassRoomRequest
+
+	if er := ctx.BindJSON(&model); er != nil {
+		return _response.GetError(http.StatusBadRequest, er.Error())
+	}
+
+	payload, _ := middleware.GetAuthorizationPayload(ctx)
+	var userId string = payload.UserId
+	if userId == "" {
+		return _response.NotAuthorized()
+	}
+
+	if m, er := ctrl.ClassRoomService.CreateClassRooms(userId, model); er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	} else {
 		return _response.GetSuccess(http.StatusOK, m)

@@ -27,6 +27,7 @@ func (module *ClassRoomModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker to
 	moduleRoute.Use(middleware.AuthMiddleware(tokenMaker))
 	{
 		moduleRoute.POST("/create", serverHttp(module.controller.CreateClassRoom))
+		moduleRoute.POST("/createmany", serverHttp(module.controller.CreateClassRooms))
 		moduleRoute.PUT("/:id", serverHttp(module.controller.PutClassRoom))
 		moduleRoute.GET("/:schoolId", serverHttp(module.controller.GetClassRooms))
 		//moduleRoute.GET("/:id", serverHttp(module.controller.GetClassRoom))

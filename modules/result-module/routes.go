@@ -27,13 +27,16 @@ func (module *ResultModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker token
 	moduleRoute.Use(middleware.AuthMiddleware(tokenMaker))
 	{
 		moduleRoute.POST("/create", serverHttp(module.controller.CreateResult))
+		moduleRoute.POST("/many", serverHttp(module.controller.CreateResults))
 		moduleRoute.PUT("/:id", serverHttp(module.controller.PutResult))
 		moduleRoute.GET("/:schoolId", serverHttp(module.controller.GetResults))
 		//moduleRoute.GET("/:id", serverHttp(module.controller.GetResult))
 		moduleRoute.DELETE("/:id/:schoolId", serverHttp(module.controller.DeleteResult))
 		moduleRoute.POST("/summarizedresult", serverHttp(module.controller.ComputeSummaryResults))
+		moduleRoute.POST("/summarizedresult2", serverHttp(module.controller.ComputeSummaryResults2))
 		moduleRoute.POST("/summarizedstudentsresult", serverHttp(module.controller.ComputeStudentsSummaryResults))
 		moduleRoute.POST("/summarizedstudentspositions", serverHttp(module.controller.SummaryStudentsPositions))
+		moduleRoute.POST("/summarizedstudentspositions2", serverHttp(module.controller.SummaryStudentsPositions2))
 		moduleRoute.POST("/summarizedstudentsresultbydate", serverHttp(module.controller.ComputeStudentsResultsByDateRange))
 	}
 

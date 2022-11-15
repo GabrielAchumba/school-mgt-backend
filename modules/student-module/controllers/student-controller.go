@@ -15,6 +15,7 @@ var _response rest.Response
 
 type StudentController interface {
 	CreateStudent(ctx *gin.Context) *rest.Response
+	CreateStudents(ctx *gin.Context) *rest.Response
 	DeleteStudent(ctx *gin.Context) *rest.Response
 	GetStudent(ctx *gin.Context) *rest.Response
 	GetStudents(ctx *gin.Context) *rest.Response
@@ -48,6 +49,26 @@ func (ctrl *controllerImpl) CreateStudent(ctx *gin.Context) *rest.Response {
 	}
 
 	if m, er := ctrl.StudentService.CreateStudent(userId, model); er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	} else {
+		return _response.GetSuccess(http.StatusOK, m)
+	}
+}
+
+func (ctrl *controllerImpl) CreateStudents(ctx *gin.Context) *rest.Response {
+	var model []dtos.CreateStudentRequest
+
+	if er := ctx.BindJSON(&model); er != nil {
+		return _response.GetError(http.StatusBadRequest, er.Error())
+	}
+
+	payload, _ := middleware.GetAuthorizationPayload(ctx)
+	var userId string = payload.UserId
+	if userId == "" {
+		return _response.NotAuthorized()
+	}
+
+	if m, er := ctrl.StudentService.CreateStudents(userId, model); er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	} else {
 		return _response.GetSuccess(http.StatusOK, m)

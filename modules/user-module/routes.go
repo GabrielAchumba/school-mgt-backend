@@ -37,6 +37,7 @@ func (module *userModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker token.M
 	moduleRoute.Use(middleware.AuthMiddleware(tokenMaker))
 	{
 		moduleRoute.POST("/create", serverHttp(module.controller.RegisterUser))
+		moduleRoute.POST("/createmany", serverHttp(module.controller.RegisterUsers))
 		moduleRoute.PUT("/:id", serverHttp(module.controller.PutUser))
 		moduleRoute.PUT("/update-referal/:id", serverHttp(module.controller.PutReferal))
 		moduleRoute.GET("/:schoolId", serverHttp(module.controller.GetUsers))

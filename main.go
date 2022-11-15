@@ -39,6 +39,18 @@ import (
 	paymentmodule "github.com/GabrielAchumba/school-mgt-backend/modules/payment-module"
 	paymentService "github.com/GabrielAchumba/school-mgt-backend/modules/payment-module/services"
 
+	sessionmodule "github.com/GabrielAchumba/school-mgt-backend/modules/session-module"
+	sessionService "github.com/GabrielAchumba/school-mgt-backend/modules/session-module/services"
+
+	grademodule "github.com/GabrielAchumba/school-mgt-backend/modules/grade-module"
+	gradeService "github.com/GabrielAchumba/school-mgt-backend/modules/grade-module/services"
+
+	levelmodule "github.com/GabrielAchumba/school-mgt-backend/modules/level-module"
+	levelService "github.com/GabrielAchumba/school-mgt-backend/modules/level-module/services"
+
+	competitionResultmodule "github.com/GabrielAchumba/school-mgt-backend/modules/competition-result-module"
+	competitionResultService "github.com/GabrielAchumba/school-mgt-backend/modules/competition-result-module/services"
+
 	"github.com/GabrielAchumba/school-mgt-backend/authentication/token"
 	"github.com/gin-gonic/gin"
 	cors "github.com/itsjamie/gin-cors"
@@ -138,10 +150,24 @@ func main() {
 	_paymentService := paymentService.New(mongoClient, configSettings, ctx)
 	paymentmodule.InjectService(_paymentService).RegisterRoutes(apiBaseName, tokenMaker)
 
+	_sessionService := sessionService.New(mongoClient, configSettings, ctx)
+	sessionmodule.InjectService(_sessionService).RegisterRoutes(apiBaseName, tokenMaker)
+
+	_gradeService := gradeService.New(mongoClient, configSettings, ctx)
+	grademodule.InjectService(_gradeService).RegisterRoutes(apiBaseName, tokenMaker)
+
+	_levelService := levelService.New(mongoClient, configSettings, ctx)
+	levelmodule.InjectService(_levelService).RegisterRoutes(apiBaseName, tokenMaker)
+
 	_resultService := resultService.New(mongoClient, configSettings, ctx, _userService,
 		_studentService, _subjectService, _classRoomService, _assessmentService,
-		_staffService)
+		_staffService, _sessionService, _gradeService, _levelService)
 	resultmodule.InjectService(_resultService).RegisterRoutes(apiBaseName, tokenMaker)
+
+	_competitionResultService := competitionResultService.New(mongoClient, configSettings, ctx, _userService,
+		_studentService, _subjectService, _classRoomService, _assessmentService,
+		_staffService, _sessionService, _gradeService, _levelService)
+	competitionResultmodule.InjectService(_competitionResultService).RegisterRoutes(apiBaseName, tokenMaker)
 
 	port := config.AppSettings.Server.Port
 

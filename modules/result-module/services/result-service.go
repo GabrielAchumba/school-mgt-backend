@@ -12,9 +12,13 @@ import (
 	errors "github.com/GabrielAchumba/school-mgt-backend/common/errors"
 	assessmentServicePackage "github.com/GabrielAchumba/school-mgt-backend/modules/assessment-module/services"
 	classRoomServicePackage "github.com/GabrielAchumba/school-mgt-backend/modules/classroom-module/services"
+	gradeDTOPackage "github.com/GabrielAchumba/school-mgt-backend/modules/grade-module/dtos"
+	gradeServicePackage "github.com/GabrielAchumba/school-mgt-backend/modules/grade-module/services"
+	levelServicePackage "github.com/GabrielAchumba/school-mgt-backend/modules/level-module/services"
 	"github.com/GabrielAchumba/school-mgt-backend/modules/result-module/dtos"
 	"github.com/GabrielAchumba/school-mgt-backend/modules/result-module/models"
 	"github.com/GabrielAchumba/school-mgt-backend/modules/result-module/utils"
+	sessionServicePackage "github.com/GabrielAchumba/school-mgt-backend/modules/session-module/services"
 	staffServicePackage "github.com/GabrielAchumba/school-mgt-backend/modules/staff-module/services"
 	studentServicePackage "github.com/GabrielAchumba/school-mgt-backend/modules/student-module/services"
 	subjectServicePackage "github.com/GabrielAchumba/school-mgt-backend/modules/subject-module/services"
@@ -25,13 +29,16 @@ import (
 
 type ResultService interface {
 	CreateResult(userId string, requestModel dtos.CreateResultRequest) (interface{}, error)
+	CreateResults(userId string, _models []dtos.CreateResultRequest) (interface{}, error)
 	DeleteResult(id string, schoolId string) (int64, error)
 	GetResult(id string, schoolId string) (dtos.ResultResponse, error)
 	GetResults(schoolId string) ([]dtos.ResultResponse, error)
 	PutResult(id string, item dtos.UpdateResultRequest) (interface{}, error)
 	ComputeSummaryResults(req dtos.GetResultsRequest) (interface{}, error)
+	ComputeSummaryResults2(req dtos.GetResultsRequest) (interface{}, error)
 	ComputeStudentsSummaryResults(req dtos.GetResultsRequest) (interface{}, error)
 	SummaryStudentsPositions(req dtos.GetResultsRequest) (interface{}, error)
+	SummaryStudentsPositions2(req dtos.GetResultsRequest) (interface{}, error)
 	ComputeStudentsResultsByDateRange(req dtos.GetResultsRequest) (interface{}, error)
 }
 
@@ -44,6 +51,9 @@ type serviceImpl struct {
 	classRoomService  classRoomServicePackage.ClassRoomService
 	assessmentService assessmentServicePackage.AssessmentService
 	staffService      staffServicePackage.StaffService
+	sessionService    sessionServicePackage.SessionService
+	gradeService      gradeServicePackage.GradeService
+	levelService      levelServicePackage.LevelService
 	resultUtils       utils.ResultUtils
 }
 
@@ -53,7 +63,10 @@ func New(mongoClient *mongo.Client, config config.Settings, ctx context.Context,
 	subjectService subjectServicePackage.SubjectService,
 	classRoomService classRoomServicePackage.ClassRoomService,
 	assessmentService assessmentServicePackage.AssessmentService,
-	staffService staffServicePackage.StaffService) ResultService {
+	staffService staffServicePackage.StaffService,
+	sessionService sessionServicePackage.SessionService,
+	gradeService gradeServicePackage.GradeService,
+	levelService levelServicePackage.LevelService) ResultService {
 	collection := mongoClient.Database(config.Database.DatabaseName).Collection(config.TableNames.Result)
 
 	return &serviceImpl{
@@ -65,6 +78,9 @@ func New(mongoClient *mongo.Client, config config.Settings, ctx context.Context,
 		classRoomService:  classRoomService,
 		assessmentService: assessmentService,
 		staffService:      staffService,
+		sessionService:    sessionService,
+		gradeService:      gradeService,
+		levelService:      levelService,
 		resultUtils:       utils.ResultUtilsImpl{},
 	}
 }
@@ -174,6 +190,7 @@ func (impl serviceImpl) ComputeSummaryResults(req dtos.GetResultsRequest) (inter
 
 	assessments, _ := impl.assessmentService.GetAssessments(req.SchoolId)
 	subjects, _ := impl.subjectService.GetSubjects(req.SchoolId)
+	grades, _ := impl.gradeService.GetGrades(req.SchoolId)
 
 	splitStartDte := strings.Split(req.StartDate, "/")
 	startDay, _ := strconv.Atoi(splitStartDte[2])
@@ -221,38 +238,144 @@ func (impl serviceImpl) ComputeSummaryResults(req dtos.GetResultsRequest) (inter
 		isSubject := false
 		subjectAssessments := make(map[string]dtos.AssesmentGroup, 0)
 		for _, assessment := range assessments {
-			var assessmentScore float64 = 0
-			var assessmentCounter float64 = 0
-			for _, Result := range Results {
-				if Result.AssessmentId == assessment.Id &&
-					Result.SubjectId == subject.Id {
-					if Result.ScoreMax > 0 {
-						assessmentScore = assessmentScore + (Result.Score / Result.ScoreMax)
-						assessmentCounter++
+
+			if subject.Id == assessment.SubjectId {
+
+				var assessmentScore float64 = 0
+				var assessmentCounter float64 = 0
+				for _, Result := range Results {
+					if Result.AssessmentId == assessment.Id &&
+						Result.SubjectId == subject.Id {
+						if Result.ScoreMax > 0 {
+							assessmentScore = assessmentScore + (Result.Score / Result.ScoreMax)
+							assessmentCounter++
+						}
 					}
 				}
-			}
 
-			if assessmentCounter > 0 {
-				var totalAssementScore float64 = (assessmentScore / assessmentCounter) * assessment.Percentage
-				subjectAssessments[assessment.Type] = dtos.AssesmentGroup{
-					AssessmentScore: totalAssementScore,
-					ScoreMax:        assessment.Percentage,
+				if assessmentCounter > 0 {
+					var totalAssementScore float64 = (assessmentScore / assessmentCounter) * assessment.Percentage
+					subjectAssessments[assessment.Type] = dtos.AssesmentGroup{
+						AssessmentScore: totalAssementScore,
+						ScoreMax:        assessment.Percentage,
+					}
+					subjectScore = subjectScore + totalAssementScore
+					isSubject = true
 				}
-				subjectScore = subjectScore + totalAssementScore
-				isSubject = true
+
 			}
 		}
 
 		if isSubject {
+			grade, point := gradeDTOPackage.GetGradeAndPoint(grades, subjectScore)
 			subjectsScores[subject.Type] = dtos.SubJectResult{
 				SubjectScore: subjectScore,
 				Assessments:  subjectAssessments,
+				Grade:        grade,
+				Point:        point,
 			}
 		}
 	}
 
 	log.Print("Call ComputeSummaryResults completed")
+	return subjectsScores, err
+
+}
+
+func (impl serviceImpl) ComputeSummaryResults2(req dtos.GetResultsRequest) (interface{}, error) {
+
+	log.Print("Call ComputeSummaryResults2 started")
+
+	assessments, _ := impl.assessmentService.GetAssessments(req.SchoolId)
+	subjects, _ := impl.subjectService.GetSubjects(req.SchoolId)
+	grades, _ := impl.gradeService.GetGrades(req.SchoolId)
+
+	splitStartDte := strings.Split(req.StartDate, "/")
+	startDay, _ := strconv.Atoi(splitStartDte[2])
+	startMonth, _ := strconv.Atoi(splitStartDte[1])
+	startYear, _ := strconv.Atoi(splitStartDte[0])
+
+	splitEndDate := strings.Split(req.EndDate, "/")
+	endDay, _ := strconv.Atoi(splitEndDate[2])
+	endMonth, _ := strconv.Atoi(splitEndDate[1])
+	endYear, _ := strconv.Atoi(splitEndDate[0])
+
+	startDate := time.Date(startYear, time.Month(startMonth), startDay, 1, 10, 30, 0, time.UTC)
+	endDate := time.Date(endYear, time.Month(endMonth), endDay, 1, 10, 30, 0, time.UTC)
+
+	var Results []dtos.ResultResponse
+	filter := bson.D{bson.E{Key: "createdat", Value: bson.D{bson.E{Key: "$gte", Value: startDate}}},
+		bson.E{Key: "createdat", Value: bson.D{bson.E{Key: "$lte", Value: endDate}}},
+		bson.E{Key: "subjectid", Value: bson.D{bson.E{Key: "$in", Value: req.SubjectIds}}},
+		bson.E{Key: "levelid", Value: req.LevelId},
+		bson.E{Key: "studentid", Value: req.StudentId},
+		bson.E{Key: "classroomid", Value: req.ClassRoomId},
+		bson.E{Key: "schoolid", Value: req.SchoolId}}
+
+	cur, err := impl.collection.Find(impl.ctx, filter)
+
+	if err != nil {
+		Results = make([]dtos.ResultResponse, 0)
+		return Results, errors.Error("Results not found!")
+	}
+
+	err = cur.All(impl.ctx, &Results)
+	if err != nil {
+		return Results, err
+	}
+
+	cur.Close(impl.ctx)
+	length := len(Results)
+	if length == 0 {
+		Results = make([]dtos.ResultResponse, 0)
+	}
+
+	subjectsScores := make(map[string]dtos.SubJectResult, 0)
+	for _, subject := range subjects {
+		var subjectScore float64 = 0
+		isSubject := false
+		subjectAssessments := make(map[string]dtos.AssesmentGroup, 0)
+		for _, assessment := range assessments {
+
+			if subject.Id == assessment.SubjectId {
+
+				var assessmentScore float64 = 0
+				var assessmentCounter float64 = 0
+				for _, Result := range Results {
+					if Result.AssessmentId == assessment.Id &&
+						Result.SubjectId == subject.Id {
+						if Result.ScoreMax > 0 {
+							assessmentScore = assessmentScore + (Result.Score / Result.ScoreMax)
+							assessmentCounter++
+						}
+					}
+				}
+
+				if assessmentCounter > 0 {
+					var totalAssementScore float64 = (assessmentScore / assessmentCounter) * assessment.Percentage
+					subjectAssessments[assessment.Type] = dtos.AssesmentGroup{
+						AssessmentScore: totalAssementScore,
+						ScoreMax:        assessment.Percentage,
+					}
+					subjectScore = subjectScore + totalAssementScore
+					isSubject = true
+				}
+
+			}
+		}
+
+		if isSubject {
+			grade, point := gradeDTOPackage.GetGradeAndPoint(grades, subjectScore)
+			subjectsScores[subject.Type] = dtos.SubJectResult{
+				SubjectScore: subjectScore,
+				Assessments:  subjectAssessments,
+				Grade:        grade,
+				Point:        point,
+			}
+		}
+	}
+
+	log.Print("Call ComputeSummaryResults2 completed")
 	return subjectsScores, err
 
 }
@@ -263,6 +386,7 @@ func (impl serviceImpl) SummaryStudentsPositions(req dtos.GetResultsRequest) (in
 
 	assessments, _ := impl.assessmentService.GetAssessments(req.SchoolId)
 	subjects, _ := impl.subjectService.GetSubjects(req.SchoolId)
+	grades, _ := impl.gradeService.GetGrades(req.SchoolId)
 
 	splitStartDte := strings.Split(req.StartDate, "/")
 	startDay, _ := strconv.Atoi(splitStartDte[2])
@@ -323,35 +447,167 @@ func (impl serviceImpl) SummaryStudentsPositions(req dtos.GetResultsRequest) (in
 			isSubject := false
 			subjectAssessments := make(map[string]dtos.AssesmentGroup, 0)
 			for _, assessment := range assessments {
-				var assessmentScore float64 = 0
-				var assessmentCounter float64 = 0
-				for _, Result := range grouppedStudent {
-					if Result.AssessmentId == assessment.Id &&
-						Result.SubjectId == subject.Id {
-						if Result.ScoreMax > 0 {
-							assessmentScore = assessmentScore + (Result.Score / Result.ScoreMax)
-							assessmentCounter++
+
+				if subject.Id == assessment.SubjectId {
+
+					var assessmentScore float64 = 0
+					var assessmentCounter float64 = 0
+					for _, Result := range grouppedStudent {
+						if Result.AssessmentId == assessment.Id &&
+							Result.SubjectId == subject.Id {
+							if Result.ScoreMax > 0 {
+								assessmentScore = assessmentScore + (Result.Score / Result.ScoreMax)
+								assessmentCounter++
+							}
 						}
+					}
+
+					if assessmentCounter > 0 {
+						var totalAssementScore float64 = (assessmentScore / assessmentCounter) * assessment.Percentage
+						subjectAssessments[assessment.Type] = dtos.AssesmentGroup{
+							AssessmentScore: totalAssementScore,
+							ScoreMax:        assessment.Percentage,
+						}
+						subjectScore = subjectScore + totalAssementScore
+						isSubject = true
 					}
 				}
 
-				if assessmentCounter > 0 {
-					var totalAssementScore float64 = (assessmentScore / assessmentCounter) * assessment.Percentage
-					subjectAssessments[assessment.Type] = dtos.AssesmentGroup{
-						AssessmentScore: totalAssementScore,
-						ScoreMax:        assessment.Percentage,
-					}
-					subjectScore = subjectScore + totalAssementScore
-					isSubject = true
-				}
 			}
 
 			if isSubject {
+				grade, point := gradeDTOPackage.GetGradeAndPoint(grades, subjectScore)
 				overallScore = overallScore + subjectScore
 				overallScoreMax = overallScoreMax + 100
 				subjectsScores[subject.Type] = dtos.SubJectResult{
 					SubjectScore: subjectScore,
 					Assessments:  subjectAssessments,
+					Grade:        grade,
+					Point:        point,
+				}
+			}
+		}
+
+		student := dtos.StudentResults{
+			StudentId:       studentId,
+			FullName:        selectedStudents[i].FirstName + " " + selectedStudents[i].LastName,
+			OverallScore:    overallScore,
+			OverallScoreMax: overallScoreMax,
+			Subjects:        subjectsScores,
+		}
+
+		students = append(students, student)
+	}
+
+	log.Print("Call SummaryStudentsPositions completed")
+	return utils.SortPositionResults(students), err
+
+}
+
+func (impl serviceImpl) SummaryStudentsPositions2(req dtos.GetResultsRequest) (interface{}, error) {
+
+	log.Print("Call SummaryStudentsPositions started")
+
+	assessments, _ := impl.assessmentService.GetAssessments(req.SchoolId)
+	subjects, _ := impl.subjectService.GetSubjects(req.SchoolId)
+	grades, _ := impl.gradeService.GetGrades(req.SchoolId)
+
+	splitStartDte := strings.Split(req.StartDate, "/")
+	startDay, _ := strconv.Atoi(splitStartDte[2])
+	startMonth, _ := strconv.Atoi(splitStartDte[1])
+	startYear, _ := strconv.Atoi(splitStartDte[0])
+
+	splitEndDate := strings.Split(req.EndDate, "/")
+	endDay, _ := strconv.Atoi(splitEndDate[2])
+	endMonth, _ := strconv.Atoi(splitEndDate[1])
+	endYear, _ := strconv.Atoi(splitEndDate[0])
+
+	startDate := time.Date(startYear, time.Month(startMonth), startDay, 1, 10, 30, 0, time.UTC)
+	endDate := time.Date(endYear, time.Month(endMonth), endDay, 1, 10, 30, 0, time.UTC)
+
+	var Results []dtos.ResultResponse
+	filter := bson.D{bson.E{Key: "createdat", Value: bson.D{bson.E{Key: "$gte", Value: startDate}}},
+		bson.E{Key: "createdat", Value: bson.D{bson.E{Key: "$lte", Value: endDate}}},
+		bson.E{Key: "subjectid", Value: bson.D{bson.E{Key: "$in", Value: req.SubjectIds}}},
+		bson.E{Key: "classroomid", Value: bson.D{bson.E{Key: "$in", Value: req.ClassRoomIds}}},
+		bson.E{Key: "studentid", Value: bson.D{bson.E{Key: "$in", Value: req.StudentIds}}},
+		bson.E{Key: "leveid", Value: req.LevelId},
+		bson.E{Key: "schoolid", Value: req.SchoolId}}
+
+	cur, err := impl.collection.Find(impl.ctx, filter)
+
+	if err != nil {
+		Results = make([]dtos.ResultResponse, 0)
+		return Results, errors.Error("Results not found!")
+	}
+
+	err = cur.All(impl.ctx, &Results)
+	if err != nil {
+		return Results, err
+	}
+
+	cur.Close(impl.ctx)
+	length := len(Results)
+	if length == 0 {
+		Results = make([]dtos.ResultResponse, 0)
+	}
+
+	grouppedStudents := impl.resultUtils.GroupByStudents(Results)
+	studentIds := make([]string, 0)
+	for studentId := range grouppedStudents {
+		studentIds = append(studentIds, studentId)
+	}
+	selectedStudents, _ := impl.studentService.GetSelecedStudents(studentIds)
+	students := make([]dtos.StudentResults, 0)
+
+	i := -1
+	for studentId, grouppedStudent := range grouppedStudents {
+		i++
+		var overallScore float64 = 0
+		var overallScoreMax float64 = 0
+		subjectsScores := make(map[string]dtos.SubJectResult, 0)
+		for _, subject := range subjects {
+			var subjectScore float64 = 0
+			isSubject := false
+			subjectAssessments := make(map[string]dtos.AssesmentGroup, 0)
+			for _, assessment := range assessments {
+
+				if subject.Id == assessment.SubjectId {
+
+					var assessmentScore float64 = 0
+					var assessmentCounter float64 = 0
+					for _, Result := range grouppedStudent {
+						if Result.AssessmentId == assessment.Id &&
+							Result.SubjectId == subject.Id {
+							if Result.ScoreMax > 0 {
+								assessmentScore = assessmentScore + (Result.Score / Result.ScoreMax)
+								assessmentCounter++
+							}
+						}
+					}
+
+					if assessmentCounter > 0 {
+						var totalAssementScore float64 = (assessmentScore / assessmentCounter) * assessment.Percentage
+						subjectAssessments[assessment.Type] = dtos.AssesmentGroup{
+							AssessmentScore: totalAssementScore,
+							ScoreMax:        assessment.Percentage,
+						}
+						subjectScore = subjectScore + totalAssementScore
+						isSubject = true
+					}
+
+				}
+			}
+
+			if isSubject {
+				grade, point := gradeDTOPackage.GetGradeAndPoint(grades, subjectScore)
+				overallScore = overallScore + subjectScore
+				overallScoreMax = overallScoreMax + 100
+				subjectsScores[subject.Type] = dtos.SubJectResult{
+					SubjectScore: subjectScore,
+					Assessments:  subjectAssessments,
+					Grade:        grade,
+					Point:        point,
 				}
 			}
 		}
@@ -614,6 +870,27 @@ func (impl serviceImpl) CreateResult(userId string, model dtos.CreateResultReque
 	}
 	log.Print("Call to create Result completed.")
 	return modelObj, er
+}
+
+func (impl serviceImpl) CreateResults(userId string, _models []dtos.CreateResultRequest) (interface{}, error) {
+
+	log.Print("Call to create results started.")
+
+	modelObjs := make([]interface{}, 0)
+	for _, model := range _models {
+		var modelObj models.Result
+		modelObj.CreatedBy = userId
+		modelObj.CreatedAt = time.Now()
+		conversion.Convert(model, &modelObj)
+		modelObjs = append(modelObjs, modelObj)
+	}
+
+	_, er := impl.collection.InsertMany(impl.ctx, modelObjs)
+	if er != nil {
+		return nil, errors.Error("Error in creating results.")
+	}
+	log.Print("Call to create results completed.")
+	return modelObjs, er
 }
 
 func (impl serviceImpl) PutResult(id string, model dtos.UpdateResultRequest) (interface{}, error) {

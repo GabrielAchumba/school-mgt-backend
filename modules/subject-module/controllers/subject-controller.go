@@ -14,6 +14,7 @@ var _response rest.Response
 
 type SubjectController interface {
 	CreateSubject(ctx *gin.Context) *rest.Response
+	CreateSubjects(ctx *gin.Context) *rest.Response
 	DeleteSubject(ctx *gin.Context) *rest.Response
 	GetSubject(ctx *gin.Context) *rest.Response
 	GetSubjects(ctx *gin.Context) *rest.Response
@@ -44,6 +45,26 @@ func (ctrl *controllerImpl) CreateSubject(ctx *gin.Context) *rest.Response {
 	}
 
 	if m, er := ctrl.SubjectService.CreateSubject(userId, model); er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	} else {
+		return _response.GetSuccess(http.StatusOK, m)
+	}
+}
+
+func (ctrl *controllerImpl) CreateSubjects(ctx *gin.Context) *rest.Response {
+	var models []dtos.CreateSubjectRequest
+
+	if er := ctx.BindJSON(&models); er != nil {
+		return _response.GetError(http.StatusBadRequest, er.Error())
+	}
+
+	payload, _ := middleware.GetAuthorizationPayload(ctx)
+	var userId string = payload.UserId
+	if userId == "" {
+		return _response.NotAuthorized()
+	}
+
+	if m, er := ctrl.SubjectService.CreateSubjects(userId, models); er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	} else {
 		return _response.GetSuccess(http.StatusOK, m)

@@ -27,6 +27,7 @@ func (module *AssessmentModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker t
 	moduleRoute.Use(middleware.AuthMiddleware(tokenMaker))
 	{
 		moduleRoute.POST("/create", serverHttp(module.controller.CreateAssessment))
+		moduleRoute.POST("/createmany", serverHttp(module.controller.CreateAssessments))
 		moduleRoute.PUT("/:id", serverHttp(module.controller.PutAssessment))
 		moduleRoute.GET("/:schoolId", serverHttp(module.controller.GetAssessments))
 		//moduleRoute.GET("/:id", serverHttp(module.controller.GetAssessment))
