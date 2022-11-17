@@ -140,13 +140,37 @@ func (impl serviceImpl) CreateClassRooms(userId string, _models []dtos.CreateCla
 
 	log.Print("Call to create class rooms started.")
 
+	types := make([]string, 0)
+	var classRooms []dtos.ClassRoomResponse
+	for _, model := range _models {
+		types = append(types, model.Type)
+	}
+
+	filter := bson.D{{Key: "type", Value: bson.D{
+		bson.E{Key: "$in", Value: types}}}}
+
+	cur, _ := impl.collection.Find(impl.ctx, filter)
+
+	_ = cur.All(impl.ctx, &classRooms)
+	cur.Close(impl.ctx)
+
 	modelObjs := make([]interface{}, 0)
 	for _, model := range _models {
 		var modelObj models.ClassRoom
 		modelObj.CreatedBy = userId
 		modelObj.CreatedAt = time.Now()
-		conversion.Convert(model, &modelObj)
-		modelObjs = append(modelObjs, modelObj)
+		check := false
+		for _, classRoom := range classRooms {
+			if model.Type == classRoom.Type {
+				check = true
+				break
+			}
+		}
+
+		if !check {
+			conversion.Convert(model, &modelObj)
+			modelObjs = append(modelObjs, modelObj)
+		}
 	}
 
 	_, er := impl.collection.InsertMany(impl.ctx, modelObjs)

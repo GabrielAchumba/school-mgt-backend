@@ -140,13 +140,37 @@ func (impl serviceImpl) CreateGrades(userId string, _models []dtos.CreateGradeRe
 
 	log.Print("Call to create Grades started.")
 
+	types := make([]string, 0)
+	var grades []dtos.GradeResponse
+	for _, model := range _models {
+		types = append(types, model.Type)
+	}
+
+	filter := bson.D{{Key: "type", Value: bson.D{
+		bson.E{Key: "$in", Value: types}}}}
+
+	cur, _ := impl.collection.Find(impl.ctx, filter)
+
+	_ = cur.All(impl.ctx, &grades)
+	cur.Close(impl.ctx)
+
 	modelObjs := make([]interface{}, 0)
 	for _, model := range _models {
 		var modelObj models.Grade
 		modelObj.CreatedBy = userId
 		modelObj.CreatedAt = time.Now()
-		conversion.Convert(model, &modelObj)
-		modelObjs = append(modelObjs, modelObj)
+		check := false
+		for _, grade := range grades {
+			if model.Type == grade.Type {
+				check = true
+				break
+			}
+		}
+
+		if !check {
+			conversion.Convert(model, &modelObj)
+			modelObjs = append(modelObjs, modelObj)
+		}
 	}
 
 	_, er := impl.collection.InsertMany(impl.ctx, modelObjs)

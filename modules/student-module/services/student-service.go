@@ -246,6 +246,20 @@ func (impl serviceImpl) CreateStudents(userId string, _models []dtos.CreateStude
 
 	log.Print("Call to create students started.")
 
+	types := make([]string, 0)
+	var students []dtos.StudentResponse
+	for _, model := range _models {
+		types = append(types, model.FirstName)
+	}
+
+	filter := bson.D{{Key: "type", Value: bson.D{
+		bson.E{Key: "$in", Value: types}}}}
+
+	cur, _ := impl.collection.Find(impl.ctx, filter)
+
+	_ = cur.All(impl.ctx, &students)
+	cur.Close(impl.ctx)
+
 	modelObjs := make([]interface{}, 0)
 	for _, model := range _models {
 		var modelObj models.Student

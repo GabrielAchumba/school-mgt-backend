@@ -189,7 +189,8 @@ func (impl serviceImpl) RegisterUsers(userId string, _models []dtos.CreateUserRe
 		usernames = append(usernames, model.UserName)
 	}
 
-	filter := bson.D{bson.E{Key: "username", Value: bson.E{Key: "$in", Value: usernames}}}
+	filter := bson.D{{Key: "username", Value: bson.D{
+		bson.E{Key: "$in", Value: usernames}}}}
 
 	cur, _ := impl.collection.Find(impl.ctx, filter)
 

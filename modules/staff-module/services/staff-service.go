@@ -139,13 +139,37 @@ func (impl serviceImpl) CreateManyStaff(userId string, _models []dtos.CreateStaf
 
 	log.Print("Call to create many staff started.")
 
+	types := make([]string, 0)
+	var staffs []dtos.StaffResponse
+	for _, model := range _models {
+		types = append(types, model.Type)
+	}
+
+	filter := bson.D{{Key: "type", Value: bson.D{
+		bson.E{Key: "$in", Value: types}}}}
+
+	cur, _ := impl.collection.Find(impl.ctx, filter)
+
+	_ = cur.All(impl.ctx, &staffs)
+	cur.Close(impl.ctx)
+
 	modelObjs := make([]interface{}, 0)
 	for _, model := range _models {
 		var modelObj models.Staff
 		modelObj.CreatedBy = userId
 		modelObj.CreatedAt = time.Now()
-		conversion.Convert(model, &modelObj)
-		modelObjs = append(modelObjs, modelObj)
+		check := false
+		for _, staff := range staffs {
+			if model.Type == staff.Type {
+				check = true
+				break
+			}
+		}
+
+		if !check {
+			conversion.Convert(model, &modelObj)
+			modelObjs = append(modelObjs, modelObj)
+		}
 	}
 
 	_, er := impl.collection.InsertMany(impl.ctx, modelObjs)

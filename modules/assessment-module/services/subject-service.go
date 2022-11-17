@@ -120,7 +120,6 @@ func (impl serviceImpl) CreateAssessment(userId string, model dtos.CreateAssessm
 	}
 
 	filter := bson.D{bson.E{Key: "type", Value: modelObj.Type},
-		bson.E{Key: "subjectid", Value: modelObj.SubjectId},
 		bson.E{Key: "schoolid", Value: modelObj.SchoolId}}
 	count, err := impl.collection.CountDocuments(impl.ctx, filter)
 	if err != nil {
@@ -141,6 +140,20 @@ func (impl serviceImpl) CreateAssessments(userId string, _models []dtos.CreateAs
 
 	log.Print("Call to create assessments started.")
 
+	types := make([]string, 0)
+	var assessments []dtos.AssessmentResponse
+	for _, model := range _models {
+		types = append(types, model.Type)
+	}
+
+	filter := bson.D{{Key: "type", Value: bson.D{
+		bson.E{Key: "$in", Value: types}}}}
+
+	cur, _ := impl.collection.Find(impl.ctx, filter)
+
+	_ = cur.All(impl.ctx, &assessments)
+	cur.Close(impl.ctx)
+
 	modelObjs := make([]interface{}, 0)
 	for _, model := range _models {
 		var modelObj models.Assessment
@@ -148,6 +161,18 @@ func (impl serviceImpl) CreateAssessments(userId string, _models []dtos.CreateAs
 		modelObj.CreatedAt = time.Now()
 		conversion.Convert(model, &modelObj)
 		modelObjs = append(modelObjs, modelObj)
+		check := false
+		for _, assessment := range assessments {
+			if model.Type == assessment.Type {
+				check = true
+				break
+			}
+		}
+
+		if !check {
+			conversion.Convert(model, &modelObj)
+			modelObjs = append(modelObjs, modelObj)
+		}
 	}
 
 	_, er := impl.collection.InsertMany(impl.ctx, modelObjs)
@@ -170,7 +195,6 @@ func (impl serviceImpl) PutAssessment(id string, User dtos.UpdateAssessmentReque
 
 	update := bson.D{bson.E{Key: "type", Value: updatedAssessment.Type},
 		bson.E{Key: "percentage", Value: updatedAssessment.Percentage},
-		bson.E{Key: "subjectid", Value: updatedAssessment.SubjectId},
 		bson.E{Key: "schoolid", Value: updatedAssessment.SchoolId}}
 	_, err := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
 

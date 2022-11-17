@@ -239,30 +239,26 @@ func (impl serviceImpl) ComputeSummaryResults(req dtos.GetResultsRequest) (inter
 		subjectAssessments := make(map[string]dtos.AssesmentGroup, 0)
 		for _, assessment := range assessments {
 
-			if subject.Id == assessment.SubjectId {
-
-				var assessmentScore float64 = 0
-				var assessmentCounter float64 = 0
-				for _, Result := range Results {
-					if Result.AssessmentId == assessment.Id &&
-						Result.SubjectId == subject.Id {
-						if Result.ScoreMax > 0 {
-							assessmentScore = assessmentScore + (Result.Score / Result.ScoreMax)
-							assessmentCounter++
-						}
+			var assessmentScore float64 = 0
+			var assessmentCounter float64 = 0
+			for _, Result := range Results {
+				if Result.AssessmentId == assessment.Id &&
+					Result.SubjectId == subject.Id {
+					if Result.ScoreMax > 0 {
+						assessmentScore = assessmentScore + (Result.Score / Result.ScoreMax)
+						assessmentCounter++
 					}
 				}
+			}
 
-				if assessmentCounter > 0 {
-					var totalAssementScore float64 = (assessmentScore / assessmentCounter) * assessment.Percentage
-					subjectAssessments[assessment.Type] = dtos.AssesmentGroup{
-						AssessmentScore: totalAssementScore,
-						ScoreMax:        assessment.Percentage,
-					}
-					subjectScore = subjectScore + totalAssementScore
-					isSubject = true
+			if assessmentCounter > 0 {
+				var totalAssementScore float64 = (assessmentScore / assessmentCounter) * assessment.Percentage
+				subjectAssessments[assessment.Type] = dtos.AssesmentGroup{
+					AssessmentScore: totalAssementScore,
+					ScoreMax:        assessment.Percentage,
 				}
-
+				subjectScore = subjectScore + totalAssementScore
+				isSubject = true
 			}
 		}
 
@@ -337,30 +333,26 @@ func (impl serviceImpl) ComputeSummaryResults2(req dtos.GetResultsRequest) (inte
 		subjectAssessments := make(map[string]dtos.AssesmentGroup, 0)
 		for _, assessment := range assessments {
 
-			if subject.Id == assessment.SubjectId {
-
-				var assessmentScore float64 = 0
-				var assessmentCounter float64 = 0
-				for _, Result := range Results {
-					if Result.AssessmentId == assessment.Id &&
-						Result.SubjectId == subject.Id {
-						if Result.ScoreMax > 0 {
-							assessmentScore = assessmentScore + (Result.Score / Result.ScoreMax)
-							assessmentCounter++
-						}
+			var assessmentScore float64 = 0
+			var assessmentCounter float64 = 0
+			for _, Result := range Results {
+				if Result.AssessmentId == assessment.Id &&
+					Result.SubjectId == subject.Id {
+					if Result.ScoreMax > 0 {
+						assessmentScore = assessmentScore + (Result.Score / Result.ScoreMax)
+						assessmentCounter++
 					}
 				}
+			}
 
-				if assessmentCounter > 0 {
-					var totalAssementScore float64 = (assessmentScore / assessmentCounter) * assessment.Percentage
-					subjectAssessments[assessment.Type] = dtos.AssesmentGroup{
-						AssessmentScore: totalAssementScore,
-						ScoreMax:        assessment.Percentage,
-					}
-					subjectScore = subjectScore + totalAssementScore
-					isSubject = true
+			if assessmentCounter > 0 {
+				var totalAssementScore float64 = (assessmentScore / assessmentCounter) * assessment.Percentage
+				subjectAssessments[assessment.Type] = dtos.AssesmentGroup{
+					AssessmentScore: totalAssementScore,
+					ScoreMax:        assessment.Percentage,
 				}
-
+				subjectScore = subjectScore + totalAssementScore
+				isSubject = true
 			}
 		}
 
@@ -448,29 +440,26 @@ func (impl serviceImpl) SummaryStudentsPositions(req dtos.GetResultsRequest) (in
 			subjectAssessments := make(map[string]dtos.AssesmentGroup, 0)
 			for _, assessment := range assessments {
 
-				if subject.Id == assessment.SubjectId {
-
-					var assessmentScore float64 = 0
-					var assessmentCounter float64 = 0
-					for _, Result := range grouppedStudent {
-						if Result.AssessmentId == assessment.Id &&
-							Result.SubjectId == subject.Id {
-							if Result.ScoreMax > 0 {
-								assessmentScore = assessmentScore + (Result.Score / Result.ScoreMax)
-								assessmentCounter++
-							}
+				var assessmentScore float64 = 0
+				var assessmentCounter float64 = 0
+				for _, Result := range grouppedStudent {
+					if Result.AssessmentId == assessment.Id &&
+						Result.SubjectId == subject.Id {
+						if Result.ScoreMax > 0 {
+							assessmentScore = assessmentScore + (Result.Score / Result.ScoreMax)
+							assessmentCounter++
 						}
 					}
+				}
 
-					if assessmentCounter > 0 {
-						var totalAssementScore float64 = (assessmentScore / assessmentCounter) * assessment.Percentage
-						subjectAssessments[assessment.Type] = dtos.AssesmentGroup{
-							AssessmentScore: totalAssementScore,
-							ScoreMax:        assessment.Percentage,
-						}
-						subjectScore = subjectScore + totalAssementScore
-						isSubject = true
+				if assessmentCounter > 0 {
+					var totalAssementScore float64 = (assessmentScore / assessmentCounter) * assessment.Percentage
+					subjectAssessments[assessment.Type] = dtos.AssesmentGroup{
+						AssessmentScore: totalAssementScore,
+						ScoreMax:        assessment.Percentage,
 					}
+					subjectScore = subjectScore + totalAssementScore
+					isSubject = true
 				}
 
 			}
@@ -572,30 +561,26 @@ func (impl serviceImpl) SummaryStudentsPositions2(req dtos.GetResultsRequest) (i
 			subjectAssessments := make(map[string]dtos.AssesmentGroup, 0)
 			for _, assessment := range assessments {
 
-				if subject.Id == assessment.SubjectId {
-
-					var assessmentScore float64 = 0
-					var assessmentCounter float64 = 0
-					for _, Result := range grouppedStudent {
-						if Result.AssessmentId == assessment.Id &&
-							Result.SubjectId == subject.Id {
-							if Result.ScoreMax > 0 {
-								assessmentScore = assessmentScore + (Result.Score / Result.ScoreMax)
-								assessmentCounter++
-							}
+				var assessmentScore float64 = 0
+				var assessmentCounter float64 = 0
+				for _, Result := range grouppedStudent {
+					if Result.AssessmentId == assessment.Id &&
+						Result.SubjectId == subject.Id {
+						if Result.ScoreMax > 0 {
+							assessmentScore = assessmentScore + (Result.Score / Result.ScoreMax)
+							assessmentCounter++
 						}
 					}
+				}
 
-					if assessmentCounter > 0 {
-						var totalAssementScore float64 = (assessmentScore / assessmentCounter) * assessment.Percentage
-						subjectAssessments[assessment.Type] = dtos.AssesmentGroup{
-							AssessmentScore: totalAssementScore,
-							ScoreMax:        assessment.Percentage,
-						}
-						subjectScore = subjectScore + totalAssementScore
-						isSubject = true
+				if assessmentCounter > 0 {
+					var totalAssementScore float64 = (assessmentScore / assessmentCounter) * assessment.Percentage
+					subjectAssessments[assessment.Type] = dtos.AssesmentGroup{
+						AssessmentScore: totalAssementScore,
+						ScoreMax:        assessment.Percentage,
 					}
-
+					subjectScore = subjectScore + totalAssementScore
+					isSubject = true
 				}
 			}
 

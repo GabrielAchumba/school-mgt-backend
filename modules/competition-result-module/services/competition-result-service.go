@@ -239,31 +239,28 @@ func (impl serviceImpl) ComputeSummaryCompetitionResults(req dtos.GetCompetition
 		subjectAssessments := make(map[string]dtos.AssesmentGroup, 0)
 		for _, assessment := range assessments {
 
-			if subject.Id == assessment.SubjectId {
-
-				var assessmentScore float64 = 0
-				var assessmentCounter float64 = 0
-				for _, CompetitionResult := range CompetitionResults {
-					if CompetitionResult.AssessmentId == assessment.Id &&
-						CompetitionResult.SubjectId == subject.Id {
-						if CompetitionResult.ScoreMax > 0 {
-							assessmentScore = assessmentScore + (CompetitionResult.Score / CompetitionResult.ScoreMax)
-							assessmentCounter++
-						}
+			var assessmentScore float64 = 0
+			var assessmentCounter float64 = 0
+			for _, CompetitionResult := range CompetitionResults {
+				if CompetitionResult.AssessmentId == assessment.Id &&
+					CompetitionResult.SubjectId == subject.Id {
+					if CompetitionResult.ScoreMax > 0 {
+						assessmentScore = assessmentScore + (CompetitionResult.Score / CompetitionResult.ScoreMax)
+						assessmentCounter++
 					}
 				}
-
-				if assessmentCounter > 0 {
-					var totalAssementScore float64 = (assessmentScore / assessmentCounter) * assessment.Percentage
-					subjectAssessments[assessment.Type] = dtos.AssesmentGroup{
-						AssessmentScore: totalAssementScore,
-						ScoreMax:        assessment.Percentage,
-					}
-					subjectScore = subjectScore + totalAssementScore
-					isSubject = true
-				}
-
 			}
+
+			if assessmentCounter > 0 {
+				var totalAssementScore float64 = (assessmentScore / assessmentCounter) * assessment.Percentage
+				subjectAssessments[assessment.Type] = dtos.AssesmentGroup{
+					AssessmentScore: totalAssementScore,
+					ScoreMax:        assessment.Percentage,
+				}
+				subjectScore = subjectScore + totalAssementScore
+				isSubject = true
+			}
+
 		}
 
 		if isSubject {
@@ -337,30 +334,26 @@ func (impl serviceImpl) ComputeSummaryCompetitionResults2(req dtos.GetCompetitio
 		subjectAssessments := make(map[string]dtos.AssesmentGroup, 0)
 		for _, assessment := range assessments {
 
-			if subject.Id == assessment.SubjectId {
-
-				var assessmentScore float64 = 0
-				var assessmentCounter float64 = 0
-				for _, CompetitionResult := range CompetitionResults {
-					if CompetitionResult.AssessmentId == assessment.Id &&
-						CompetitionResult.SubjectId == subject.Id {
-						if CompetitionResult.ScoreMax > 0 {
-							assessmentScore = assessmentScore + (CompetitionResult.Score / CompetitionResult.ScoreMax)
-							assessmentCounter++
-						}
+			var assessmentScore float64 = 0
+			var assessmentCounter float64 = 0
+			for _, CompetitionResult := range CompetitionResults {
+				if CompetitionResult.AssessmentId == assessment.Id &&
+					CompetitionResult.SubjectId == subject.Id {
+					if CompetitionResult.ScoreMax > 0 {
+						assessmentScore = assessmentScore + (CompetitionResult.Score / CompetitionResult.ScoreMax)
+						assessmentCounter++
 					}
 				}
+			}
 
-				if assessmentCounter > 0 {
-					var totalAssementScore float64 = (assessmentScore / assessmentCounter) * assessment.Percentage
-					subjectAssessments[assessment.Type] = dtos.AssesmentGroup{
-						AssessmentScore: totalAssementScore,
-						ScoreMax:        assessment.Percentage,
-					}
-					subjectScore = subjectScore + totalAssementScore
-					isSubject = true
+			if assessmentCounter > 0 {
+				var totalAssementScore float64 = (assessmentScore / assessmentCounter) * assessment.Percentage
+				subjectAssessments[assessment.Type] = dtos.AssesmentGroup{
+					AssessmentScore: totalAssementScore,
+					ScoreMax:        assessment.Percentage,
 				}
-
+				subjectScore = subjectScore + totalAssementScore
+				isSubject = true
 			}
 		}
 
@@ -448,29 +441,26 @@ func (impl serviceImpl) SummaryStudentsPositions(req dtos.GetCompetitionResultsR
 			subjectAssessments := make(map[string]dtos.AssesmentGroup, 0)
 			for _, assessment := range assessments {
 
-				if subject.Id == assessment.SubjectId {
-
-					var assessmentScore float64 = 0
-					var assessmentCounter float64 = 0
-					for _, CompetitionResult := range grouppedStudent {
-						if CompetitionResult.AssessmentId == assessment.Id &&
-							CompetitionResult.SubjectId == subject.Id {
-							if CompetitionResult.ScoreMax > 0 {
-								assessmentScore = assessmentScore + (CompetitionResult.Score / CompetitionResult.ScoreMax)
-								assessmentCounter++
-							}
+				var assessmentScore float64 = 0
+				var assessmentCounter float64 = 0
+				for _, CompetitionResult := range grouppedStudent {
+					if CompetitionResult.AssessmentId == assessment.Id &&
+						CompetitionResult.SubjectId == subject.Id {
+						if CompetitionResult.ScoreMax > 0 {
+							assessmentScore = assessmentScore + (CompetitionResult.Score / CompetitionResult.ScoreMax)
+							assessmentCounter++
 						}
 					}
+				}
 
-					if assessmentCounter > 0 {
-						var totalAssementScore float64 = (assessmentScore / assessmentCounter) * assessment.Percentage
-						subjectAssessments[assessment.Type] = dtos.AssesmentGroup{
-							AssessmentScore: totalAssementScore,
-							ScoreMax:        assessment.Percentage,
-						}
-						subjectScore = subjectScore + totalAssementScore
-						isSubject = true
+				if assessmentCounter > 0 {
+					var totalAssementScore float64 = (assessmentScore / assessmentCounter) * assessment.Percentage
+					subjectAssessments[assessment.Type] = dtos.AssesmentGroup{
+						AssessmentScore: totalAssementScore,
+						ScoreMax:        assessment.Percentage,
 					}
+					subjectScore = subjectScore + totalAssementScore
+					isSubject = true
 				}
 
 			}
@@ -572,30 +562,26 @@ func (impl serviceImpl) SummaryStudentsPositions2(req dtos.GetCompetitionResults
 			subjectAssessments := make(map[string]dtos.AssesmentGroup, 0)
 			for _, assessment := range assessments {
 
-				if subject.Id == assessment.SubjectId {
-
-					var assessmentScore float64 = 0
-					var assessmentCounter float64 = 0
-					for _, CompetitionResult := range grouppedStudent {
-						if CompetitionResult.AssessmentId == assessment.Id &&
-							CompetitionResult.SubjectId == subject.Id {
-							if CompetitionResult.ScoreMax > 0 {
-								assessmentScore = assessmentScore + (CompetitionResult.Score / CompetitionResult.ScoreMax)
-								assessmentCounter++
-							}
+				var assessmentScore float64 = 0
+				var assessmentCounter float64 = 0
+				for _, CompetitionResult := range grouppedStudent {
+					if CompetitionResult.AssessmentId == assessment.Id &&
+						CompetitionResult.SubjectId == subject.Id {
+						if CompetitionResult.ScoreMax > 0 {
+							assessmentScore = assessmentScore + (CompetitionResult.Score / CompetitionResult.ScoreMax)
+							assessmentCounter++
 						}
 					}
+				}
 
-					if assessmentCounter > 0 {
-						var totalAssementScore float64 = (assessmentScore / assessmentCounter) * assessment.Percentage
-						subjectAssessments[assessment.Type] = dtos.AssesmentGroup{
-							AssessmentScore: totalAssementScore,
-							ScoreMax:        assessment.Percentage,
-						}
-						subjectScore = subjectScore + totalAssementScore
-						isSubject = true
+				if assessmentCounter > 0 {
+					var totalAssementScore float64 = (assessmentScore / assessmentCounter) * assessment.Percentage
+					subjectAssessments[assessment.Type] = dtos.AssesmentGroup{
+						AssessmentScore: totalAssementScore,
+						ScoreMax:        assessment.Percentage,
 					}
-
+					subjectScore = subjectScore + totalAssementScore
+					isSubject = true
 				}
 			}
 
