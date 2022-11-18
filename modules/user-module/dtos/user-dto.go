@@ -24,10 +24,13 @@ type UserInternalOperation struct {
 	DesignationId string    `json:"designationId"`
 	UserName      string    `json:"userName,omitempty"`
 	Password      string    `json:"password"`
+	Token         int       `json:"token"`
 	CreatedAt     time.Time `json:"createdAt"`
 	Base64String  string    `json:"base64String"`
 	SchoolId      string    `json:"schoolId" binding:"required"`
 	CountryCode   string    `json:"countryCode"`
+	ClassRoomId   string    `json:"classRoomId"`
+	LevelId       string    `json:"levelId"`
 }
 
 type CreateUserRequest struct {
@@ -42,22 +45,29 @@ type CreateUserRequest struct {
 	DesignationId        string `json:"designationId"`
 	UserName             string `json:"userName"`
 	Password             string `json:"password"`
+	Token                int    `json:"token"`
 	SchoolId             string `json:"schoolId"`
+	ClassRoomId          string `json:"classRoomId"`
+	LevelId              string `json:"levelId"`
 }
 
 type UpdateUserRequest struct {
-	Base64String         string `json:"base64String"`
-	IsPhotographUploaded int    `json:"isPhotographUploaded"`
-	FirstName            string `json:"firstName"`
-	LastName             string `json:"lastName"`
-	PhoneNumber          string `json:"phoneNumber"`
-	CountryCode          string `json:"countryCode"`
-	Email                string `json:"email"`
-	UserType             string `json:"userType"`
-	DesignationId        string `json:"designationId"`
-	UserName             string `json:"userName"`
-	Password             string `json:"password"`
-	SchoolId             string `json:"schoolId"`
+	Base64String         string   `json:"base64String"`
+	IsPhotographUploaded int      `json:"isPhotographUploaded"`
+	FirstName            string   `json:"firstName"`
+	LastName             string   `json:"lastName"`
+	PhoneNumber          string   `json:"phoneNumber"`
+	CountryCode          string   `json:"countryCode"`
+	Email                string   `json:"email"`
+	UserType             string   `json:"userType"`
+	DesignationId        string   `json:"designationId"`
+	UserName             string   `json:"userName"`
+	Password             string   `json:"password"`
+	Token                int      `json:"token"`
+	SchoolId             string   `json:"schoolId"`
+	StudentIds           []string `json:"studentIds"`
+	ClassRoomId          string   `json:"classRoomId"`
+	LevelId              string   `json:"levelId"`
 }
 
 type UserResponse struct {
@@ -77,6 +87,9 @@ type UserResponse struct {
 	UserName             string    `json:"userName,omitempty"`
 	Password             string    `json:"password,omitempty"`
 	SchoolId             string    `json:"schoolId" binding:"required"`
+	Token                int       `json:"token"`
+	ClassRoomId          string    `json:"classRoomId"`
+	LevelId              string    `json:"levelId"`
 }
 
 type ForgotPasswordInput struct {

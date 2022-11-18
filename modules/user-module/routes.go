@@ -33,6 +33,7 @@ func (module *userModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker token.M
 	moduleRoute.GET("/referals", serverHttp(module.controller.GetRerals))
 	moduleRoute.POST("/user-is-exist", serverHttp(module.controller.UserIsExist))
 	moduleRoute.POST("/user-is-exist2", serverHttp(module.controller.UserIsExist2))
+	moduleRoute.GET("/loginstudent/:token/:schoolId", serverHttp(module.controller.LogInStudent))
 
 	moduleRoute.Use(middleware.AuthMiddleware(tokenMaker))
 	{
@@ -41,11 +42,14 @@ func (module *userModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker token.M
 		moduleRoute.PUT("/:id", serverHttp(module.controller.PutUser))
 		moduleRoute.PUT("/update-referal/:id", serverHttp(module.controller.PutReferal))
 		moduleRoute.GET("/:schoolId", serverHttp(module.controller.GetUsers))
+		moduleRoute.GET("/students/:schoolId", serverHttp(module.controller.GetStudents))
 		//moduleRoute.GET("/:id", serverHttp(module.controller.GetUser))
 		moduleRoute.GET("category/:category/:schoolId", serverHttp(module.controller.GetUsersByCategory))
 		moduleRoute.DELETE("/:id/:schoolId", serverHttp(module.controller.DeleteUser))
 		moduleRoute.POST("/registeradministrator", serverHttp(module.controller.RegisterUser))
 		moduleRoute.PUT("/updateadministratordto/:id", serverHttp(module.controller.UpdateAdminDTO))
 		moduleRoute.POST("/uploadphoto", serverHttp(module.controller.UploadPhoto))
+		moduleRoute.POST("/generatetokens", serverHttp(module.controller.GenerateTokens))
+		moduleRoute.GET("/get/:token/:schoolId", serverHttp(module.controller.GetStudentByToken))
 	}
 }

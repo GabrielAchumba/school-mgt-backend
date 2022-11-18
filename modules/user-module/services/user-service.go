@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -30,6 +31,7 @@ type UserService interface {
 	UserIsExist2(requestModel dtos.CreateUserRequest) (interface{}, error)
 	RegisterAdminOrReferal(model dtos.CreateUserRequest) (interface{}, error)
 	GetUsers(schoolId string) ([]dtos.UserResponse, error)
+	GetStudents(schoolId string) ([]dtos.UserResponse, error)
 	GetUser(id string, schoolId string) (dtos.UserResponse, error)
 	GetUsersByCategory(category string, schoolId string) ([]dtos.UserResponse, error)
 	GetRerals() ([]dtos.UserResponse, error)
@@ -42,6 +44,10 @@ type UserService interface {
 	ForgotPassword(forgotPasswordInput dtos.ForgotPasswordInput) (dtos.ForgotPasswordInput, error)
 	ResetPassword(model dtos.ResetPasswordInput) (string, error)
 	SeedAdmin()
+	GenerateTokens(studentIds []string) (interface{}, error)
+	GetSelecedStudents(Ids []string) ([]dtos.UserResponse, error)
+	GetStudentByToken(token int, schoolId string) (dtos.UserResponse, error)
+	LogInStudent(token int, schoolId string) (dtos.LoginUserResponse, error)
 }
 
 type serviceImpl struct {
@@ -50,6 +56,7 @@ type serviceImpl struct {
 	tokenMaker   token.Maker
 	emailDto     dtos.EmailDto
 	staffService staffServicePackage.StaffService
+	utils        utils.NumericTokenGenerator
 }
 
 func New(mongoClient *mongo.Client, config config.Settings, ctx context.Context,
@@ -389,7 +396,8 @@ func (impl serviceImpl) GetUsers(schoolId string) ([]dtos.UserResponse, error) {
 	log.Print("Call to get all Users started.")
 
 	var Users []dtos.UserResponse
-	filter := bson.D{bson.E{Key: "schoolid", Value: schoolId}}
+	filter := bson.D{bson.E{Key: "schoolid", Value: schoolId},
+		bson.E{Key: "usertype", Value: "Member"}}
 	cur, err := impl.collection.Find(impl.ctx, filter)
 
 	if err != nil {
@@ -414,6 +422,40 @@ func (impl serviceImpl) GetUsers(schoolId string) ([]dtos.UserResponse, error) {
 	}
 
 	log.Print("Call to get all Users completed.")
+	return Users, err
+}
+
+func (impl serviceImpl) GetStudents(schoolId string) ([]dtos.UserResponse, error) {
+
+	log.Print("Call to get all students started.")
+
+	var Users []dtos.UserResponse
+	filter := bson.D{bson.E{Key: "schoolid", Value: schoolId},
+		bson.E{Key: "usertype", Value: "Student"}}
+	cur, err := impl.collection.Find(impl.ctx, filter)
+
+	if err != nil {
+		Users = make([]dtos.UserResponse, 0)
+		return Users, errors.Error("Users not found!")
+	}
+
+	err = cur.All(impl.ctx, &Users)
+	if err != nil {
+		return Users, err
+	}
+
+	cur.Close(impl.ctx)
+	length := len(Users)
+	if length == 0 {
+		Users = make([]dtos.UserResponse, 0)
+	}
+
+	for i := 0; i < length; i++ {
+		staff, _ := impl.staffService.GetStaff(Users[i].DesignationId, schoolId)
+		Users[i].Designation = staff.Type
+	}
+
+	log.Print("Call to get all students completed.")
 	return Users, err
 }
 
@@ -519,10 +561,11 @@ func (impl serviceImpl) PutUser(id string, User dtos.UpdateUserRequest) (interfa
 		bson.E{Key: "firstname", Value: updatedUser.FirstName},
 		bson.E{Key: "isPhotographuploaded", Value: updatedUser.IsPhotographUploaded},
 		bson.E{Key: "lastname", Value: updatedUser.LastName},
-		bson.E{Key: "password", Value: updatedUser.Password},
 		bson.E{Key: "phonenumber", Value: updatedUser.PhoneNumber},
 		bson.E{Key: "username", Value: updatedUser.UserName},
 		bson.E{Key: "usertype", Value: updatedUser.UserType},
+		bson.E{Key: "classroomid", Value: updatedUser.ClassRoomId},
+		bson.E{Key: "levelid", Value: updatedUser.LevelId},
 		bson.E{Key: "schoolid", Value: updatedUser.SchoolId}}
 
 	_, err := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
@@ -720,4 +763,130 @@ func (impl serviceImpl) ResetPassword(userCredential dtos.ResetPasswordInput) (s
 	}
 
 	return "Password data updated successfully", nil
+}
+
+func (impl serviceImpl) LogInStudent(token int, schoolId string) (dtos.LoginUserResponse, error) {
+
+	var Student dtos.UserResponse
+
+	filter := bson.D{bson.E{Key: "token", Value: token},
+		bson.E{Key: "schoolid", Value: schoolId}}
+
+	err := impl.collection.FindOne(impl.ctx, filter).Decode(&Student)
+	if err != nil {
+		return dtos.LoginUserResponse{}, errors.Error("could not find type of student by token")
+	}
+
+	accessToken, accessPayload, accessError := impl.tokenMaker.CreateToken(Student.Id, strconv.Itoa(token))
+	if accessError != nil {
+		return dtos.LoginUserResponse{}, errors.Error("Internal server error.")
+	}
+
+	rsp := dtos.LoginUserResponse{
+		Token:     accessToken,
+		ExpiresAt: accessPayload.ExpiredAt,
+		User: dtos.UserResponse{
+			Id:        Student.Id,
+			FirstName: Student.FirstName,
+			LastName:  Student.LastName,
+			UserType:  Student.UserType,
+			CreatedAt: Student.CreatedAt,
+			SchoolId:  Student.SchoolId,
+			Token:     token,
+		},
+	}
+
+	log.Print("Get type of student completed")
+	return rsp, err
+}
+
+func (impl serviceImpl) GetSelecedStudents(Ids []string) ([]dtos.UserResponse, error) {
+
+	objIds := make([]primitive.ObjectID, 0)
+	log.Print("Call GetSelecedStudents started.")
+	for _, id := range Ids {
+		objIds = append(objIds, conversion.GetMongoId(id))
+	}
+
+	var Students []dtos.UserResponse
+	filter := bson.D{bson.E{Key: "_id", Value: bson.D{bson.E{Key: "$in", Value: objIds}}}}
+	cur, err := impl.collection.Find(impl.ctx, filter)
+
+	if err != nil {
+		Students = make([]dtos.UserResponse, 0)
+		return Students, errors.Error("Types of student not found!")
+	}
+
+	err = cur.All(impl.ctx, &Students)
+	if err != nil {
+		return Students, err
+	}
+
+	cur.Close(impl.ctx)
+	if len(Students) == 0 {
+		Students = make([]dtos.UserResponse, 0)
+	}
+
+	log.Print("Call GetSelecedStudents completed.")
+	return Students, err
+}
+
+func (impl serviceImpl) GenerateTokens(studentIds []string) (interface{}, error) {
+
+	log.Print("GenerateTokens started")
+
+	objIds := make([]primitive.ObjectID, 0)
+	for _, studentId := range studentIds {
+		objIds = append(objIds, conversion.GetMongoId(studentId))
+	}
+
+	selectedStudents, _ := impl.GetSelecedStudents(studentIds)
+	tokens := make([]int, 0)
+	schoolIds := make([]string, 0)
+
+	for _, selectedStudent := range selectedStudents {
+		tokens = append(tokens, selectedStudent.Token)
+		schoolIds = append(schoolIds, selectedStudent.SchoolId)
+	}
+
+	//filter := bson.D{bson.E{Key: "_id", Value: bson.D{bson.E{Key: "$in", Value: objIds}}}
+	var modelObj models.User
+	CreatedSubscriptionDate := time.Now()
+	newTokens := make([]int, 0)
+	for i := 0; i < len(selectedStudents); i++ {
+		newTokens = append(newTokens, impl.utils.GenerateToken(tokens))
+		filter := bson.D{bson.E{Key: "_id", Value: objIds[i]}}
+		update := bson.D{bson.E{Key: "createdsubscriptiondate", Value: CreatedSubscriptionDate},
+			bson.E{Key: "schoolid", Value: schoolIds[i]},
+			bson.E{Key: "token", Value: newTokens[i]}}
+		_, err := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
+		if err != nil {
+			return modelObj, errors.Error("Could not upadte students")
+		}
+	}
+
+	/* update := bson.D{bson.E{Key: "createdsubscriptiondate", Value: CreatedSubscriptionDate},
+	bson.E{Key: "schoolid", Value: bson.D{bson.E{Key: "$in", Value: schoolIds}}},
+	bson.E{Key: "token", Value: bson.D{bson.E{Key: "$in", Value: newTokens}}}} */
+
+	log.Print("GenerateTokens completed")
+	return modelObj, nil
+}
+
+func (impl serviceImpl) GetStudentByToken(token int, schoolId string) (dtos.UserResponse, error) {
+
+	log.Print("GetStudentByToken called")
+	var Student dtos.UserResponse
+
+	filter := bson.D{bson.E{Key: "token", Value: token},
+		bson.E{Key: "schoolid", Value: schoolId}}
+
+	err := impl.collection.FindOne(impl.ctx, filter).Decode(&Student)
+	if err != nil {
+		return Student, errors.Error("could not find type of student by token")
+	}
+
+	log.Print("GetStudentByToken completed")
+	return Student, err
+
 }

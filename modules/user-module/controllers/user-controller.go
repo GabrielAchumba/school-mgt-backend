@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/GabrielAchumba/school-mgt-backend/common/rest"
 	"github.com/GabrielAchumba/school-mgt-backend/modules/user-module/dtos"
@@ -27,12 +28,16 @@ type UserController interface {
 	GetUsersByCategory(ctx *gin.Context) *rest.Response
 	GetRerals(ctx *gin.Context) *rest.Response
 	GetUsers(ctx *gin.Context) *rest.Response
+	GetStudents(ctx *gin.Context) *rest.Response
 	PutUser(ctx *gin.Context) *rest.Response
 	PutReferal(ctx *gin.Context) *rest.Response
 	UpdateAdminDTO(ctx *gin.Context) *rest.Response
 	UploadPhoto(ctx *gin.Context) *rest.Response
 	ForgotPassword(ctx *gin.Context) *rest.Response
 	ResetPassword(ctx *gin.Context) *rest.Response
+	GenerateTokens(ctx *gin.Context) *rest.Response
+	GetStudentByToken(ctx *gin.Context) *rest.Response
+	LogInStudent(ctx *gin.Context) *rest.Response
 	toBase64(b []byte) string
 }
 
@@ -199,6 +204,16 @@ func (ctrl *controllerImpl) GetUsers(ctx *gin.Context) *rest.Response {
 	return _response.GetSuccess(http.StatusOK, m)
 }
 
+func (ctrl *controllerImpl) GetStudents(ctx *gin.Context) *rest.Response {
+
+	schoolId := ctx.Param("schoolId")
+	m, er := ctrl.userService.GetStudents(schoolId)
+	if er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	}
+	return _response.GetSuccess(http.StatusOK, m)
+}
+
 func (ctrl *controllerImpl) PutUser(ctx *gin.Context) *rest.Response {
 	id := ctx.Param("id")
 	var model dtos.UpdateUserRequest
@@ -320,6 +335,42 @@ func (ctrl *controllerImpl) ResetPassword(ctx *gin.Context) *rest.Response {
 
 	if m, er := ctrl.userService.ResetPassword(model); er != nil {
 		return _response.GetError(http.StatusBadRequest, er.Error())
+	} else {
+		return _response.GetSuccess(http.StatusOK, m)
+	}
+}
+
+func (ctrl *controllerImpl) LogInStudent(ctx *gin.Context) *rest.Response {
+	token, _ := strconv.Atoi(ctx.Param("token"))
+	schoolId := ctx.Param("schoolId")
+
+	m, er := ctrl.userService.LogInStudent(token, schoolId)
+	if er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	}
+	return _response.GetSuccess(http.StatusOK, m)
+}
+
+func (ctrl *controllerImpl) GetStudentByToken(ctx *gin.Context) *rest.Response {
+	token, _ := strconv.Atoi(ctx.Param("token"))
+	schoolId := ctx.Param("schoolId")
+
+	m, er := ctrl.userService.GetStudentByToken(token, schoolId)
+	if er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	}
+	return _response.GetSuccess(http.StatusOK, m)
+}
+
+func (ctrl *controllerImpl) GenerateTokens(ctx *gin.Context) *rest.Response {
+	var model dtos.UpdateUserRequest
+
+	if er := ctx.BindJSON(&model); er != nil {
+		return _response.GetError(http.StatusBadRequest, er.Error())
+	}
+
+	if m, er := ctrl.userService.GenerateTokens(model.StudentIds); er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
 	} else {
 		return _response.GetSuccess(http.StatusOK, m)
 	}

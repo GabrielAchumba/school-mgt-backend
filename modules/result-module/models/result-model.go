@@ -16,6 +16,6 @@ type Result struct {
 	ClassRoomId   string    `json:"classRoomId" binding:"required"`   //1
 	AssessmentId  string    `json:"assessmentId" binding:"required"`  // 6
 	DesignationId string    `json:"designationId" binding:"required"` // 4
-	LevelId       string    `json:"levelId" binding:"required"`       //10
+	LevelId       string    `json:"levelId"`                          //10
 	SchoolId      string    `json:"schoolId" binding:"required"`
 }

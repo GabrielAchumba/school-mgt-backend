@@ -120,12 +120,13 @@ func (impl serviceImpl) GetResult(id string, schoolId string) (dtos.ResultRespon
 		return Result, errors.Error("could not find type of Result by id")
 	}
 
-	student, _ := impl.studentService.GetStudent(Result.StudentId, Result.SchoolId)
+	student, _ := impl.userService.GetUser(Result.StudentId, Result.SchoolId)
 	subject, _ := impl.subjectService.GetSubject(Result.SubjectId, Result.SchoolId)
 	teacher, _ := impl.userService.GetUser(Result.TeacherId, Result.SchoolId)
 	_classRoom, _ := impl.classRoomService.GetClassRoom(Result.ClassRoomId, Result.SchoolId)
 	assessment, _ := impl.assessmentService.GetAssessment(Result.AssessmentId, Result.SchoolId)
 	designation, _ := impl.staffService.GetStaff(Result.DesignationId, Result.SchoolId)
+	level, _ := impl.levelService.GetLevel(Result.LevelId, Result.SchoolId)
 
 	Result.StudentFullName = student.FirstName + " " + student.LastName
 	Result.SubjectFullName = subject.Type
@@ -133,6 +134,7 @@ func (impl serviceImpl) GetResult(id string, schoolId string) (dtos.ResultRespon
 	Result.ClassRoomFullName = _classRoom.Type
 	Result.AssessmentFullName = assessment.Type
 	Result.DesignationFullName = designation.Type
+	Result.LevelFullName = level.Type
 
 	log.Print("Get type of Result completed")
 	return Result, err
@@ -165,11 +167,12 @@ func (impl serviceImpl) GetResults(schoolId string) ([]dtos.ResultResponse, erro
 
 	for i := 0; i < length; i++ {
 		designation, _ := impl.staffService.GetStaff(Results[i].DesignationId, Results[i].SchoolId)
-		student, _ := impl.studentService.GetStudent(Results[i].StudentId, Results[i].SchoolId)
+		student, _ := impl.userService.GetUser(Results[i].StudentId, Results[i].SchoolId)
 		subject, _ := impl.subjectService.GetSubject(Results[i].SubjectId, Results[i].SchoolId)
 		teacher, _ := impl.userService.GetUser(Results[i].TeacherId, Results[i].SchoolId)
 		classRoom, _ := impl.classRoomService.GetClassRoom(Results[i].ClassRoomId, Results[i].SchoolId)
 		assessment, _ := impl.assessmentService.GetAssessment(Results[i].AssessmentId, Results[i].SchoolId)
+		level, _ := impl.levelService.GetLevel(Results[i].LevelId, Results[i].SchoolId)
 
 		Results[i].StudentFullName = student.FirstName + " " + student.LastName
 		Results[i].SubjectFullName = subject.Type
@@ -177,6 +180,7 @@ func (impl serviceImpl) GetResults(schoolId string) ([]dtos.ResultResponse, erro
 		Results[i].ClassRoomFullName = classRoom.Type
 		Results[i].AssessmentFullName = assessment.Type
 		Results[i].DesignationFullName = designation.Type
+		Results[i].LevelFullName = level.Type
 
 	}
 
@@ -839,8 +843,8 @@ func (impl serviceImpl) CreateResult(userId string, model dtos.CreateResultReque
 	filter := bson.D{bson.E{Key: "createdat", Value: modelObj.CreatedAt},
 		bson.E{Key: "studentid", Value: modelObj.StudentId},
 		bson.E{Key: "subjectid", Value: modelObj.SubjectId},
-		bson.E{Key: "teacherid", Value: modelObj.TeacherId},
 		bson.E{Key: "classroomid", Value: modelObj.ClassRoomId},
+		bson.E{Key: "levelid", Value: modelObj.LevelId},
 		bson.E{Key: "schoolid", Value: modelObj.SchoolId}}
 	count, err := impl.collection.CountDocuments(impl.ctx, filter)
 	if err != nil {
@@ -861,13 +865,75 @@ func (impl serviceImpl) CreateResults(userId string, _models []dtos.CreateResult
 
 	log.Print("Call to create results started.")
 
+	createdats := make([]time.Time, 0)
+	/* studentids := make([]string, 0)
+	subjectids := make([]string, 0)
+	classroomids := make([]string, 0)
+	levelids := make([]string, 0) */
+	var schoolid string
+	var results []dtos.ResultResponse
+	for _, model := range _models {
+		schoolid = model.SchoolId
+		splitCreatedAt := strings.Split(model.CreatedAt, "/")
+		CreatedDay, _ := strconv.Atoi(splitCreatedAt[2])
+		CreatedMonth, _ := strconv.Atoi(splitCreatedAt[1])
+		CreatedYear, _ := strconv.Atoi(splitCreatedAt[0])
+		CreatedAt := time.Date(CreatedYear,
+			time.Month(CreatedMonth), CreatedDay, 1, 10, 30, 0, time.UTC)
+		createdats = append(createdats, CreatedAt)
+		/* studentids = append(studentids, model.StudentId)
+		subjectids = append(subjectids, model.SubjectId)
+		classroomids = append(classroomids, model.ClassRoomId)
+		levelids = append(levelids, model.LevelId) */
+	}
+
+	/* filter := bson.D{
+	bson.E{Key: "schoolid", Value: schoolid},
+	bson.E{Key: "createdat", Value: bson.D{
+		bson.E{Key: "$in", Value: createdats}}},
+	bson.E{Key: "studentid", Value: bson.D{
+		bson.E{Key: "$in", Value: studentids}}},
+	bson.E{Key: "subjectid", Value: bson.D{
+		bson.E{Key: "$in", Value: subjectids}}},
+	bson.E{Key: "classroomid", Value: bson.D{
+		bson.E{Key: "$in", Value: classroomids}}},
+	bson.E{Key: "levelid", Value: bson.D{
+		bson.E{Key: "$in", Value: levelids}}}} */
+
+	filter := bson.D{}
+
+	cur, _ := impl.collection.Find(impl.ctx, filter)
+
+	_ = cur.All(impl.ctx, &results)
+	cur.Close(impl.ctx)
+
 	modelObjs := make([]interface{}, 0)
+	i := -1
 	for _, model := range _models {
 		var modelObj models.Result
 		modelObj.CreatedBy = userId
 		modelObj.CreatedAt = time.Now()
-		conversion.Convert(model, &modelObj)
-		modelObjs = append(modelObjs, modelObj)
+		check := false
+		i++
+
+		for _, result := range results {
+			if model.SchoolId == schoolid &&
+				model.StudentId == result.StudentId &&
+				model.SubjectId == result.SubjectId &&
+				model.LevelId == result.LevelId &&
+				model.ClassRoomId == result.ClassRoomId &&
+				createdats[i].Equal(result.CreatedAt) {
+				check = true
+				break
+			}
+		}
+
+		if !check {
+			conversion.Convert(model, &modelObj)
+			modelObj.SchoolId = model.SchoolId
+			modelObj.CreatedAt = createdats[i]
+			modelObjs = append(modelObjs, modelObj)
+		}
 	}
 
 	_, er := impl.collection.InsertMany(impl.ctx, modelObjs)
@@ -902,6 +968,7 @@ func (impl serviceImpl) PutResult(id string, model dtos.UpdateResultRequest) (in
 		bson.E{Key: "subjectid", Value: updatedResult.SubjectId},
 		bson.E{Key: "teacherid", Value: updatedResult.TeacherId},
 		bson.E{Key: "classroomid", Value: updatedResult.ClassRoomId},
+		bson.E{Key: "levelid", Value: updatedResult.LevelId},
 		bson.E{Key: "assessmentid", Value: updatedResult.AssessmentId},
 		bson.E{Key: "designationid", Value: updatedResult.DesignationId},
 		bson.E{Key: "score", Value: updatedResult.Score},

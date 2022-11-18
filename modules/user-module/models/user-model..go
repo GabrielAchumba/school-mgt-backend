@@ -20,6 +20,9 @@ type User struct {
 	DesignationId        string    `json:"designationId"`
 	UserName             string    `json:"userName,omitempty" binding:"required"`
 	Password             string    `json:"password,omitempty" binding:"required"`
+	ClassRoomId          string    `json:"classRoomId"`
+	LevelId              string    `json:"levelId"`
+	Token                int       `json:"token"`
 	PasswordResetToken   string    `json:"passwordResetToken"`
 	PasswordResetAt      time.Time `json:"passwordResetAt"`
 	SchoolId             string    `json:"schoolId" binding:"required"`

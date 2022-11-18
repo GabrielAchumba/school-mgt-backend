@@ -294,6 +294,9 @@ func (impl serviceImpl) PutStudent(id string, User dtos.UpdateStudentRequest) (i
 		bson.E{Key: "birthday", Value: updatedStudent.BirthDay},
 		bson.E{Key: "birthmonth", Value: updatedStudent.BirthMonth},
 		bson.E{Key: "birthyear", Value: updatedStudent.BirthYear},
+		bson.E{Key: "birthyear", Value: updatedStudent.Password},
+		bson.E{Key: "birthyear", Value: updatedStudent.BirthYear},
+		bson.E{Key: "birthyear", Value: updatedStudent.BirthYear},
 		bson.E{Key: "schoolid", Value: updatedStudent.SchoolId}}
 	_, err := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
 

@@ -11,6 +11,7 @@ type CreateResultRequest struct {
 	ClassRoomId   string  `json:"classRoomId" binding:"required"`
 	AssessmentId  string  `json:"assessmentId" binding:"required"`
 	DesignationId string  `json:"designationId" binding:"required"`
+	LevelId       string  `json:"levelId"`
 	CreatedAt     string  `json:"createdAt" binding:"required"`
 	SchoolId      string  `json:"schoolId" binding:"required"`
 }
@@ -22,6 +23,7 @@ type UpdateResultRequest struct {
 	StudentId     string  `json:"studentId" binding:"required"`
 	TeacherId     string  `json:"teacherId" binding:"required"`
 	ClassRoomId   string  `json:"classRoomId" binding:"required"`
+	LevelId       string  `json:"levelId"`
 	AssessmentId  string  `json:"assessmentId" binding:"required"`
 	DesignationId string  `json:"designationId" binding:"required"`
 	UpdatedAt     string  `json:"updatedAt" binding:"required"`
@@ -38,6 +40,7 @@ type ResultResponse struct {
 	StudentId           string    `json:"studentId" binding:"required"`
 	TeacherId           string    `json:"teacherId" binding:"required"`
 	ClassRoomId         string    `json:"classRoomId" binding:"required"`
+	LevelId             string    `json:"levelId"`
 	AssessmentId        string    `json:"assessmentId" binding:"required"`
 	DesignationId       string    `json:"designationId" binding:"required"`
 	SubjectFullName     string    `json:"subjectFullName" binding:"required"`
@@ -45,6 +48,7 @@ type ResultResponse struct {
 	TeacherFullName     string    `json:"teacherFullName" binding:"required"`
 	ClassRoomFullName   string    `json:"classRoomFullName" binding:"required"`
 	AssessmentFullName  string    `json:"assessmentFullName" binding:"required"`
+	LevelFullName       string    `json:"levelFullName"`
 	DesignationFullName string    `json:"designationFullName" binding:"required"`
 	SchoolId            string    `json:"schoolId" binding:"required"`
 }
