@@ -12,6 +12,7 @@ type CreateStudentRequest struct {
 	Password         string `json:"password"`
 	ClassRoomId      string `json:"classRoomId"`
 	LevelId          string `json:"levelId"`
+	SessionId        string `json:"sessionId"`
 	SubscriptionType int    `json:"subscriptionType" binding:"required"`
 	SchoolId         string `json:"schoolId"`
 }
@@ -26,6 +27,7 @@ type UpdateStudentRequest struct {
 	Password         string   `json:"password"`
 	ClassRoomId      string   `json:"classRoomId"`
 	LevelId          string   `json:"levelId"`
+	SessionId        string   `json:"sessionId"`
 	SubscriptionType int      `json:"subscriptionType"`
 	StudentIds       []string `json:"studentIds"`
 	SchoolId         string   `json:"schoolId"`
@@ -45,6 +47,7 @@ type StudentResponse struct {
 	Password                  string    `json:"password"`
 	ClassRoomId               string    `json:"classRoomId"`
 	LevelId                   string    `json:"levelId"`
+	SessionId                 string    `json:"sessionId"`
 	Token                     int       `json:"token" binding:"required"`
 	SubscriptionType          int       `json:"subscriptionType" binding:"required"`
 	RemainingSubscriptionDays int       `json:"remainingSubscriptionDays"`

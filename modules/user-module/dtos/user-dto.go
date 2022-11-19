@@ -31,6 +31,7 @@ type UserInternalOperation struct {
 	CountryCode   string    `json:"countryCode"`
 	ClassRoomId   string    `json:"classRoomId"`
 	LevelId       string    `json:"levelId"`
+	SessionId     string    `json:"sessionId"`
 }
 
 type CreateUserRequest struct {
@@ -49,6 +50,7 @@ type CreateUserRequest struct {
 	SchoolId             string `json:"schoolId"`
 	ClassRoomId          string `json:"classRoomId"`
 	LevelId              string `json:"levelId"`
+	SessionId            string `json:"sessionId"`
 }
 
 type UpdateUserRequest struct {
@@ -68,6 +70,7 @@ type UpdateUserRequest struct {
 	StudentIds           []string `json:"studentIds"`
 	ClassRoomId          string   `json:"classRoomId"`
 	LevelId              string   `json:"levelId"`
+	SessionId            string   `json:"sessionId"`
 }
 
 type UserResponse struct {
@@ -90,6 +93,7 @@ type UserResponse struct {
 	Token                int       `json:"token"`
 	ClassRoomId          string    `json:"classRoomId"`
 	LevelId              string    `json:"levelId"`
+	SessionId            string    `json:"sessionId"`
 }
 
 type ForgotPasswordInput struct {

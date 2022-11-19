@@ -290,23 +290,9 @@ func (impl serviceImpl) ComputeSummaryResults2(req dtos.GetResultsRequest) (inte
 	subjects, _ := impl.subjectService.GetSubjects(req.SchoolId)
 	grades, _ := impl.gradeService.GetGrades(req.SchoolId)
 
-	splitStartDte := strings.Split(req.StartDate, "/")
-	startDay, _ := strconv.Atoi(splitStartDte[2])
-	startMonth, _ := strconv.Atoi(splitStartDte[1])
-	startYear, _ := strconv.Atoi(splitStartDte[0])
-
-	splitEndDate := strings.Split(req.EndDate, "/")
-	endDay, _ := strconv.Atoi(splitEndDate[2])
-	endMonth, _ := strconv.Atoi(splitEndDate[1])
-	endYear, _ := strconv.Atoi(splitEndDate[0])
-
-	startDate := time.Date(startYear, time.Month(startMonth), startDay, 1, 10, 30, 0, time.UTC)
-	endDate := time.Date(endYear, time.Month(endMonth), endDay, 1, 10, 30, 0, time.UTC)
-
 	var Results []dtos.ResultResponse
-	filter := bson.D{bson.E{Key: "createdat", Value: bson.D{bson.E{Key: "$gte", Value: startDate}}},
-		bson.E{Key: "createdat", Value: bson.D{bson.E{Key: "$lte", Value: endDate}}},
-		bson.E{Key: "subjectid", Value: bson.D{bson.E{Key: "$in", Value: req.SubjectIds}}},
+	filter := bson.D{bson.E{Key: "subjectid", Value: bson.D{bson.E{Key: "$in", Value: req.SubjectIds}}},
+		bson.E{Key: "sessionid", Value: req.SessionId},
 		bson.E{Key: "levelid", Value: req.LevelId},
 		bson.E{Key: "studentid", Value: req.StudentId},
 		bson.E{Key: "classroomid", Value: req.ClassRoomId},
@@ -499,32 +485,18 @@ func (impl serviceImpl) SummaryStudentsPositions(req dtos.GetResultsRequest) (in
 
 func (impl serviceImpl) SummaryStudentsPositions2(req dtos.GetResultsRequest) (interface{}, error) {
 
-	log.Print("Call SummaryStudentsPositions started")
+	log.Print("Call SummaryStudentsPositions2 started")
 
 	assessments, _ := impl.assessmentService.GetAssessments(req.SchoolId)
 	subjects, _ := impl.subjectService.GetSubjects(req.SchoolId)
 	grades, _ := impl.gradeService.GetGrades(req.SchoolId)
 
-	splitStartDte := strings.Split(req.StartDate, "/")
-	startDay, _ := strconv.Atoi(splitStartDte[2])
-	startMonth, _ := strconv.Atoi(splitStartDte[1])
-	startYear, _ := strconv.Atoi(splitStartDte[0])
-
-	splitEndDate := strings.Split(req.EndDate, "/")
-	endDay, _ := strconv.Atoi(splitEndDate[2])
-	endMonth, _ := strconv.Atoi(splitEndDate[1])
-	endYear, _ := strconv.Atoi(splitEndDate[0])
-
-	startDate := time.Date(startYear, time.Month(startMonth), startDay, 1, 10, 30, 0, time.UTC)
-	endDate := time.Date(endYear, time.Month(endMonth), endDay, 1, 10, 30, 0, time.UTC)
-
 	var Results []dtos.ResultResponse
-	filter := bson.D{bson.E{Key: "createdat", Value: bson.D{bson.E{Key: "$gte", Value: startDate}}},
-		bson.E{Key: "createdat", Value: bson.D{bson.E{Key: "$lte", Value: endDate}}},
-		bson.E{Key: "subjectid", Value: bson.D{bson.E{Key: "$in", Value: req.SubjectIds}}},
+	filter := bson.D{bson.E{Key: "subjectid", Value: bson.D{bson.E{Key: "$in", Value: req.SubjectIds}}},
 		bson.E{Key: "classroomid", Value: bson.D{bson.E{Key: "$in", Value: req.ClassRoomIds}}},
 		bson.E{Key: "studentid", Value: bson.D{bson.E{Key: "$in", Value: req.StudentIds}}},
-		bson.E{Key: "leveid", Value: req.LevelId},
+		bson.E{Key: "sessionid", Value: req.SessionId},
+		bson.E{Key: "levelid", Value: req.LevelId},
 		bson.E{Key: "schoolid", Value: req.SchoolId}}
 
 	cur, err := impl.collection.Find(impl.ctx, filter)
@@ -550,7 +522,7 @@ func (impl serviceImpl) SummaryStudentsPositions2(req dtos.GetResultsRequest) (i
 	for studentId := range grouppedStudents {
 		studentIds = append(studentIds, studentId)
 	}
-	selectedStudents, _ := impl.studentService.GetSelecedStudents(studentIds)
+	selectedStudents, _ := impl.userService.GetSelecedStudents(studentIds)
 	students := make([]dtos.StudentResults, 0)
 
 	i := -1
@@ -845,6 +817,7 @@ func (impl serviceImpl) CreateResult(userId string, model dtos.CreateResultReque
 		bson.E{Key: "subjectid", Value: modelObj.SubjectId},
 		bson.E{Key: "classroomid", Value: modelObj.ClassRoomId},
 		bson.E{Key: "levelid", Value: modelObj.LevelId},
+		bson.E{Key: "sessionid", Value: modelObj.SessionId},
 		bson.E{Key: "schoolid", Value: modelObj.SchoolId}}
 	count, err := impl.collection.CountDocuments(impl.ctx, filter)
 	if err != nil {
@@ -922,6 +895,7 @@ func (impl serviceImpl) CreateResults(userId string, _models []dtos.CreateResult
 				model.SubjectId == result.SubjectId &&
 				model.LevelId == result.LevelId &&
 				model.ClassRoomId == result.ClassRoomId &&
+				model.SessionId == result.SessionId &&
 				createdats[i].Equal(result.CreatedAt) {
 				check = true
 				break
@@ -969,6 +943,7 @@ func (impl serviceImpl) PutResult(id string, model dtos.UpdateResultRequest) (in
 		bson.E{Key: "teacherid", Value: updatedResult.TeacherId},
 		bson.E{Key: "classroomid", Value: updatedResult.ClassRoomId},
 		bson.E{Key: "levelid", Value: updatedResult.LevelId},
+		bson.E{Key: "sessionid", Value: updatedResult.SessionId},
 		bson.E{Key: "assessmentid", Value: updatedResult.AssessmentId},
 		bson.E{Key: "designationid", Value: updatedResult.DesignationId},
 		bson.E{Key: "score", Value: updatedResult.Score},

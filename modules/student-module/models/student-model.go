@@ -16,6 +16,7 @@ type Student struct {
 	Password                string    `json:"password"`
 	ClassRoomId             string    `json:"classRoomId"`
 	LevelId                 string    `json:"levelId"`
+	SessionId               string    `json:"sessionId"`
 	SubscriptionType        int       `json:"subscriptionType" binding:"required"`
 	CreatedSubscriptionDate time.Time `json:"createdSubscriptionDate"`
 	SchoolId                string    `json:"schoolId" binding:"required"`

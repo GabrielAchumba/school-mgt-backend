@@ -12,6 +12,7 @@ type CreateResultRequest struct {
 	AssessmentId  string  `json:"assessmentId" binding:"required"`
 	DesignationId string  `json:"designationId" binding:"required"`
 	LevelId       string  `json:"levelId"`
+	SessionId     string  `json:"sessionId"`
 	CreatedAt     string  `json:"createdAt" binding:"required"`
 	SchoolId      string  `json:"schoolId" binding:"required"`
 }
@@ -24,6 +25,7 @@ type UpdateResultRequest struct {
 	TeacherId     string  `json:"teacherId" binding:"required"`
 	ClassRoomId   string  `json:"classRoomId" binding:"required"`
 	LevelId       string  `json:"levelId"`
+	SessionId     string  `json:"sessionId"`
 	AssessmentId  string  `json:"assessmentId" binding:"required"`
 	DesignationId string  `json:"designationId" binding:"required"`
 	UpdatedAt     string  `json:"updatedAt" binding:"required"`
@@ -41,6 +43,7 @@ type ResultResponse struct {
 	TeacherId           string    `json:"teacherId" binding:"required"`
 	ClassRoomId         string    `json:"classRoomId" binding:"required"`
 	LevelId             string    `json:"levelId"`
+	SessionId           string    `json:"sessionId"`
 	AssessmentId        string    `json:"assessmentId" binding:"required"`
 	DesignationId       string    `json:"designationId" binding:"required"`
 	SubjectFullName     string    `json:"subjectFullName" binding:"required"`
@@ -49,6 +52,7 @@ type ResultResponse struct {
 	ClassRoomFullName   string    `json:"classRoomFullName" binding:"required"`
 	AssessmentFullName  string    `json:"assessmentFullName" binding:"required"`
 	LevelFullName       string    `json:"levelFullName"`
+	SessionFullName     string    `json:"sessionFullName"`
 	DesignationFullName string    `json:"designationFullName" binding:"required"`
 	SchoolId            string    `json:"schoolId" binding:"required"`
 }
@@ -71,7 +75,7 @@ type GetResultsRequest struct {
 	TeacherId     string         `json:"teacherId"`
 	TeacherIds    []string       `json:"teacherIds"`
 	ClassRoomId   string         `json:"classRoomId"`
-	ClassRoomIds  string         `json:"classRoomIds"`
+	ClassRoomIds  []string       `json:"classRoomIds"`
 	SessionId     string         `json:"sessionId"`
 	SessionIds    string         `json:"sessionIds"`
 	LevelId       string         `json:"levelId"`

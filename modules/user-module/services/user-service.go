@@ -566,6 +566,7 @@ func (impl serviceImpl) PutUser(id string, User dtos.UpdateUserRequest) (interfa
 		bson.E{Key: "usertype", Value: updatedUser.UserType},
 		bson.E{Key: "classroomid", Value: updatedUser.ClassRoomId},
 		bson.E{Key: "levelid", Value: updatedUser.LevelId},
+		bson.E{Key: "sessionid", Value: updatedUser.SessionId},
 		bson.E{Key: "schoolid", Value: updatedUser.SchoolId}}
 
 	_, err := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})

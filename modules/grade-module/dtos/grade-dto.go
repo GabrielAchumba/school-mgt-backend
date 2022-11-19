@@ -35,7 +35,7 @@ func GetGradeAndPoint(grades []GradeResponse, score float64) (string, float64) {
 	point := 1.0
 
 	for _, grade := range grades {
-		if score >= grade.From && score >= grade.Point {
+		if score >= grade.From && score <= grade.Point {
 			_grade = grade.Type
 			point = grade.Point
 			break

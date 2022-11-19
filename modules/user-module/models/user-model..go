@@ -22,6 +22,7 @@ type User struct {
 	Password             string    `json:"password,omitempty" binding:"required"`
 	ClassRoomId          string    `json:"classRoomId"`
 	LevelId              string    `json:"levelId"`
+	SessionId            string    `json:"sessionId"`
 	Token                int       `json:"token"`
 	PasswordResetToken   string    `json:"passwordResetToken"`
 	PasswordResetAt      time.Time `json:"passwordResetAt"`
