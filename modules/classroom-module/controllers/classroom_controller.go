@@ -18,6 +18,7 @@ type ClassRoomController interface {
 	DeleteClassRoom(ctx *gin.Context) *rest.Response
 	GetClassRoom(ctx *gin.Context) *rest.Response
 	GetClassRooms(ctx *gin.Context) *rest.Response
+	GetClassRoomsByLevel(ctx *gin.Context) *rest.Response
 	PutClassRoom(ctx *gin.Context) *rest.Response
 }
 
@@ -97,6 +98,17 @@ func (ctrl *controllerImpl) GetClassRooms(ctx *gin.Context) *rest.Response {
 
 	schoolId := ctx.Param("schoolId")
 	m, er := ctrl.ClassRoomService.GetClassRooms(schoolId)
+	if er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	}
+	return _response.GetSuccess(http.StatusOK, m)
+}
+
+func (ctrl *controllerImpl) GetClassRoomsByLevel(ctx *gin.Context) *rest.Response {
+
+	schoolId := ctx.Param("schoolId")
+	levelId := ctx.Param("levelId")
+	m, er := ctrl.ClassRoomService.GetClassRoomsByLevel(schoolId, levelId)
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}

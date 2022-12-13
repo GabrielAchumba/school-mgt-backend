@@ -46,6 +46,8 @@ type UserService interface {
 	SeedAdmin()
 	GenerateTokens(studentIds []string) (interface{}, error)
 	GetSelecedStudents(Ids []string) ([]dtos.UserResponse, error)
+	GetStudentsByClassRoom(schoolId string, levelId string,
+		classRoomId string, sessionId string) ([]dtos.UserResponse, error)
 	GetStudentByToken(token int, schoolId string) (dtos.UserResponse, error)
 	LogInStudent(token int, schoolId string) (dtos.LoginUserResponse, error)
 }
@@ -135,6 +137,9 @@ func (impl serviceImpl) LoginUser(requestModel dtos.LoginUserRequest) (interface
 			Base64String:  modelDto.Base64String,
 			SchoolId:      modelDto.SchoolId,
 			CountryCode:   modelDto.CountryCode,
+			SessionId:     modelDto.SessionId,
+			LevelId:       modelDto.LevelId,
+			ClassRoomId:   modelDto.ClassRoomId,
 		},
 	}
 
@@ -218,7 +223,24 @@ func (impl serviceImpl) RegisterUsers(userId string, _models []dtos.CreateUserRe
 		}
 
 		if !check {
+			if model.UserName == "" {
+				continue
+			}
+			if model.Password == "" {
+				continue
+			}
+			if model.FirstName == "" {
+				continue
+			}
+			if model.LastName == "" {
+				continue
+			}
+
 			conversion.Convert(model, &modelObj)
+			er := modelObj.HashPassword()
+			if er != nil {
+				continue
+			}
 			modelObjs = append(modelObjs, modelObj)
 		}
 	}
@@ -816,6 +838,35 @@ func (impl serviceImpl) GetSelecedStudents(Ids []string) ([]dtos.UserResponse, e
 	if err != nil {
 		Students = make([]dtos.UserResponse, 0)
 		return Students, errors.Error("Types of student not found!")
+	}
+
+	err = cur.All(impl.ctx, &Students)
+	if err != nil {
+		return Students, err
+	}
+
+	cur.Close(impl.ctx)
+	if len(Students) == 0 {
+		Students = make([]dtos.UserResponse, 0)
+	}
+
+	log.Print("Call GetSelecedStudents completed.")
+	return Students, err
+}
+
+func (impl serviceImpl) GetStudentsByClassRoom(schoolId string, levelId string,
+	classRoomId string, sessionId string) ([]dtos.UserResponse, error) {
+
+	var Students []dtos.UserResponse
+	filter := bson.D{bson.E{Key: "schoolid", Value: schoolId},
+		bson.E{Key: "classroomid", Value: classRoomId},
+		bson.E{Key: "levelid", Value: levelId},
+		bson.E{Key: "sessionid", Value: sessionId}}
+	cur, err := impl.collection.Find(impl.ctx, filter)
+
+	if err != nil {
+		Students = make([]dtos.UserResponse, 0)
+		return Students, errors.Error("students not found!")
 	}
 
 	err = cur.All(impl.ctx, &Students)

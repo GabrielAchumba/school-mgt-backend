@@ -22,6 +22,7 @@ import (
 	staffServicePackage "github.com/GabrielAchumba/school-mgt-backend/modules/staff-module/services"
 	studentServicePackage "github.com/GabrielAchumba/school-mgt-backend/modules/student-module/services"
 	subjectServicePackage "github.com/GabrielAchumba/school-mgt-backend/modules/subject-module/services"
+	userDTOsPackage "github.com/GabrielAchumba/school-mgt-backend/modules/user-module/dtos"
 	userServicePackage "github.com/GabrielAchumba/school-mgt-backend/modules/user-module/services"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -470,6 +471,7 @@ func (impl serviceImpl) SummaryStudentsPositions(req dtos.GetResultsRequest) (in
 		student := dtos.StudentResults{
 			StudentId:       studentId,
 			FullName:        selectedStudents[i].FirstName + " " + selectedStudents[i].LastName,
+			UserName:        selectedStudents[i].UserName,
 			OverallScore:    overallScore,
 			OverallScoreMax: overallScoreMax,
 			Subjects:        subjectsScores,
@@ -573,9 +575,18 @@ func (impl serviceImpl) SummaryStudentsPositions2(req dtos.GetResultsRequest) (i
 			}
 		}
 
+		selectedStudent := userDTOsPackage.UserResponse{}
+		for _, v := range selectedStudents {
+			if v.Id == studentId {
+				selectedStudent = v
+				break
+			}
+		}
+
 		student := dtos.StudentResults{
 			StudentId:       studentId,
-			FullName:        selectedStudents[i].FirstName + " " + selectedStudents[i].LastName,
+			FullName:        selectedStudent.FirstName + " " + selectedStudent.LastName,
+			UserName:        selectedStudent.UserName,
 			OverallScore:    overallScore,
 			OverallScoreMax: overallScoreMax,
 			Subjects:        subjectsScores,

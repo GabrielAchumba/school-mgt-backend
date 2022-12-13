@@ -37,6 +37,7 @@ type UserController interface {
 	ResetPassword(ctx *gin.Context) *rest.Response
 	GenerateTokens(ctx *gin.Context) *rest.Response
 	GetStudentByToken(ctx *gin.Context) *rest.Response
+	GetStudentsByClassRoom(ctx *gin.Context) *rest.Response
 	LogInStudent(ctx *gin.Context) *rest.Response
 	toBase64(b []byte) string
 }
@@ -208,6 +209,19 @@ func (ctrl *controllerImpl) GetStudents(ctx *gin.Context) *rest.Response {
 
 	schoolId := ctx.Param("schoolId")
 	m, er := ctrl.userService.GetStudents(schoolId)
+	if er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	}
+	return _response.GetSuccess(http.StatusOK, m)
+}
+
+func (ctrl *controllerImpl) GetStudentsByClassRoom(ctx *gin.Context) *rest.Response {
+
+	schoolId := ctx.Param("schoolId")
+	levelId := ctx.Param("levelId")
+	classRoomId := ctx.Param("classRoomId")
+	sessionId := ctx.Param("sessionId")
+	m, er := ctrl.userService.GetStudentsByClassRoom(schoolId, levelId, classRoomId, sessionId)
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}

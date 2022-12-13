@@ -103,6 +103,7 @@ type SubJectResult struct {
 type StudentResults struct {
 	StudentId       string                   `json:"studentId"`
 	FullName        string                   `json:"fullName"`
+	UserName        string                   `json:"userName"`
 	OverallScore    float64                  `json:"overallScore"`
 	OverallScoreMax float64                  `json:"overallScoreMax"`
 	CGPA            float64                  `json:"cGPA"`
