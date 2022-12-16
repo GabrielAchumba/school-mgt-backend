@@ -91,6 +91,7 @@ type GetResultsRequest struct {
 type AssesmentGroup struct {
 	AssessmentScore float64 `json:"assessmentScore"`
 	ScoreMax        float64 `json:"scoreMax"`
+	Year            int     `json:"year"`
 }
 
 type SubJectResult struct {

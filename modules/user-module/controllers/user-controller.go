@@ -37,7 +37,7 @@ type UserController interface {
 	ResetPassword(ctx *gin.Context) *rest.Response
 	GenerateTokens(ctx *gin.Context) *rest.Response
 	GetStudentByToken(ctx *gin.Context) *rest.Response
-	GetStudentsByClassRoom(ctx *gin.Context) *rest.Response
+	GetStudentsByClassRooms(ctx *gin.Context) *rest.Response
 	LogInStudent(ctx *gin.Context) *rest.Response
 	toBase64(b []byte) string
 }
@@ -215,17 +215,19 @@ func (ctrl *controllerImpl) GetStudents(ctx *gin.Context) *rest.Response {
 	return _response.GetSuccess(http.StatusOK, m)
 }
 
-func (ctrl *controllerImpl) GetStudentsByClassRoom(ctx *gin.Context) *rest.Response {
+func (ctrl *controllerImpl) GetStudentsByClassRooms(ctx *gin.Context) *rest.Response {
+	var model dtos.CreateUserRequest
 
-	schoolId := ctx.Param("schoolId")
-	levelId := ctx.Param("levelId")
-	classRoomId := ctx.Param("classRoomId")
-	sessionId := ctx.Param("sessionId")
-	m, er := ctrl.userService.GetStudentsByClassRoom(schoolId, levelId, classRoomId, sessionId)
-	if er != nil {
-		return _response.GetError(http.StatusOK, er.Error())
+	if er := ctx.BindJSON(&model); er != nil {
+		return _response.GetError(http.StatusBadRequest, er.Error())
 	}
-	return _response.GetSuccess(http.StatusOK, m)
+
+	if m, er := ctrl.userService.GetStudentsByClassRooms(model.SchoolId, model.LevelId,
+		model.ClassRoomIds, model.SessionId); er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	} else {
+		return _response.GetSuccess(http.StatusOK, m)
+	}
 }
 
 func (ctrl *controllerImpl) PutUser(ctx *gin.Context) *rest.Response {

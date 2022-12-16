@@ -46,8 +46,8 @@ type UserService interface {
 	SeedAdmin()
 	GenerateTokens(studentIds []string) (interface{}, error)
 	GetSelecedStudents(Ids []string) ([]dtos.UserResponse, error)
-	GetStudentsByClassRoom(schoolId string, levelId string,
-		classRoomId string, sessionId string) ([]dtos.UserResponse, error)
+	GetStudentsByClassRooms(schoolId string, levelId string,
+		classRoomIds []string, sessionId string) ([]dtos.UserResponse, error)
 	GetStudentByToken(token int, schoolId string) (dtos.UserResponse, error)
 	LogInStudent(token int, schoolId string) (dtos.LoginUserResponse, error)
 }
@@ -854,12 +854,12 @@ func (impl serviceImpl) GetSelecedStudents(Ids []string) ([]dtos.UserResponse, e
 	return Students, err
 }
 
-func (impl serviceImpl) GetStudentsByClassRoom(schoolId string, levelId string,
-	classRoomId string, sessionId string) ([]dtos.UserResponse, error) {
+func (impl serviceImpl) GetStudentsByClassRooms(schoolId string, levelId string,
+	classRoomIds []string, sessionId string) ([]dtos.UserResponse, error) {
 
 	var Students []dtos.UserResponse
 	filter := bson.D{bson.E{Key: "schoolid", Value: schoolId},
-		bson.E{Key: "classroomid", Value: classRoomId},
+		bson.E{Key: "classroomid", Value: bson.D{bson.E{Key: "$in", Value: classRoomIds}}},
 		bson.E{Key: "levelid", Value: levelId},
 		bson.E{Key: "sessionid", Value: sessionId}}
 	cur, err := impl.collection.Find(impl.ctx, filter)

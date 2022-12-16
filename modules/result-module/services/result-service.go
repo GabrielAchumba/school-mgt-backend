@@ -326,10 +326,12 @@ func (impl serviceImpl) ComputeSummaryResults2(req dtos.GetResultsRequest) (inte
 
 			var assessmentScore float64 = 0
 			var assessmentCounter float64 = 0
+			var year int = 0
 			for _, Result := range Results {
 				if Result.AssessmentId == assessment.Id &&
 					Result.SubjectId == subject.Id {
 					if Result.ScoreMax > 0 {
+						year = Result.CreatedAt.Year()
 						assessmentScore = assessmentScore + (Result.Score / Result.ScoreMax)
 						assessmentCounter++
 					}
@@ -341,6 +343,7 @@ func (impl serviceImpl) ComputeSummaryResults2(req dtos.GetResultsRequest) (inte
 				subjectAssessments[assessment.Type] = dtos.AssesmentGroup{
 					AssessmentScore: totalAssementScore,
 					ScoreMax:        assessment.Percentage,
+					Year:            year,
 				}
 				subjectScore = subjectScore + totalAssementScore
 				isSubject = true
@@ -541,10 +544,12 @@ func (impl serviceImpl) SummaryStudentsPositions2(req dtos.GetResultsRequest) (i
 
 				var assessmentScore float64 = 0
 				var assessmentCounter float64 = 0
+				var year int = 0
 				for _, Result := range grouppedStudent {
 					if Result.AssessmentId == assessment.Id &&
 						Result.SubjectId == subject.Id {
 						if Result.ScoreMax > 0 {
+							year = Result.CreatedAt.Year()
 							assessmentScore = assessmentScore + (Result.Score / Result.ScoreMax)
 							assessmentCounter++
 						}
@@ -556,6 +561,7 @@ func (impl serviceImpl) SummaryStudentsPositions2(req dtos.GetResultsRequest) (i
 					subjectAssessments[assessment.Type] = dtos.AssesmentGroup{
 						AssessmentScore: totalAssementScore,
 						ScoreMax:        assessment.Percentage,
+						Year:            year,
 					}
 					subjectScore = subjectScore + totalAssementScore
 					isSubject = true

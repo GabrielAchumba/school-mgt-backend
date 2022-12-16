@@ -35,22 +35,23 @@ type UserInternalOperation struct {
 }
 
 type CreateUserRequest struct {
-	Base64String         string `json:"base64String,omitempty"`
-	IsPhotographUploaded int64  `json:"isPhotographUploaded,omitempty"`
-	FirstName            string `json:"firstName"`
-	LastName             string `json:"lastName"`
-	PhoneNumber          string `json:"phoneNumber"`
-	CountryCode          string `json:"countryCode"`
-	Email                string `json:"email"`
-	UserType             string `json:"userType"`
-	DesignationId        string `json:"designationId"`
-	UserName             string `json:"userName"`
-	Password             string `json:"password"`
-	Token                int    `json:"token"`
-	SchoolId             string `json:"schoolId"`
-	ClassRoomId          string `json:"classRoomId"`
-	LevelId              string `json:"levelId"`
-	SessionId            string `json:"sessionId"`
+	Base64String         string   `json:"base64String,omitempty"`
+	IsPhotographUploaded int64    `json:"isPhotographUploaded,omitempty"`
+	FirstName            string   `json:"firstName"`
+	LastName             string   `json:"lastName"`
+	PhoneNumber          string   `json:"phoneNumber"`
+	CountryCode          string   `json:"countryCode"`
+	Email                string   `json:"email"`
+	UserType             string   `json:"userType"`
+	DesignationId        string   `json:"designationId"`
+	UserName             string   `json:"userName"`
+	Password             string   `json:"password"`
+	Token                int      `json:"token"`
+	SchoolId             string   `json:"schoolId"`
+	ClassRoomId          string   `json:"classRoomId"`
+	ClassRoomIds         []string `json:"classRoomIds"`
+	LevelId              string   `json:"levelId"`
+	SessionId            string   `json:"sessionId"`
 }
 
 type UpdateUserRequest struct {
