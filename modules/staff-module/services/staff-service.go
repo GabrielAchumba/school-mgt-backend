@@ -12,6 +12,7 @@ import (
 	"github.com/GabrielAchumba/school-mgt-backend/modules/staff-module/dtos"
 	"github.com/GabrielAchumba/school-mgt-backend/modules/staff-module/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -21,6 +22,7 @@ type StaffService interface {
 	DeleteStaff(id string, schoolId string) (int64, error)
 	GetStaff(id string, schoolId string) (dtos.StaffResponse, error)
 	GetStaffs(schoolId string) ([]dtos.StaffResponse, error)
+	GetStaffsByIds(schoolId string, Ids []string) ([]dtos.StaffResponse, error)
 	PutStaff(id string, item dtos.UpdateStaffRequest) (interface{}, error)
 }
 
@@ -103,6 +105,40 @@ func (impl serviceImpl) GetStaffs(schoolId string) ([]dtos.StaffResponse, error)
 
 	log.Print("Call to get all types of staff completed.")
 	return Staffs, err
+}
+
+func (impl serviceImpl) GetStaffsByIds(schoolId string, Ids []string) ([]dtos.StaffResponse, error) {
+
+	log.Print("Call to get GetStaffsByIds started.")
+
+	var objIds = make([]primitive.ObjectID, 0)
+	for _, id := range Ids {
+		objIds = append(objIds, conversion.GetMongoId(id))
+	}
+
+	var staffs []dtos.StaffResponse
+	filter := bson.D{bson.E{Key: "schoolid", Value: schoolId},
+		bson.E{Key: "_id", Value: bson.D{bson.E{Key: "$in", Value: objIds}}}}
+
+	cur, err := impl.collection.Find(impl.ctx, filter)
+
+	if err != nil {
+		staffs = make([]dtos.StaffResponse, 0)
+		return staffs, errors.Error("Staffs not found!")
+	}
+
+	err = cur.All(impl.ctx, &staffs)
+	if err != nil {
+		return staffs, err
+	}
+
+	cur.Close(impl.ctx)
+	if len(staffs) == 0 {
+		staffs = make([]dtos.StaffResponse, 0)
+	}
+
+	log.Print("Call to get staffs by Ids completed.")
+	return staffs, err
 }
 
 func (impl serviceImpl) CreateStaff(userId string, model dtos.CreateStaffRequest) (interface{}, error) {

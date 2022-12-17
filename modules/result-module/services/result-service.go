@@ -165,13 +165,49 @@ func (impl serviceImpl) GetResults(schoolId string) ([]dtos.ResultResponse, erro
 		Results = make([]dtos.ResultResponse, 0)
 	}
 
+	StudentIds := make([]string, 0)
+	for _, v := range Results {
+		StudentIds = append(StudentIds, v.StudentId)
+	}
+	students, _ := impl.userService.GetUsersByIds(schoolId, StudentIds)
+
+	TeacherIds := make([]string, 0)
+	for _, v := range Results {
+		TeacherIds = append(TeacherIds, v.TeacherId)
+	}
+	teachers, _ := impl.userService.GetUsersByIds(schoolId, TeacherIds)
+
+	SubjectIds := make([]string, 0)
+	for _, v := range Results {
+		SubjectIds = append(SubjectIds, v.SubjectId)
+	}
+	subjects, _ := impl.subjectService.GetSubjectsByIds(schoolId, SubjectIds)
+
+	ClassRoomIds := make([]string, 0)
+	for _, v := range Results {
+		ClassRoomIds = append(ClassRoomIds, v.ClassRoomId)
+	}
+	classRooms, _ := impl.classRoomService.GetClassRoomsByIds(schoolId, ClassRoomIds)
+
+	AssessmentIds := make([]string, 0)
+	for _, v := range Results {
+		AssessmentIds = append(AssessmentIds, v.ClassRoomId)
+	}
+	assessments, _ := impl.assessmentService.GetAssessmentsByIds(schoolId, AssessmentIds)
+
+	LevelIds := make([]string, 0)
+	for _, v := range Results {
+		LevelIds = append(LevelIds, v.ClassRoomId)
+	}
+	levels, _ := impl.levelService.GetLevelsByIds(schoolId, LevelIds)
+
 	for i := 0; i < length; i++ {
-		student, _ := impl.userService.GetStudent(Results[i].StudentId, Results[i].SchoolId)
-		subject, _ := impl.subjectService.GetSubject(Results[i].SubjectId, Results[i].SchoolId)
-		teacher, _ := impl.userService.GetUser(Results[i].TeacherId, Results[i].SchoolId)
-		classRoom, _ := impl.classRoomService.GetClassRoom(Results[i].ClassRoomId, Results[i].SchoolId)
-		assessment, _ := impl.assessmentService.GetAssessment(Results[i].AssessmentId, Results[i].SchoolId)
-		level, _ := impl.levelService.GetLevel(Results[i].LevelId, Results[i].SchoolId)
+		student := students[i]
+		subject := subjects[i]
+		teacher := teachers[i]
+		classRoom := classRooms[i]
+		assessment := assessments[i]
+		level := levels[i]
 
 		Results[i].StudentFullName = student.FirstName + " " + student.LastName
 		Results[i].SubjectFullName = subject.Type

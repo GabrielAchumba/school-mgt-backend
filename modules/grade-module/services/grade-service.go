@@ -12,6 +12,7 @@ import (
 	"github.com/GabrielAchumba/school-mgt-backend/modules/grade-module/dtos"
 	"github.com/GabrielAchumba/school-mgt-backend/modules/grade-module/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -21,6 +22,7 @@ type GradeService interface {
 	DeleteGrade(id string, schoolId string) (int64, error)
 	GetGrade(id string, schoolId string) (dtos.GradeResponse, error)
 	GetGrades(schoolId string) ([]dtos.GradeResponse, error)
+	GetGradesByIds(schoolId string, Ids []string) ([]dtos.GradeResponse, error)
 	PutGrade(id string, item dtos.UpdateGradeRequest) (interface{}, error)
 }
 
@@ -102,6 +104,40 @@ func (impl serviceImpl) GetGrades(schoolId string) ([]dtos.GradeResponse, error)
 	}
 
 	log.Print("Call to get all types of Grade completed.")
+	return Grades, err
+}
+
+func (impl serviceImpl) GetGradesByIds(schoolId string, Ids []string) ([]dtos.GradeResponse, error) {
+
+	log.Print("Call to get GetGradesByIds started.")
+
+	var objIds = make([]primitive.ObjectID, 0)
+	for _, id := range Ids {
+		objIds = append(objIds, conversion.GetMongoId(id))
+	}
+
+	var Grades []dtos.GradeResponse
+	filter := bson.D{bson.E{Key: "schoolid", Value: schoolId},
+		bson.E{Key: "_id", Value: bson.D{bson.E{Key: "$in", Value: objIds}}}}
+
+	cur, err := impl.collection.Find(impl.ctx, filter)
+
+	if err != nil {
+		Grades = make([]dtos.GradeResponse, 0)
+		return Grades, errors.Error("Types of Grades not found!")
+	}
+
+	err = cur.All(impl.ctx, &Grades)
+	if err != nil {
+		return Grades, err
+	}
+
+	cur.Close(impl.ctx)
+	if len(Grades) == 0 {
+		Grades = make([]dtos.GradeResponse, 0)
+	}
+
+	log.Print("Call to get grades by Ids completed.")
 	return Grades, err
 }
 

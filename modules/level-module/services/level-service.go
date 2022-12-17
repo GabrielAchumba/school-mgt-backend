@@ -12,6 +12,7 @@ import (
 	"github.com/GabrielAchumba/school-mgt-backend/modules/level-module/dtos"
 	"github.com/GabrielAchumba/school-mgt-backend/modules/level-module/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -21,6 +22,7 @@ type LevelService interface {
 	DeleteLevel(id string, schoolId string) (int64, error)
 	GetLevel(id string, schoolId string) (dtos.LevelResponse, error)
 	GetLevels(schoolId string) ([]dtos.LevelResponse, error)
+	GetLevelsByIds(schoolId string, Ids []string) ([]dtos.LevelResponse, error)
 	PutLevel(id string, item dtos.UpdateLevelRequest) (interface{}, error)
 }
 
@@ -102,6 +104,40 @@ func (impl serviceImpl) GetLevels(schoolId string) ([]dtos.LevelResponse, error)
 	}
 
 	log.Print("Call to get all types of Level completed.")
+	return Levels, err
+}
+
+func (impl serviceImpl) GetLevelsByIds(schoolId string, Ids []string) ([]dtos.LevelResponse, error) {
+
+	log.Print("Call to get GetLevelsByIds started.")
+
+	var objIds = make([]primitive.ObjectID, 0)
+	for _, id := range Ids {
+		objIds = append(objIds, conversion.GetMongoId(id))
+	}
+
+	var Levels []dtos.LevelResponse
+	filter := bson.D{bson.E{Key: "schoolid", Value: schoolId},
+		bson.E{Key: "_id", Value: bson.D{bson.E{Key: "$in", Value: objIds}}}}
+
+	cur, err := impl.collection.Find(impl.ctx, filter)
+
+	if err != nil {
+		Levels = make([]dtos.LevelResponse, 0)
+		return Levels, errors.Error("Levels not found!")
+	}
+
+	err = cur.All(impl.ctx, &Levels)
+	if err != nil {
+		return Levels, err
+	}
+
+	cur.Close(impl.ctx)
+	if len(Levels) == 0 {
+		Levels = make([]dtos.LevelResponse, 0)
+	}
+
+	log.Print("Call to get levels by Ids completed.")
 	return Levels, err
 }
 

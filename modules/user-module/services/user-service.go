@@ -51,6 +51,7 @@ type UserService interface {
 		classRoomIds []string, sessionId string) ([]dtos.UserResponse, error)
 	GetStudentByToken(token int, schoolId string) (dtos.UserResponse, error)
 	LogInStudent(token int, schoolId string) (dtos.LoginUserResponse, error)
+	GetUsersByIds(schoolId string, Ids []string) ([]dtos.UserResponse, error)
 }
 
 type serviceImpl struct {
@@ -458,9 +459,14 @@ func (impl serviceImpl) GetUsers(schoolId string) ([]dtos.UserResponse, error) {
 		Users = make([]dtos.UserResponse, 0)
 	}
 
+	DesignationIds := make([]string, 0)
+	for _, v := range Users {
+		DesignationIds = append(DesignationIds, v.DesignationId)
+	}
+
+	staffs, _ := impl.staffService.GetStaffsByIds(schoolId, DesignationIds)
 	for i := 0; i < length; i++ {
-		staff, _ := impl.staffService.GetStaff(Users[i].DesignationId, schoolId)
-		Users[i].Designation = staff.Type
+		Users[i].Designation = staffs[i].Type
 	}
 
 	log.Print("Call to get all Users completed.")
@@ -492,13 +498,42 @@ func (impl serviceImpl) GetStudents(schoolId string) ([]dtos.UserResponse, error
 		Users = make([]dtos.UserResponse, 0)
 	}
 
-	/* for i := 0; i < length; i++ {
-		staff, _ := impl.staffService.GetStaff(Users[i].DesignationId, schoolId)
-		Users[i].Designation = staff.Type
-	} */
-
 	log.Print("Call to get all students completed.")
 	return Users, err
+}
+
+func (impl serviceImpl) GetUsersByIds(schoolId string, Ids []string) ([]dtos.UserResponse, error) {
+
+	log.Print("Call to get GetUsersByIds started.")
+
+	var objIds = make([]primitive.ObjectID, 0)
+	for _, id := range Ids {
+		objIds = append(objIds, conversion.GetMongoId(id))
+	}
+
+	var users []dtos.UserResponse
+	filter := bson.D{bson.E{Key: "schoolid", Value: schoolId},
+		bson.E{Key: "_id", Value: bson.D{bson.E{Key: "$in", Value: objIds}}}}
+
+	cur, err := impl.collection.Find(impl.ctx, filter)
+
+	if err != nil {
+		users = make([]dtos.UserResponse, 0)
+		return users, errors.Error("Users not found!")
+	}
+
+	err = cur.All(impl.ctx, &users)
+	if err != nil {
+		return users, err
+	}
+
+	cur.Close(impl.ctx)
+	if len(users) == 0 {
+		users = make([]dtos.UserResponse, 0)
+	}
+
+	log.Print("Call to get users by Ids completed.")
+	return users, err
 }
 
 func (impl serviceImpl) GetRerals() ([]dtos.UserResponse, error) {
@@ -554,9 +589,14 @@ func (impl serviceImpl) GetUsersByCategory(category string, schoolId string) ([]
 		Users = make([]dtos.UserResponse, 0)
 	}
 
+	DesignationIds := make([]string, 0)
+	for _, v := range Users {
+		DesignationIds = append(DesignationIds, v.DesignationId)
+	}
+
+	staffs, _ := impl.staffService.GetStaffsByIds(schoolId, DesignationIds)
 	for i := 0; i < length; i++ {
-		staff, _ := impl.staffService.GetStaff(Users[i].DesignationId, schoolId)
-		Users[i].Designation = staff.Type
+		Users[i].Designation = staffs[i].Type
 	}
 
 	log.Print("Call to get Users by category completed.")

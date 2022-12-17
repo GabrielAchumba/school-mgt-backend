@@ -12,6 +12,7 @@ import (
 	"github.com/GabrielAchumba/school-mgt-backend/modules/assessment-module/dtos"
 	"github.com/GabrielAchumba/school-mgt-backend/modules/assessment-module/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -21,6 +22,7 @@ type AssessmentService interface {
 	DeleteAssessment(id string, schoolId string) (int64, error)
 	GetAssessment(id string, schoolId string) (dtos.AssessmentResponse, error)
 	GetAssessments(schoolId string) ([]dtos.AssessmentResponse, error)
+	GetAssessmentsByIds(schoolId string, Ids []string) ([]dtos.AssessmentResponse, error)
 	PutAssessment(id string, item dtos.UpdateAssessmentRequest) (interface{}, error)
 }
 
@@ -89,6 +91,40 @@ func (impl serviceImpl) GetAssessments(schoolId string) ([]dtos.AssessmentRespon
 	if err != nil {
 		Assessments = make([]dtos.AssessmentResponse, 0)
 		return Assessments, errors.Error("Types of Assessment not found!")
+	}
+
+	err = cur.All(impl.ctx, &Assessments)
+	if err != nil {
+		return Assessments, err
+	}
+
+	cur.Close(impl.ctx)
+	if len(Assessments) == 0 {
+		Assessments = make([]dtos.AssessmentResponse, 0)
+	}
+
+	log.Print("Call to get all types of Assessment completed.")
+	return Assessments, err
+}
+
+func (impl serviceImpl) GetAssessmentsByIds(schoolId string, Ids []string) ([]dtos.AssessmentResponse, error) {
+
+	log.Print("Call to get all types of Assessments started.")
+
+	var objIds = make([]primitive.ObjectID, 0)
+	for _, id := range Ids {
+		objIds = append(objIds, conversion.GetMongoId(id))
+	}
+
+	var Assessments []dtos.AssessmentResponse
+	filter := bson.D{bson.E{Key: "schoolid", Value: schoolId},
+		bson.E{Key: "_id", Value: bson.D{bson.E{Key: "$in", Value: objIds}}}}
+
+	cur, err := impl.collection.Find(impl.ctx, filter)
+
+	if err != nil {
+		Assessments = make([]dtos.AssessmentResponse, 0)
+		return Assessments, errors.Error("Types of Assessments not found!")
 	}
 
 	err = cur.All(impl.ctx, &Assessments)

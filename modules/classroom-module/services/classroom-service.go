@@ -12,6 +12,7 @@ import (
 	"github.com/GabrielAchumba/school-mgt-backend/modules/classroom-module/dtos"
 	"github.com/GabrielAchumba/school-mgt-backend/modules/classroom-module/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -21,6 +22,7 @@ type ClassRoomService interface {
 	DeleteClassRoom(id string, schoolId string) (int64, error)
 	GetClassRoom(id string, schoolId string) (dtos.ClassRoomResponse, error)
 	GetClassRooms(schoolId string) ([]dtos.ClassRoomResponse, error)
+	GetClassRoomsByIds(schoolId string, Ids []string) ([]dtos.ClassRoomResponse, error)
 	GetClassRoomsByLevel(schoolId string, levelId string) ([]dtos.ClassRoomResponse, error)
 	PutClassRoom(id string, item dtos.UpdateClassRoomRequest) (interface{}, error)
 }
@@ -103,6 +105,40 @@ func (impl serviceImpl) GetClassRooms(schoolId string) ([]dtos.ClassRoomResponse
 	}
 
 	log.Print("Call to get all types of ClassRoom completed.")
+	return ClassRooms, err
+}
+
+func (impl serviceImpl) GetClassRoomsByIds(schoolId string, Ids []string) ([]dtos.ClassRoomResponse, error) {
+
+	log.Print("Call to get GetClassRoomsByIds started.")
+
+	var objIds = make([]primitive.ObjectID, 0)
+	for _, id := range Ids {
+		objIds = append(objIds, conversion.GetMongoId(id))
+	}
+
+	var ClassRooms []dtos.ClassRoomResponse
+	filter := bson.D{bson.E{Key: "schoolid", Value: schoolId},
+		bson.E{Key: "_id", Value: bson.D{bson.E{Key: "$in", Value: objIds}}}}
+
+	cur, err := impl.collection.Find(impl.ctx, filter)
+
+	if err != nil {
+		ClassRooms = make([]dtos.ClassRoomResponse, 0)
+		return ClassRooms, errors.Error("Types of Assessments not found!")
+	}
+
+	err = cur.All(impl.ctx, &ClassRooms)
+	if err != nil {
+		return ClassRooms, err
+	}
+
+	cur.Close(impl.ctx)
+	if len(ClassRooms) == 0 {
+		ClassRooms = make([]dtos.ClassRoomResponse, 0)
+	}
+
+	log.Print("Call to get all types of Assessment completed.")
 	return ClassRooms, err
 }
 

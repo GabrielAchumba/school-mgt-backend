@@ -12,6 +12,7 @@ import (
 	"github.com/GabrielAchumba/school-mgt-backend/modules/session-module/dtos"
 	"github.com/GabrielAchumba/school-mgt-backend/modules/session-module/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -21,6 +22,7 @@ type SessionService interface {
 	DeleteSession(id string, schoolId string) (int64, error)
 	GetSession(id string, schoolId string) (dtos.SessionResponse, error)
 	GetSessions(schoolId string) ([]dtos.SessionResponse, error)
+	GetSessionsByIds(schoolId string, Ids []string) ([]dtos.SessionResponse, error)
 	PutSession(id string, item dtos.UpdateSessionRequest) (interface{}, error)
 }
 
@@ -102,6 +104,40 @@ func (impl serviceImpl) GetSessions(schoolId string) ([]dtos.SessionResponse, er
 	}
 
 	log.Print("Call to get all types of Session completed.")
+	return Sessions, err
+}
+
+func (impl serviceImpl) GetSessionsByIds(schoolId string, Ids []string) ([]dtos.SessionResponse, error) {
+
+	log.Print("Call to get GetSessionsByIds started.")
+
+	var objIds = make([]primitive.ObjectID, 0)
+	for _, id := range Ids {
+		objIds = append(objIds, conversion.GetMongoId(id))
+	}
+
+	var Sessions []dtos.SessionResponse
+	filter := bson.D{bson.E{Key: "schoolid", Value: schoolId},
+		bson.E{Key: "_id", Value: bson.D{bson.E{Key: "$in", Value: objIds}}}}
+
+	cur, err := impl.collection.Find(impl.ctx, filter)
+
+	if err != nil {
+		Sessions = make([]dtos.SessionResponse, 0)
+		return Sessions, errors.Error("Sessions not found!")
+	}
+
+	err = cur.All(impl.ctx, &Sessions)
+	if err != nil {
+		return Sessions, err
+	}
+
+	cur.Close(impl.ctx)
+	if len(Sessions) == 0 {
+		Sessions = make([]dtos.SessionResponse, 0)
+	}
+
+	log.Print("Call to get sessions by Ids completed.")
 	return Sessions, err
 }
 

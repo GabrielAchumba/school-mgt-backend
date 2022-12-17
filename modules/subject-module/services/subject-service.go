@@ -12,6 +12,7 @@ import (
 	"github.com/GabrielAchumba/school-mgt-backend/modules/subject-module/dtos"
 	"github.com/GabrielAchumba/school-mgt-backend/modules/subject-module/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -21,6 +22,7 @@ type SubjectService interface {
 	DeleteSubject(id string, schoolId string) (int64, error)
 	GetSubject(id string, schoolId string) (dtos.SubjectResponse, error)
 	GetSubjects(schoolId string) ([]dtos.SubjectResponse, error)
+	GetSubjectsByIds(schoolId string, Ids []string) ([]dtos.SubjectResponse, error)
 	PutSubject(id string, item dtos.UpdateSubjectRequest) (interface{}, error)
 }
 
@@ -103,6 +105,40 @@ func (impl serviceImpl) GetSubjects(schoolId string) ([]dtos.SubjectResponse, er
 
 	log.Print("Call to get all types of Subject completed.")
 	return Subjects, err
+}
+
+func (impl serviceImpl) GetSubjectsByIds(schoolId string, Ids []string) ([]dtos.SubjectResponse, error) {
+
+	log.Print("Call to get GetSubjectsByIds started.")
+
+	var objIds = make([]primitive.ObjectID, 0)
+	for _, id := range Ids {
+		objIds = append(objIds, conversion.GetMongoId(id))
+	}
+
+	var subjects []dtos.SubjectResponse
+	filter := bson.D{bson.E{Key: "schoolid", Value: schoolId},
+		bson.E{Key: "_id", Value: bson.D{bson.E{Key: "$in", Value: objIds}}}}
+
+	cur, err := impl.collection.Find(impl.ctx, filter)
+
+	if err != nil {
+		subjects = make([]dtos.SubjectResponse, 0)
+		return subjects, errors.Error("Subjects not found!")
+	}
+
+	err = cur.All(impl.ctx, &subjects)
+	if err != nil {
+		return subjects, err
+	}
+
+	cur.Close(impl.ctx)
+	if len(subjects) == 0 {
+		subjects = make([]dtos.SubjectResponse, 0)
+	}
+
+	log.Print("Call to get subjects by Ids completed.")
+	return subjects, err
 }
 
 func (impl serviceImpl) CreateSubject(userId string, model dtos.CreateSubjectRequest) (interface{}, error) {
