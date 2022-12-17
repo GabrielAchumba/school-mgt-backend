@@ -466,7 +466,12 @@ func (impl serviceImpl) GetUsers(schoolId string) ([]dtos.UserResponse, error) {
 
 	staffs, _ := impl.staffService.GetStaffsByIds(schoolId, DesignationIds)
 	for i := 0; i < length; i++ {
-		Users[i].Designation = staffs[i].Type
+		for _, staff := range staffs {
+			if staff.Id == Users[i].DesignationId {
+				Users[i].Designation = staff.Type
+				break
+			}
+		}
 	}
 
 	log.Print("Call to get all Users completed.")
@@ -528,8 +533,24 @@ func (impl serviceImpl) GetUsersByIds(schoolId string, Ids []string) ([]dtos.Use
 	}
 
 	cur.Close(impl.ctx)
-	if len(users) == 0 {
+	length := len(users)
+	if length == 0 {
 		users = make([]dtos.UserResponse, 0)
+	}
+
+	DesignationIds := make([]string, 0)
+	for _, v := range users {
+		DesignationIds = append(DesignationIds, v.DesignationId)
+	}
+
+	staffs, _ := impl.staffService.GetStaffsByIds(schoolId, DesignationIds)
+	for i := 0; i < length; i++ {
+		for _, staff := range staffs {
+			if staff.Id == users[i].DesignationId {
+				users[i].Designation = staff.Type
+				break
+			}
+		}
 	}
 
 	log.Print("Call to get users by Ids completed.")
@@ -597,6 +618,12 @@ func (impl serviceImpl) GetUsersByCategory(category string, schoolId string) ([]
 	staffs, _ := impl.staffService.GetStaffsByIds(schoolId, DesignationIds)
 	for i := 0; i < length; i++ {
 		Users[i].Designation = staffs[i].Type
+		for _, staff := range staffs {
+			if staff.Id == Users[i].DesignationId {
+				Users[i].Designation = staff.Type
+				break
+			}
+		}
 	}
 
 	log.Print("Call to get Users by category completed.")

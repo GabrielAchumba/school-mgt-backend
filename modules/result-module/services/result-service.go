@@ -202,20 +202,50 @@ func (impl serviceImpl) GetResults(schoolId string) ([]dtos.ResultResponse, erro
 	levels, _ := impl.levelService.GetLevelsByIds(schoolId, LevelIds)
 
 	for i := 0; i < length; i++ {
-		student := students[i]
-		subject := subjects[i]
-		teacher := teachers[i]
-		classRoom := classRooms[i]
-		assessment := assessments[i]
-		level := levels[i]
 
-		Results[i].StudentFullName = student.FirstName + " " + student.LastName
-		Results[i].SubjectFullName = subject.Type
-		Results[i].TeacherFullName = teacher.FirstName + " " + teacher.LastName
-		Results[i].ClassRoomFullName = classRoom.Type
-		Results[i].AssessmentFullName = assessment.Type
+		for _, student := range students {
+			if student.Id == Results[i].StudentId {
+				Results[i].StudentFullName = student.FirstName + " " + student.LastName
+				break
+			}
+		}
+
+		for _, subject := range subjects {
+			if subject.Id == Results[i].SubjectId {
+				Results[i].SubjectFullName = subject.Type
+				break
+			}
+		}
+
+		for _, teacher := range teachers {
+			if teacher.Id == Results[i].TeacherId {
+				Results[i].TeacherFullName = teacher.FirstName + " " + teacher.LastName
+				break
+			}
+		}
+
+		for _, classRoom := range classRooms {
+			if classRoom.Id == Results[i].ClassRoomId {
+				Results[i].ClassRoomFullName = classRoom.Type
+				break
+			}
+		}
+
+		for _, assessment := range assessments {
+			if assessment.Id == Results[i].AssessmentId {
+				Results[i].AssessmentFullName = assessment.Type
+				break
+			}
+		}
+
+		for _, level := range levels {
+			if level.Id == Results[i].LevelId {
+				Results[i].LevelFullName = level.Type
+				break
+			}
+		}
+
 		Results[i].DesignationFullName = "Student"
-		Results[i].LevelFullName = level.Type
 
 	}
 
