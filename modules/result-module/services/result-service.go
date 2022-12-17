@@ -126,7 +126,7 @@ func (impl serviceImpl) GetResult(id string, schoolId string) (dtos.ResultRespon
 	teacher, _ := impl.userService.GetUser(Result.TeacherId, Result.SchoolId)
 	_classRoom, _ := impl.classRoomService.GetClassRoom(Result.ClassRoomId, Result.SchoolId)
 	assessment, _ := impl.assessmentService.GetAssessment(Result.AssessmentId, Result.SchoolId)
-	designation, _ := impl.staffService.GetStaff(Result.DesignationId, Result.SchoolId)
+	//designation, _ := impl.staffService.GetStaff(Result.DesignationId, Result.SchoolId)
 	level, _ := impl.levelService.GetLevel(Result.LevelId, Result.SchoolId)
 
 	Result.StudentFullName = student.FirstName + " " + student.LastName
@@ -134,7 +134,7 @@ func (impl serviceImpl) GetResult(id string, schoolId string) (dtos.ResultRespon
 	Result.TeacherFullName = teacher.FirstName + " " + teacher.LastName
 	Result.ClassRoomFullName = _classRoom.Type
 	Result.AssessmentFullName = assessment.Type
-	Result.DesignationFullName = designation.Type
+	Result.DesignationFullName = "Student"
 	Result.LevelFullName = level.Type
 
 	log.Print("Get type of Result completed")
@@ -167,7 +167,7 @@ func (impl serviceImpl) GetResults(schoolId string) ([]dtos.ResultResponse, erro
 	}
 
 	for i := 0; i < length; i++ {
-		designation, _ := impl.staffService.GetStaff(Results[i].DesignationId, Results[i].SchoolId)
+		//designation, _ := impl.staffService.GetStaff(Results[i].DesignationId, Results[i].SchoolId)
 		student, _ := impl.userService.GetUser(Results[i].StudentId, Results[i].SchoolId)
 		subject, _ := impl.subjectService.GetSubject(Results[i].SubjectId, Results[i].SchoolId)
 		teacher, _ := impl.userService.GetUser(Results[i].TeacherId, Results[i].SchoolId)
@@ -180,7 +180,7 @@ func (impl serviceImpl) GetResults(schoolId string) ([]dtos.ResultResponse, erro
 		Results[i].TeacherFullName = teacher.FirstName + " " + teacher.LastName
 		Results[i].ClassRoomFullName = classRoom.Type
 		Results[i].AssessmentFullName = assessment.Type
-		Results[i].DesignationFullName = designation.Type
+		Results[i].DesignationFullName = "Student"
 		Results[i].LevelFullName = level.Type
 
 	}
