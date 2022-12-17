@@ -472,10 +472,10 @@ func (impl serviceImpl) GetStudents(schoolId string) ([]dtos.UserResponse, error
 		Users = make([]dtos.UserResponse, 0)
 	}
 
-	for i := 0; i < length; i++ {
+	/* for i := 0; i < length; i++ {
 		staff, _ := impl.staffService.GetStaff(Users[i].DesignationId, schoolId)
 		Users[i].Designation = staff.Type
-	}
+	} */
 
 	log.Print("Call to get all students completed.")
 	return Users, err
