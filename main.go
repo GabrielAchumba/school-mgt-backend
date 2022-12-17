@@ -174,8 +174,8 @@ func main() {
 	networkingServer := &http.Server{
 		Addr:         ":" + port,
 		Handler:      server,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
+		ReadTimeout:  600 * time.Second,
+		WriteTimeout: 1200 * time.Second,
 	}
 
 	fmt.Println("Networking service is running on port: " + port)
