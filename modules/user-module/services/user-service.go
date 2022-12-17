@@ -33,6 +33,7 @@ type UserService interface {
 	GetUsers(schoolId string) ([]dtos.UserResponse, error)
 	GetStudents(schoolId string) ([]dtos.UserResponse, error)
 	GetUser(id string, schoolId string) (dtos.UserResponse, error)
+	GetStudent(id string, schoolId string) (dtos.UserResponse, error)
 	GetUsersByCategory(category string, schoolId string) ([]dtos.UserResponse, error)
 	GetRerals() ([]dtos.UserResponse, error)
 	PutUser(id string, User dtos.UpdateUserRequest) (interface{}, error)
@@ -407,6 +408,25 @@ func (impl serviceImpl) GetUser(id string, schoolId string) (dtos.UserResponse, 
 
 	staff, _ := impl.staffService.GetStaff(User.DesignationId, schoolId)
 	User.Designation = staff.Type
+
+	log.Print("Call GetUser completed")
+	return User, err
+
+}
+
+func (impl serviceImpl) GetStudent(id string, schoolId string) (dtos.UserResponse, error) {
+
+	log.Print("Get GetUser called")
+	objId := conversion.GetMongoId(id)
+	var User dtos.UserResponse
+
+	filter := bson.D{bson.E{Key: "_id", Value: objId},
+		bson.E{Key: "schoolid", Value: schoolId}}
+
+	err := impl.collection.FindOne(impl.ctx, filter).Decode(&User)
+	if err != nil {
+		return User, errors.Error("could not find user by id")
+	}
 
 	log.Print("Call GetUser completed")
 	return User, err

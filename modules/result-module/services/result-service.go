@@ -121,12 +121,11 @@ func (impl serviceImpl) GetResult(id string, schoolId string) (dtos.ResultRespon
 		return Result, errors.Error("could not find type of Result by id")
 	}
 
-	student, _ := impl.userService.GetUser(Result.StudentId, Result.SchoolId)
+	student, _ := impl.userService.GetStudent(Result.StudentId, Result.SchoolId)
 	subject, _ := impl.subjectService.GetSubject(Result.SubjectId, Result.SchoolId)
 	teacher, _ := impl.userService.GetUser(Result.TeacherId, Result.SchoolId)
 	_classRoom, _ := impl.classRoomService.GetClassRoom(Result.ClassRoomId, Result.SchoolId)
 	assessment, _ := impl.assessmentService.GetAssessment(Result.AssessmentId, Result.SchoolId)
-	//designation, _ := impl.staffService.GetStaff(Result.DesignationId, Result.SchoolId)
 	level, _ := impl.levelService.GetLevel(Result.LevelId, Result.SchoolId)
 
 	Result.StudentFullName = student.FirstName + " " + student.LastName
@@ -167,8 +166,7 @@ func (impl serviceImpl) GetResults(schoolId string) ([]dtos.ResultResponse, erro
 	}
 
 	for i := 0; i < length; i++ {
-		//designation, _ := impl.staffService.GetStaff(Results[i].DesignationId, Results[i].SchoolId)
-		student, _ := impl.userService.GetUser(Results[i].StudentId, Results[i].SchoolId)
+		student, _ := impl.userService.GetStudent(Results[i].StudentId, Results[i].SchoolId)
 		subject, _ := impl.subjectService.GetSubject(Results[i].SubjectId, Results[i].SchoolId)
 		teacher, _ := impl.userService.GetUser(Results[i].TeacherId, Results[i].SchoolId)
 		classRoom, _ := impl.classRoomService.GetClassRoom(Results[i].ClassRoomId, Results[i].SchoolId)
