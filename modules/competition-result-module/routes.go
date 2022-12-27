@@ -32,11 +32,8 @@ func (module *CompetitionResultModule) RegisterRoutes(rg *gin.RouterGroup, token
 		moduleRoute.GET("/:schoolId", serverHttp(module.controller.GetCompetitionResults))
 		//moduleRoute.GET("/:id", serverHttp(module.controller.GetCompetitionResult))
 		moduleRoute.DELETE("/:id/:schoolId", serverHttp(module.controller.DeleteCompetitionResult))
-		moduleRoute.POST("/summarizedCompetitionResult", serverHttp(module.controller.ComputeSummaryCompetitionResults))
-		moduleRoute.POST("/summarizedCompetitionResult2", serverHttp(module.controller.ComputeSummaryCompetitionResults2))
+		moduleRoute.POST("/summarizedCompetitionResult2", serverHttp(module.controller.ComputeSummaryCompetitionResults))
 		moduleRoute.POST("/summarizedstudentsCompetitionResult", serverHttp(module.controller.ComputeStudentsSummaryCompetitionResults))
-		moduleRoute.POST("/summarizedstudentspositions", serverHttp(module.controller.SummaryStudentsPositions))
-		moduleRoute.POST("/summarizedstudentspositions2", serverHttp(module.controller.SummaryStudentsPositions2))
 		moduleRoute.POST("/summarizedstudentsCompetitionResultbydate", serverHttp(module.controller.ComputeStudentsCompetitionResultsByDateRange))
 	}
 

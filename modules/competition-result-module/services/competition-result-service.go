@@ -20,7 +20,6 @@ import (
 	levelServicePackage "github.com/GabrielAchumba/school-mgt-backend/modules/level-module/services"
 	sessionServicePackage "github.com/GabrielAchumba/school-mgt-backend/modules/session-module/services"
 	staffServicePackage "github.com/GabrielAchumba/school-mgt-backend/modules/staff-module/services"
-	studentServicePackage "github.com/GabrielAchumba/school-mgt-backend/modules/student-module/services"
 	subjectServicePackage "github.com/GabrielAchumba/school-mgt-backend/modules/subject-module/services"
 	userServicePackage "github.com/GabrielAchumba/school-mgt-backend/modules/user-module/services"
 	"go.mongodb.org/mongo-driver/bson"
@@ -35,10 +34,7 @@ type CompetitionResultService interface {
 	GetCompetitionResults(schoolId string) ([]dtos.CompetitionResultResponse, error)
 	PutCompetitionResult(id string, item dtos.UpdateCompetitionResultRequest) (interface{}, error)
 	ComputeSummaryCompetitionResults(req dtos.GetCompetitionResultsRequest) (interface{}, error)
-	ComputeSummaryCompetitionResults2(req dtos.GetCompetitionResultsRequest) (interface{}, error)
 	ComputeStudentsSummaryCompetitionResults(req dtos.GetCompetitionResultsRequest) (interface{}, error)
-	SummaryStudentsPositions(req dtos.GetCompetitionResultsRequest) (interface{}, error)
-	SummaryStudentsPositions2(req dtos.GetCompetitionResultsRequest) (interface{}, error)
 	ComputeStudentsCompetitionResultsByDateRange(req dtos.GetCompetitionResultsRequest) (interface{}, error)
 }
 
@@ -46,7 +42,6 @@ type serviceImpl struct {
 	ctx                    context.Context
 	collection             *mongo.Collection
 	userService            userServicePackage.UserService
-	studentService         studentServicePackage.StudentService
 	subjectService         subjectServicePackage.SubjectService
 	classRoomService       classRoomServicePackage.ClassRoomService
 	assessmentService      assessmentServicePackage.AssessmentService
@@ -59,7 +54,6 @@ type serviceImpl struct {
 
 func New(mongoClient *mongo.Client, config config.Settings, ctx context.Context,
 	userService userServicePackage.UserService,
-	studentService studentServicePackage.StudentService,
 	subjectService subjectServicePackage.SubjectService,
 	classRoomService classRoomServicePackage.ClassRoomService,
 	assessmentService assessmentServicePackage.AssessmentService,
@@ -73,7 +67,6 @@ func New(mongoClient *mongo.Client, config config.Settings, ctx context.Context,
 		collection:             collection,
 		ctx:                    ctx,
 		userService:            userService,
-		studentService:         studentService,
 		subjectService:         subjectService,
 		classRoomService:       classRoomService,
 		assessmentService:      assessmentService,
@@ -120,7 +113,7 @@ func (impl serviceImpl) GetCompetitionResult(id string, schoolId string) (dtos.C
 		return CompetitionResult, errors.Error("could not find type of CompetitionResult by id")
 	}
 
-	student, _ := impl.studentService.GetStudent(CompetitionResult.StudentId, CompetitionResult.SchoolId)
+	student, _ := impl.userService.GetStudent(CompetitionResult.StudentId, CompetitionResult.SchoolId)
 	subject, _ := impl.subjectService.GetSubject(CompetitionResult.SubjectId, CompetitionResult.SchoolId)
 	teacher, _ := impl.userService.GetUser(CompetitionResult.TeacherId, CompetitionResult.SchoolId)
 	_classRoom, _ := impl.classRoomService.GetClassRoom(CompetitionResult.ClassRoomId, CompetitionResult.SchoolId)
@@ -165,7 +158,7 @@ func (impl serviceImpl) GetCompetitionResults(schoolId string) ([]dtos.Competiti
 
 	for i := 0; i < length; i++ {
 		designation, _ := impl.staffService.GetStaff(CompetitionResults[i].DesignationId, CompetitionResults[i].SchoolId)
-		student, _ := impl.studentService.GetStudent(CompetitionResults[i].StudentId, CompetitionResults[i].SchoolId)
+		student, _ := impl.userService.GetStudent(CompetitionResults[i].StudentId, CompetitionResults[i].SchoolId)
 		subject, _ := impl.subjectService.GetSubject(CompetitionResults[i].SubjectId, CompetitionResults[i].SchoolId)
 		teacher, _ := impl.userService.GetUser(CompetitionResults[i].TeacherId, CompetitionResults[i].SchoolId)
 		classRoom, _ := impl.classRoomService.GetClassRoom(CompetitionResults[i].ClassRoomId, CompetitionResults[i].SchoolId)
@@ -185,101 +178,6 @@ func (impl serviceImpl) GetCompetitionResults(schoolId string) ([]dtos.Competiti
 }
 
 func (impl serviceImpl) ComputeSummaryCompetitionResults(req dtos.GetCompetitionResultsRequest) (interface{}, error) {
-
-	log.Print("Call ComputeSummaryCompetitionResults started")
-
-	assessments, _ := impl.assessmentService.GetAssessments(req.SchoolId)
-	subjects, _ := impl.subjectService.GetSubjects(req.SchoolId)
-	grades, _ := impl.gradeService.GetGrades(req.SchoolId)
-
-	splitStartDte := strings.Split(req.StartDate, "/")
-	startDay, _ := strconv.Atoi(splitStartDte[2])
-	startMonth, _ := strconv.Atoi(splitStartDte[1])
-	startYear, _ := strconv.Atoi(splitStartDte[0])
-
-	splitEndDate := strings.Split(req.EndDate, "/")
-	endDay, _ := strconv.Atoi(splitEndDate[2])
-	endMonth, _ := strconv.Atoi(splitEndDate[1])
-	endYear, _ := strconv.Atoi(splitEndDate[0])
-
-	startDate := time.Date(startYear, time.Month(startMonth), startDay, 1, 10, 30, 0, time.UTC)
-	endDate := time.Date(endYear, time.Month(endMonth), endDay, 1, 10, 30, 0, time.UTC)
-
-	var CompetitionResults []dtos.CompetitionResultResponse
-	filter := bson.D{bson.E{Key: "createdat", Value: bson.D{bson.E{Key: "$gte", Value: startDate}}},
-		bson.E{Key: "createdat", Value: bson.D{bson.E{Key: "$lte", Value: endDate}}},
-		bson.E{Key: "subjectid", Value: bson.D{bson.E{Key: "$in", Value: req.SubjectIds}}},
-		bson.E{Key: "teacherid", Value: req.TeacherId},
-		bson.E{Key: "studentid", Value: req.StudentId},
-		bson.E{Key: "classroomid", Value: req.ClassRoomId},
-		bson.E{Key: "schoolid", Value: req.SchoolId}}
-
-	cur, err := impl.collection.Find(impl.ctx, filter)
-
-	if err != nil {
-		CompetitionResults = make([]dtos.CompetitionResultResponse, 0)
-		return CompetitionResults, errors.Error("CompetitionResults not found!")
-	}
-
-	err = cur.All(impl.ctx, &CompetitionResults)
-	if err != nil {
-		return CompetitionResults, err
-	}
-
-	cur.Close(impl.ctx)
-	length := len(CompetitionResults)
-	if length == 0 {
-		CompetitionResults = make([]dtos.CompetitionResultResponse, 0)
-	}
-
-	subjectsScores := make(map[string]dtos.SubJectCompetitionResult, 0)
-	for _, subject := range subjects {
-		var subjectScore float64 = 0
-		isSubject := false
-		subjectAssessments := make(map[string]dtos.AssesmentGroup, 0)
-		for _, assessment := range assessments {
-
-			var assessmentScore float64 = 0
-			var assessmentCounter float64 = 0
-			for _, CompetitionResult := range CompetitionResults {
-				if CompetitionResult.AssessmentId == assessment.Id &&
-					CompetitionResult.SubjectId == subject.Id {
-					if CompetitionResult.ScoreMax > 0 {
-						assessmentScore = assessmentScore + (CompetitionResult.Score / CompetitionResult.ScoreMax)
-						assessmentCounter++
-					}
-				}
-			}
-
-			if assessmentCounter > 0 {
-				var totalAssementScore float64 = (assessmentScore / assessmentCounter) * assessment.Percentage
-				subjectAssessments[assessment.Type] = dtos.AssesmentGroup{
-					AssessmentScore: totalAssementScore,
-					ScoreMax:        assessment.Percentage,
-				}
-				subjectScore = subjectScore + totalAssementScore
-				isSubject = true
-			}
-
-		}
-
-		if isSubject {
-			grade, point := gradeDTOPackage.GetGradeAndPoint(grades, subjectScore)
-			subjectsScores[subject.Type] = dtos.SubJectCompetitionResult{
-				SubjectScore: subjectScore,
-				Assessments:  subjectAssessments,
-				Grade:        grade,
-				Point:        point,
-			}
-		}
-	}
-
-	log.Print("Call ComputeSummaryCompetitionResults completed")
-	return subjectsScores, err
-
-}
-
-func (impl serviceImpl) ComputeSummaryCompetitionResults2(req dtos.GetCompetitionResultsRequest) (interface{}, error) {
 
 	log.Print("Call ComputeSummaryCompetitionResults2 started")
 
@@ -370,247 +268,6 @@ func (impl serviceImpl) ComputeSummaryCompetitionResults2(req dtos.GetCompetitio
 
 	log.Print("Call ComputeSummaryCompetitionResults2 completed")
 	return subjectsScores, err
-
-}
-
-func (impl serviceImpl) SummaryStudentsPositions(req dtos.GetCompetitionResultsRequest) (interface{}, error) {
-
-	log.Print("Call SummaryStudentsPositions started")
-
-	assessments, _ := impl.assessmentService.GetAssessments(req.SchoolId)
-	subjects, _ := impl.subjectService.GetSubjects(req.SchoolId)
-	grades, _ := impl.gradeService.GetGrades(req.SchoolId)
-
-	splitStartDte := strings.Split(req.StartDate, "/")
-	startDay, _ := strconv.Atoi(splitStartDte[2])
-	startMonth, _ := strconv.Atoi(splitStartDte[1])
-	startYear, _ := strconv.Atoi(splitStartDte[0])
-
-	splitEndDate := strings.Split(req.EndDate, "/")
-	endDay, _ := strconv.Atoi(splitEndDate[2])
-	endMonth, _ := strconv.Atoi(splitEndDate[1])
-	endYear, _ := strconv.Atoi(splitEndDate[0])
-
-	startDate := time.Date(startYear, time.Month(startMonth), startDay, 1, 10, 30, 0, time.UTC)
-	endDate := time.Date(endYear, time.Month(endMonth), endDay, 1, 10, 30, 0, time.UTC)
-
-	var CompetitionResults []dtos.CompetitionResultResponse
-	filter := bson.D{bson.E{Key: "createdat", Value: bson.D{bson.E{Key: "$gte", Value: startDate}}},
-		bson.E{Key: "createdat", Value: bson.D{bson.E{Key: "$lte", Value: endDate}}},
-		bson.E{Key: "subjectid", Value: bson.D{bson.E{Key: "$in", Value: req.SubjectIds}}},
-		bson.E{Key: "teacherid", Value: bson.D{bson.E{Key: "$in", Value: req.TeacherIds}}},
-		bson.E{Key: "studentid", Value: bson.D{bson.E{Key: "$in", Value: req.StudentIds}}},
-		bson.E{Key: "classroomid", Value: req.ClassRoomId},
-		bson.E{Key: "schoolid", Value: req.SchoolId}}
-
-	cur, err := impl.collection.Find(impl.ctx, filter)
-
-	if err != nil {
-		CompetitionResults = make([]dtos.CompetitionResultResponse, 0)
-		return CompetitionResults, errors.Error("CompetitionResults not found!")
-	}
-
-	err = cur.All(impl.ctx, &CompetitionResults)
-	if err != nil {
-		return CompetitionResults, err
-	}
-
-	cur.Close(impl.ctx)
-	length := len(CompetitionResults)
-	if length == 0 {
-		CompetitionResults = make([]dtos.CompetitionResultResponse, 0)
-	}
-
-	grouppedStudents := impl.CompetitionResultUtils.GroupByStudents(CompetitionResults)
-	studentIds := make([]string, 0)
-	for studentId := range grouppedStudents {
-		studentIds = append(studentIds, studentId)
-	}
-	selectedStudents, _ := impl.studentService.GetSelecedStudents(studentIds)
-	students := make([]dtos.StudentCompetitionResults, 0)
-
-	i := -1
-	for studentId, grouppedStudent := range grouppedStudents {
-		i++
-		var overallScore float64 = 0
-		var overallScoreMax float64 = 0
-		subjectsScores := make(map[string]dtos.SubJectCompetitionResult, 0)
-		for _, subject := range subjects {
-			var subjectScore float64 = 0
-			isSubject := false
-			subjectAssessments := make(map[string]dtos.AssesmentGroup, 0)
-			for _, assessment := range assessments {
-
-				var assessmentScore float64 = 0
-				var assessmentCounter float64 = 0
-				for _, CompetitionResult := range grouppedStudent {
-					if CompetitionResult.AssessmentId == assessment.Id &&
-						CompetitionResult.SubjectId == subject.Id {
-						if CompetitionResult.ScoreMax > 0 {
-							assessmentScore = assessmentScore + (CompetitionResult.Score / CompetitionResult.ScoreMax)
-							assessmentCounter++
-						}
-					}
-				}
-
-				if assessmentCounter > 0 {
-					var totalAssementScore float64 = (assessmentScore / assessmentCounter) * assessment.Percentage
-					subjectAssessments[assessment.Type] = dtos.AssesmentGroup{
-						AssessmentScore: totalAssementScore,
-						ScoreMax:        assessment.Percentage,
-					}
-					subjectScore = subjectScore + totalAssementScore
-					isSubject = true
-				}
-
-			}
-
-			if isSubject {
-				grade, point := gradeDTOPackage.GetGradeAndPoint(grades, subjectScore)
-				overallScore = overallScore + subjectScore
-				overallScoreMax = overallScoreMax + 100
-				subjectsScores[subject.Type] = dtos.SubJectCompetitionResult{
-					SubjectScore: subjectScore,
-					Assessments:  subjectAssessments,
-					Grade:        grade,
-					Point:        point,
-				}
-			}
-		}
-
-		student := dtos.StudentCompetitionResults{
-			StudentId:       studentId,
-			FullName:        selectedStudents[i].FirstName + " " + selectedStudents[i].LastName,
-			OverallScore:    overallScore,
-			OverallScoreMax: overallScoreMax,
-			Subjects:        subjectsScores,
-		}
-
-		students = append(students, student)
-	}
-
-	log.Print("Call SummaryStudentsPositions completed")
-	return utils.SortPositionCompetitionResults(students), err
-
-}
-
-func (impl serviceImpl) SummaryStudentsPositions2(req dtos.GetCompetitionResultsRequest) (interface{}, error) {
-
-	log.Print("Call SummaryStudentsPositions started")
-
-	assessments, _ := impl.assessmentService.GetAssessments(req.SchoolId)
-	subjects, _ := impl.subjectService.GetSubjects(req.SchoolId)
-	grades, _ := impl.gradeService.GetGrades(req.SchoolId)
-
-	splitStartDte := strings.Split(req.StartDate, "/")
-	startDay, _ := strconv.Atoi(splitStartDte[2])
-	startMonth, _ := strconv.Atoi(splitStartDte[1])
-	startYear, _ := strconv.Atoi(splitStartDte[0])
-
-	splitEndDate := strings.Split(req.EndDate, "/")
-	endDay, _ := strconv.Atoi(splitEndDate[2])
-	endMonth, _ := strconv.Atoi(splitEndDate[1])
-	endYear, _ := strconv.Atoi(splitEndDate[0])
-
-	startDate := time.Date(startYear, time.Month(startMonth), startDay, 1, 10, 30, 0, time.UTC)
-	endDate := time.Date(endYear, time.Month(endMonth), endDay, 1, 10, 30, 0, time.UTC)
-
-	var CompetitionResults []dtos.CompetitionResultResponse
-	filter := bson.D{bson.E{Key: "createdat", Value: bson.D{bson.E{Key: "$gte", Value: startDate}}},
-		bson.E{Key: "createdat", Value: bson.D{bson.E{Key: "$lte", Value: endDate}}},
-		bson.E{Key: "subjectid", Value: bson.D{bson.E{Key: "$in", Value: req.SubjectIds}}},
-		bson.E{Key: "classroomid", Value: bson.D{bson.E{Key: "$in", Value: req.ClassRoomIds}}},
-		bson.E{Key: "studentid", Value: bson.D{bson.E{Key: "$in", Value: req.StudentIds}}},
-		bson.E{Key: "leveid", Value: req.LevelId},
-		bson.E{Key: "schoolid", Value: req.SchoolId}}
-
-	cur, err := impl.collection.Find(impl.ctx, filter)
-
-	if err != nil {
-		CompetitionResults = make([]dtos.CompetitionResultResponse, 0)
-		return CompetitionResults, errors.Error("CompetitionResults not found!")
-	}
-
-	err = cur.All(impl.ctx, &CompetitionResults)
-	if err != nil {
-		return CompetitionResults, err
-	}
-
-	cur.Close(impl.ctx)
-	length := len(CompetitionResults)
-	if length == 0 {
-		CompetitionResults = make([]dtos.CompetitionResultResponse, 0)
-	}
-
-	grouppedStudents := impl.CompetitionResultUtils.GroupByStudents(CompetitionResults)
-	studentIds := make([]string, 0)
-	for studentId := range grouppedStudents {
-		studentIds = append(studentIds, studentId)
-	}
-	selectedStudents, _ := impl.studentService.GetSelecedStudents(studentIds)
-	students := make([]dtos.StudentCompetitionResults, 0)
-
-	i := -1
-	for studentId, grouppedStudent := range grouppedStudents {
-		i++
-		var overallScore float64 = 0
-		var overallScoreMax float64 = 0
-		subjectsScores := make(map[string]dtos.SubJectCompetitionResult, 0)
-		for _, subject := range subjects {
-			var subjectScore float64 = 0
-			isSubject := false
-			subjectAssessments := make(map[string]dtos.AssesmentGroup, 0)
-			for _, assessment := range assessments {
-
-				var assessmentScore float64 = 0
-				var assessmentCounter float64 = 0
-				for _, CompetitionResult := range grouppedStudent {
-					if CompetitionResult.AssessmentId == assessment.Id &&
-						CompetitionResult.SubjectId == subject.Id {
-						if CompetitionResult.ScoreMax > 0 {
-							assessmentScore = assessmentScore + (CompetitionResult.Score / CompetitionResult.ScoreMax)
-							assessmentCounter++
-						}
-					}
-				}
-
-				if assessmentCounter > 0 {
-					var totalAssementScore float64 = (assessmentScore / assessmentCounter) * assessment.Percentage
-					subjectAssessments[assessment.Type] = dtos.AssesmentGroup{
-						AssessmentScore: totalAssementScore,
-						ScoreMax:        assessment.Percentage,
-					}
-					subjectScore = subjectScore + totalAssementScore
-					isSubject = true
-				}
-			}
-
-			if isSubject {
-				grade, point := gradeDTOPackage.GetGradeAndPoint(grades, subjectScore)
-				overallScore = overallScore + subjectScore
-				overallScoreMax = overallScoreMax + 100
-				subjectsScores[subject.Type] = dtos.SubJectCompetitionResult{
-					SubjectScore: subjectScore,
-					Assessments:  subjectAssessments,
-					Grade:        grade,
-					Point:        point,
-				}
-			}
-		}
-
-		student := dtos.StudentCompetitionResults{
-			StudentId:       studentId,
-			FullName:        selectedStudents[i].FirstName + " " + selectedStudents[i].LastName,
-			OverallScore:    overallScore,
-			OverallScoreMax: overallScoreMax,
-			Subjects:        subjectsScores,
-		}
-
-		students = append(students, student)
-	}
-
-	log.Print("Call SummaryStudentsPositions completed")
-	return utils.SortPositionCompetitionResults(students), err
 
 }
 

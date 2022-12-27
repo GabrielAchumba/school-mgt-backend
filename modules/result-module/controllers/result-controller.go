@@ -20,10 +20,8 @@ type ResultController interface {
 	GetResults(ctx *gin.Context) *rest.Response
 	PutResult(ctx *gin.Context) *rest.Response
 	ComputeSummaryResults(ctx *gin.Context) *rest.Response
-	ComputeSummaryResults2(ctx *gin.Context) *rest.Response
 	ComputeStudentsSummaryResults(ctx *gin.Context) *rest.Response
 	SummaryStudentsPositions(ctx *gin.Context) *rest.Response
-	SummaryStudentsPositions2(ctx *gin.Context) *rest.Response
 	ComputeStudentsResultsByDateRange(ctx *gin.Context) *rest.Response
 }
 
@@ -143,26 +141,6 @@ func (ctrl *controllerImpl) ComputeSummaryResults(ctx *gin.Context) *rest.Respon
 	}
 }
 
-func (ctrl *controllerImpl) ComputeSummaryResults2(ctx *gin.Context) *rest.Response {
-	var model dtos.GetResultsRequest
-
-	if er := ctx.BindJSON(&model); er != nil {
-		return _response.GetError(http.StatusBadRequest, er.Error())
-	}
-
-	payload, _ := middleware.GetAuthorizationPayload(ctx)
-	var userId string = payload.UserId
-	if userId == "" {
-		return _response.NotAuthorized()
-	}
-
-	if m, er := ctrl.ResultService.ComputeSummaryResults2(model); er != nil {
-		return _response.GetError(http.StatusOK, er.Error())
-	} else {
-		return _response.GetSuccess(http.StatusOK, m)
-	}
-}
-
 func (ctrl *controllerImpl) ComputeStudentsSummaryResults(ctx *gin.Context) *rest.Response {
 	var model dtos.GetResultsRequest
 
@@ -197,26 +175,6 @@ func (ctrl *controllerImpl) SummaryStudentsPositions(ctx *gin.Context) *rest.Res
 	}
 
 	if m, er := ctrl.ResultService.SummaryStudentsPositions(model); er != nil {
-		return _response.GetError(http.StatusOK, er.Error())
-	} else {
-		return _response.GetSuccess(http.StatusOK, m)
-	}
-}
-
-func (ctrl *controllerImpl) SummaryStudentsPositions2(ctx *gin.Context) *rest.Response {
-	var model dtos.GetResultsRequest
-
-	if er := ctx.BindJSON(&model); er != nil {
-		return _response.GetError(http.StatusBadRequest, er.Error())
-	}
-
-	payload, _ := middleware.GetAuthorizationPayload(ctx)
-	var userId string = payload.UserId
-	if userId == "" {
-		return _response.NotAuthorized()
-	}
-
-	if m, er := ctrl.ResultService.SummaryStudentsPositions2(model); er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	} else {
 		return _response.GetSuccess(http.StatusOK, m)

@@ -18,9 +18,6 @@ import (
 	staffmodule "github.com/GabrielAchumba/school-mgt-backend/modules/staff-module"
 	staffService "github.com/GabrielAchumba/school-mgt-backend/modules/staff-module/services"
 
-	studentmodule "github.com/GabrielAchumba/school-mgt-backend/modules/student-module"
-	studentService "github.com/GabrielAchumba/school-mgt-backend/modules/student-module/services"
-
 	subjectmodule "github.com/GabrielAchumba/school-mgt-backend/modules/subject-module"
 	subjectService "github.com/GabrielAchumba/school-mgt-backend/modules/subject-module/services"
 
@@ -135,9 +132,6 @@ func main() {
 		_staffService)
 	usermodule.InjectService(_userService).RegisterRoutes(apiBaseName, tokenMaker)
 
-	_studentService := studentService.New(mongoClient, configSettings, ctx, tokenMaker)
-	studentmodule.InjectService(_studentService).RegisterRoutes(apiBaseName, tokenMaker)
-
 	_subjectService := subjectService.New(mongoClient, configSettings, ctx)
 	subjectmodule.InjectService(_subjectService).RegisterRoutes(apiBaseName, tokenMaker)
 
@@ -160,12 +154,12 @@ func main() {
 	levelmodule.InjectService(_levelService).RegisterRoutes(apiBaseName, tokenMaker)
 
 	_resultService := resultService.New(mongoClient, configSettings, ctx, _userService,
-		_studentService, _subjectService, _classRoomService, _assessmentService,
+		_subjectService, _classRoomService, _assessmentService,
 		_staffService, _sessionService, _gradeService, _levelService)
 	resultmodule.InjectService(_resultService).RegisterRoutes(apiBaseName, tokenMaker)
 
 	_competitionResultService := competitionResultService.New(mongoClient, configSettings, ctx, _userService,
-		_studentService, _subjectService, _classRoomService, _assessmentService,
+		_subjectService, _classRoomService, _assessmentService,
 		_staffService, _sessionService, _gradeService, _levelService)
 	competitionResultmodule.InjectService(_competitionResultService).RegisterRoutes(apiBaseName, tokenMaker)
 

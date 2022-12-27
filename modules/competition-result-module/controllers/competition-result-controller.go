@@ -20,10 +20,7 @@ type CompetitionResultController interface {
 	GetCompetitionResults(ctx *gin.Context) *rest.Response
 	PutCompetitionResult(ctx *gin.Context) *rest.Response
 	ComputeSummaryCompetitionResults(ctx *gin.Context) *rest.Response
-	ComputeSummaryCompetitionResults2(ctx *gin.Context) *rest.Response
 	ComputeStudentsSummaryCompetitionResults(ctx *gin.Context) *rest.Response
-	SummaryStudentsPositions(ctx *gin.Context) *rest.Response
-	SummaryStudentsPositions2(ctx *gin.Context) *rest.Response
 	ComputeStudentsCompetitionResultsByDateRange(ctx *gin.Context) *rest.Response
 }
 
@@ -143,26 +140,6 @@ func (ctrl *controllerImpl) ComputeSummaryCompetitionResults(ctx *gin.Context) *
 	}
 }
 
-func (ctrl *controllerImpl) ComputeSummaryCompetitionResults2(ctx *gin.Context) *rest.Response {
-	var model dtos.GetCompetitionResultsRequest
-
-	if er := ctx.BindJSON(&model); er != nil {
-		return _response.GetError(http.StatusBadRequest, er.Error())
-	}
-
-	payload, _ := middleware.GetAuthorizationPayload(ctx)
-	var userId string = payload.UserId
-	if userId == "" {
-		return _response.NotAuthorized()
-	}
-
-	if m, er := ctrl.CompetitionResultService.ComputeSummaryCompetitionResults2(model); er != nil {
-		return _response.GetError(http.StatusOK, er.Error())
-	} else {
-		return _response.GetSuccess(http.StatusOK, m)
-	}
-}
-
 func (ctrl *controllerImpl) ComputeStudentsSummaryCompetitionResults(ctx *gin.Context) *rest.Response {
 	var model dtos.GetCompetitionResultsRequest
 
@@ -177,46 +154,6 @@ func (ctrl *controllerImpl) ComputeStudentsSummaryCompetitionResults(ctx *gin.Co
 	}
 
 	if m, er := ctrl.CompetitionResultService.ComputeStudentsSummaryCompetitionResults(model); er != nil {
-		return _response.GetError(http.StatusOK, er.Error())
-	} else {
-		return _response.GetSuccess(http.StatusOK, m)
-	}
-}
-
-func (ctrl *controllerImpl) SummaryStudentsPositions(ctx *gin.Context) *rest.Response {
-	var model dtos.GetCompetitionResultsRequest
-
-	if er := ctx.BindJSON(&model); er != nil {
-		return _response.GetError(http.StatusBadRequest, er.Error())
-	}
-
-	payload, _ := middleware.GetAuthorizationPayload(ctx)
-	var userId string = payload.UserId
-	if userId == "" {
-		return _response.NotAuthorized()
-	}
-
-	if m, er := ctrl.CompetitionResultService.SummaryStudentsPositions(model); er != nil {
-		return _response.GetError(http.StatusOK, er.Error())
-	} else {
-		return _response.GetSuccess(http.StatusOK, m)
-	}
-}
-
-func (ctrl *controllerImpl) SummaryStudentsPositions2(ctx *gin.Context) *rest.Response {
-	var model dtos.GetCompetitionResultsRequest
-
-	if er := ctx.BindJSON(&model); er != nil {
-		return _response.GetError(http.StatusBadRequest, er.Error())
-	}
-
-	payload, _ := middleware.GetAuthorizationPayload(ctx)
-	var userId string = payload.UserId
-	if userId == "" {
-		return _response.NotAuthorized()
-	}
-
-	if m, er := ctrl.CompetitionResultService.SummaryStudentsPositions2(model); er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	} else {
 		return _response.GetSuccess(http.StatusOK, m)
