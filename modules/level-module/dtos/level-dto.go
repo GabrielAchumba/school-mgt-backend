@@ -19,3 +19,8 @@ type LevelResponse struct {
 	Type      string    `json:"type" binding:"required"`
 	SchoolId  string    `json:"schoolId" binding:"required"`
 }
+
+type LevelIds struct {
+	Ids      []string `json:"ids"`
+	SchoolId string   `json:"schoolId"`
+}

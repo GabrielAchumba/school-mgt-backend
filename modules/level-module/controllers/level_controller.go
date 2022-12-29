@@ -16,6 +16,7 @@ type LevelController interface {
 	CreateLevel(ctx *gin.Context) *rest.Response
 	CreateLevels(ctx *gin.Context) *rest.Response
 	DeleteLevel(ctx *gin.Context) *rest.Response
+	DeleteLevelMany(ctx *gin.Context) *rest.Response
 	GetLevel(ctx *gin.Context) *rest.Response
 	GetLevels(ctx *gin.Context) *rest.Response
 	PutLevel(ctx *gin.Context) *rest.Response
@@ -76,6 +77,20 @@ func (ctrl *controllerImpl) DeleteLevel(ctx *gin.Context) *rest.Response {
 	schoolId := ctx.Param("schoolId")
 
 	m, er := ctrl.LevelService.DeleteLevel(id, schoolId)
+	if er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	}
+	return _response.GetSuccess(http.StatusOK, m)
+}
+
+func (ctrl *controllerImpl) DeleteLevelMany(ctx *gin.Context) *rest.Response {
+	var model dtos.LevelIds
+
+	if er := ctx.BindJSON(&model); er != nil {
+		return _response.GetError(http.StatusBadRequest, er.Error())
+	}
+
+	m, er := ctrl.LevelService.DeleteLevelMany(model.Ids, model.SchoolId)
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}

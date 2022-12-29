@@ -28,6 +28,7 @@ func (module *LevelModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker token.
 	{
 		moduleRoute.POST("/create", serverHttp(module.controller.CreateLevel))
 		moduleRoute.POST("/createmany", serverHttp(module.controller.CreateLevels))
+		moduleRoute.POST("/deletemany", serverHttp(module.controller.DeleteLevelMany))
 		moduleRoute.PUT("/:id", serverHttp(module.controller.PutLevel))
 		moduleRoute.GET("/:schoolId", serverHttp(module.controller.GetLevels))
 		//moduleRoute.GET("/:id", serverHttp(module.controller.GetLevel))

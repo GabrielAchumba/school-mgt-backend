@@ -20,6 +20,7 @@ type LevelService interface {
 	CreateLevel(userId string, requestModel dtos.CreateLevelRequest) (interface{}, error)
 	CreateLevels(userId string, _models []dtos.CreateLevelRequest) (interface{}, error)
 	DeleteLevel(id string, schoolId string) (int64, error)
+	DeleteLevelMany(ids []string, schoolId string) (int64, error)
 	GetLevel(id string, schoolId string) (dtos.LevelResponse, error)
 	GetLevels(schoolId string) ([]dtos.LevelResponse, error)
 	GetLevelsByIds(schoolId string, Ids []string) ([]dtos.LevelResponse, error)
@@ -55,6 +56,28 @@ func (impl serviceImpl) DeleteLevel(id string, schoolId string) (int64, error) {
 
 	if result.DeletedCount < 1 {
 		return result.DeletedCount, errors.Error("Type of Level with specified ID not found!")
+	}
+
+	log.Print("Call to delete type of Level by id completed.")
+	return result.DeletedCount, nil
+}
+
+func (impl serviceImpl) DeleteLevelMany(ids []string, schoolId string) (int64, error) {
+
+	log.Print("Call to delete levels by id started.")
+	objIds := make([]primitive.ObjectID, 0)
+	for _, id := range ids {
+		objIds = append(objIds, conversion.GetMongoId(id))
+	}
+
+	filter := bson.D{{Key: "_id", Value: bson.D{
+		bson.E{Key: "$in", Value: objIds}}},
+		bson.E{Key: "schoolid", Value: schoolId}}
+
+	result, err := impl.collection.DeleteMany(impl.ctx, filter)
+
+	if err != nil {
+		return result.DeletedCount, errors.Error("Error in deleting levels.")
 	}
 
 	log.Print("Call to delete type of Level by id completed.")
