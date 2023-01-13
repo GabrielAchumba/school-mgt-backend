@@ -34,13 +34,15 @@ func (module *userModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker token.M
 	moduleRoute.POST("/user-is-exist", serverHttp(module.controller.UserIsExist))
 	moduleRoute.POST("/user-is-exist2", serverHttp(module.controller.UserIsExist2))
 	moduleRoute.GET("/loginstudent/:token/:schoolId", serverHttp(module.controller.LogInStudent))
+	moduleRoute.POST("/create", serverHttp(module.controller.RegisterUser))
 
 	moduleRoute.Use(middleware.AuthMiddleware(tokenMaker))
 	{
-		moduleRoute.POST("/create", serverHttp(module.controller.RegisterUser))
 		moduleRoute.POST("/createmany", serverHttp(module.controller.RegisterUsers))
 		moduleRoute.PUT("/:id", serverHttp(module.controller.PutUser))
 		moduleRoute.PUT("/update-referal/:id", serverHttp(module.controller.PutReferal))
+		moduleRoute.PUT("/confirmuser/:id", serverHttp(module.controller.ConfirmUser))
+		moduleRoute.PUT("/blockuser/:id", serverHttp(module.controller.BlockUser))
 		moduleRoute.GET("/:schoolId", serverHttp(module.controller.GetUsers))
 		moduleRoute.GET("/students/:schoolId", serverHttp(module.controller.GetStudents))
 		//moduleRoute.GET("/:id", serverHttp(module.controller.GetUser))

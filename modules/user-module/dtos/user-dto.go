@@ -15,26 +15,33 @@ type LoginUserResponse struct {
 	User      UserResponse `json:"user"`
 }
 type UserInternalOperation struct {
-	ID            string    `json:"id"  bson:"_id"`
-	PhoneNumber   string    `json:"phoneNumber" `
-	FirstName     string    `json:"firstName" `
-	LastName      string    `json:"lastName" `
-	UserType      string    `json:"userType" `
-	Designation   string    `json:"designation" `
-	DesignationId string    `json:"designationId"`
-	UserName      string    `json:"userName,omitempty"`
-	Password      string    `json:"password"`
-	Token         int       `json:"token"`
-	CreatedAt     time.Time `json:"createdAt"`
-	Base64String  string    `json:"base64String"`
-	SchoolId      string    `json:"schoolId" binding:"required"`
-	CountryCode   string    `json:"countryCode"`
-	ClassRoomId   string    `json:"classRoomId"`
-	LevelId       string    `json:"levelId"`
-	SessionId     string    `json:"sessionId"`
+	ID               string    `json:"id"  bson:"_id"`
+	PhoneNumber      string    `json:"phoneNumber" `
+	FirstName        string    `json:"firstName" `
+	LastName         string    `json:"lastName" `
+	UserType         string    `json:"userType" `
+	Designation      string    `json:"designation" `
+	DesignationId    string    `json:"designationId"`
+	UserName         string    `json:"userName,omitempty"`
+	Password         string    `json:"password"`
+	Token            int       `json:"token"`
+	CreatedAt        time.Time `json:"createdAt"`
+	Base64String     string    `json:"base64String"`
+	SchoolId         string    `json:"schoolId" binding:"required"`
+	CountryCode      string    `json:"countryCode"`
+	ClassRoomId      string    `json:"classRoomId"`
+	LevelId          string    `json:"levelId"`
+	SessionId        string    `json:"sessionId"`
+	ConfirmedBy      string    `json:"confirmedBy"`
+	BlockedBy        string    `json:"blockedBy"`
+	Confirmed        bool      `json:"confirmed"`
+	FileUrl          string    `json:"fileUrl"`
+	FileName         string    `json:"fileName"`
+	OriginalFileName string    `json:"originalFileName"`
 }
 
 type CreateUserRequest struct {
+	CreatedBy            string   `json:"createdBy"`
 	Base64String         string   `json:"base64String,omitempty"`
 	IsPhotographUploaded int64    `json:"isPhotographUploaded,omitempty"`
 	FirstName            string   `json:"firstName"`
@@ -52,6 +59,12 @@ type CreateUserRequest struct {
 	ClassRoomIds         []string `json:"classRoomIds"`
 	LevelId              string   `json:"levelId"`
 	SessionId            string   `json:"sessionId"`
+	ConfirmedBy          string   `json:"confirmedBy"`
+	BlockedBy            string   `json:"blockedBy"`
+	Confirmed            bool     `json:"confirmed"`
+	FileUrl              string   `json:"fileUrl"`
+	FileName             string   `json:"fileName"`
+	OriginalFileName     string   `json:"originalFileName"`
 }
 
 type UpdateUserRequest struct {
@@ -72,6 +85,12 @@ type UpdateUserRequest struct {
 	ClassRoomId          string   `json:"classRoomId"`
 	LevelId              string   `json:"levelId"`
 	SessionId            string   `json:"sessionId"`
+	ConfirmedBy          string   `json:"confirmedBy"`
+	BlockedBy            string   `json:"blockedBy"`
+	Confirmed            bool     `json:"confirmed"`
+	FileUrl              string   `json:"fileUrl"`
+	FileName             string   `json:"fileName"`
+	OriginalFileName     string   `json:"originalFileName"`
 }
 
 type UserResponse struct {
@@ -80,6 +99,9 @@ type UserResponse struct {
 	IsPhotographUploaded int       `json:"isPhotographUploaded"`
 	CreatedAt            time.Time `json:"createdAt"`
 	CreatedBy            string    `json:"createdBy"`
+	ConfirmedBy          string    `json:"confirmedBy"`
+	BlockedBy            string    `json:"blockedBy"`
+	Confirmed            bool      `json:"confirmed"`
 	CountryCode          string    `json:"countryCode"`
 	FirstName            string    `json:"firstName"`
 	LastName             string    `json:"lastName"`
@@ -95,6 +117,9 @@ type UserResponse struct {
 	ClassRoomId          string    `json:"classRoomId"`
 	LevelId              string    `json:"levelId"`
 	SessionId            string    `json:"sessionId"`
+	FileUrl              string    `json:"fileUrl"`
+	FileName             string    `json:"fileName"`
+	OriginalFileName     string    `json:"originalFileName"`
 }
 
 type ForgotPasswordInput struct {

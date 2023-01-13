@@ -11,6 +11,9 @@ type User struct {
 	IsPhotographUploaded int       `json:"isPhotographUploaded"`
 	CreatedAt            time.Time `json:"createdAt"`
 	CreatedBy            string    `json:"createdBy"`
+	ConfirmedBy          string    `json:"confirmedBy"`
+	BlockedBy            string    `json:"blockedBy"`
+	Confirmed            bool      `json:"confirmed"`
 	CountryCode          string    `json:"countryCode"`
 	FirstName            string    `json:"firstName" binding:"required"`
 	LastName             string    `json:"lastName" binding:"required"`
@@ -27,6 +30,9 @@ type User struct {
 	PasswordResetToken   string    `json:"passwordResetToken"`
 	PasswordResetAt      time.Time `json:"passwordResetAt"`
 	SchoolId             string    `json:"schoolId" binding:"required"`
+	FileUrl              string    `json:"fileUrl"`
+	FileName             string    `json:"fileName"`
+	OriginalFileName     string    `json:"originalFileName"`
 }
 
 func (user *User) HashPassword() error {

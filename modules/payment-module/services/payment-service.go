@@ -83,11 +83,13 @@ func (impl serviceImpl) CheckSubscription(schoolId string) (dtos.CheckSubscripti
 	log.Print("CheckSubscription called")
 	var Payment dtos.PaymentResponse
 	var CheckSubscription dtos.CheckSubscription = dtos.CheckSubscription{
-		IsResultsAnalysis: false,
-		IsFileManagement:  false,
-		IsAdvertizement:   false,
-		IsExamsQuiz:       false,
-		IsOnlineLearning:  false,
+		IsResultsAnalysis:   false,
+		IsFileManagement:    false,
+		IsAdvertizement:     false,
+		IsExamsQuiz:         false,
+		IsOnlineLearning:    false,
+		IsLibraryManagement: false,
+		IsSocialize:         false,
 	}
 
 	filter := bson.D{bson.E{Key: "schoolid", Value: schoolId}}
@@ -106,11 +108,15 @@ func (impl serviceImpl) CheckSubscription(schoolId string) (dtos.CheckSubscripti
 	CheckSubscription.IsFileManagement = true
 	CheckSubscription.IsOnlineLearning = true
 	CheckSubscription.IsResultsAnalysis = true
+	CheckSubscription.IsLibraryManagement = true
+	CheckSubscription.IsSocialize = false
 
 	today := time.Now()
 	days := today.Sub(Payment.CreatedAt).Hours() / 24
 
 	switch Payment.ResultSubscription.Variable {
+	case "None":
+		CheckSubscription.IsResultsAnalysis = false
 	case "Results Analysis (90 Days)":
 		if days > 90 {
 			CheckSubscription.IsResultsAnalysis = false
@@ -126,6 +132,8 @@ func (impl serviceImpl) CheckSubscription(schoolId string) (dtos.CheckSubscripti
 	}
 
 	switch Payment.FileManagementSubscription.Variable {
+	case "None":
+		CheckSubscription.IsFileManagement = false
 	case "File Management 10GB (Quaterly)":
 		if days > 90 {
 			CheckSubscription.IsFileManagement = false
@@ -165,42 +173,105 @@ func (impl serviceImpl) CheckSubscription(schoolId string) (dtos.CheckSubscripti
 	}
 
 	switch Payment.AppCustomizationSubscription.Variable {
-	case "App Customization 10GB (Quaterly)":
+	case "None":
+		CheckSubscription.IsAdvertizement = false
+	case "Branding & Advertisement 10GB (Quaterly)":
 		if days > 90 {
 			CheckSubscription.IsAdvertizement = false
 		}
-	case "App Customization 20GB (Quaterly)":
+	case "Branding & Advertisement 20GB (Quaterly)":
 		if days > 90 {
 			CheckSubscription.IsAdvertizement = false
 		}
-	case "App Customization 80GB (Quaterly)":
+	case "Branding & Advertisement 80GB (Quaterly)":
 		if days > 90 {
 			CheckSubscription.IsAdvertizement = false
 		}
-	case "App Customization 10GB (Semi-Annually)":
+	case "Branding & Advertisement 10GB (Semi-Annually)":
 		if days > 180 {
 			CheckSubscription.IsAdvertizement = false
 		}
-	case "App Customization 20GB (Semi-Annually)":
+	case "Branding & Advertisement 20GB (Semi-Annually)":
 		if days > 180 {
 			CheckSubscription.IsAdvertizement = false
 		}
-	case "App Customization 80GB (Semi-Annually)":
+	case "Branding & Advertisement 80GB (Semi-Annually)":
 		if days > 180 {
 			CheckSubscription.IsAdvertizement = false
 		}
-	case "App Customization 10GB (Annually)":
+	case "Branding & Advertisement 10GB (Annually)":
 		if days > 360 {
 			CheckSubscription.IsAdvertizement = false
 		}
-	case "App Customization 20GB (Annually)":
+	case "Branding & Advertisement 20GB (Annually)":
 		if days > 360 {
 			CheckSubscription.IsAdvertizement = false
 		}
-	case "App Customization 80GB (Annually)":
+	case "Branding & Advertisement 80GB (Annually)":
 		if days > 360 {
 			CheckSubscription.IsAdvertizement = false
 		}
+	}
+
+	switch Payment.LibraryManagementSubscription.Variable {
+	case "None":
+		CheckSubscription.IsLibraryManagement = false
+	case "Library Management 10GB (Quaterly)":
+		if days > 90 {
+			CheckSubscription.IsLibraryManagement = false
+		}
+	case "Library Management 20GB (Quaterly)":
+		if days > 90 {
+			CheckSubscription.IsLibraryManagement = false
+		}
+	case "Library Management 80GB (Quaterly)":
+		if days > 90 {
+			CheckSubscription.IsLibraryManagement = false
+		}
+	case "Library Management 10GB (Semi-Annually)":
+		if days > 180 {
+			CheckSubscription.IsLibraryManagement = false
+		}
+	case "Library Management 20GB (Semi-Annually)":
+		if days > 180 {
+			CheckSubscription.IsLibraryManagement = false
+		}
+	case "Library Management 80GB (Semi-Annually)":
+		if days > 180 {
+			CheckSubscription.IsLibraryManagement = false
+		}
+	case "Library Management 10GB (Annually)":
+		if days > 360 {
+			CheckSubscription.IsLibraryManagement = false
+		}
+	case "Library Management 20GB (Annually)":
+		if days > 360 {
+			CheckSubscription.IsLibraryManagement = false
+		}
+	case "Library Management 80GB (Annually)":
+		if days > 360 {
+			CheckSubscription.IsLibraryManagement = false
+		}
+	}
+
+	if CheckSubscription.IsAdvertizement {
+		CheckSubscription.IsSocialize = true
+	}
+
+	if CheckSubscription.IsExamsQuiz {
+		CheckSubscription.IsSocialize = true
+	}
+
+	if CheckSubscription.IsFileManagement {
+		CheckSubscription.IsSocialize = true
+	}
+
+	if CheckSubscription.IsOnlineLearning {
+		CheckSubscription.IsSocialize = true
+	}
+
+	if CheckSubscription.IsLibraryManagement {
+		CheckSubscription.IsSocialize = true
 	}
 
 	log.Print("CheckSubscription completed")

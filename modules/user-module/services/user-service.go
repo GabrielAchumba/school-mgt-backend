@@ -52,6 +52,8 @@ type UserService interface {
 	GetStudentByToken(token int, schoolId string) (dtos.UserResponse, error)
 	LogInStudent(token int, schoolId string) (dtos.LoginUserResponse, error)
 	GetUsersByIds(schoolId string, Ids []string) ([]dtos.UserResponse, error)
+	BlockUser(id string, User dtos.UpdateUserRequest) (interface{}, error)
+	ConfirmUser(id string, User dtos.UpdateUserRequest) (interface{}, error)
 }
 
 type serviceImpl struct {
@@ -128,20 +130,26 @@ func (impl serviceImpl) LoginUser(requestModel dtos.LoginUserRequest) (interface
 		Token:     accessToken,
 		ExpiresAt: accessPayload.ExpiredAt,
 		User: dtos.UserResponse{
-			Id:            modelDto.ID,
-			PhoneNumber:   modelDto.PhoneNumber,
-			FirstName:     modelDto.FirstName,
-			LastName:      modelDto.LastName,
-			UserName:      modelDto.UserName,
-			UserType:      modelDto.UserType,
-			DesignationId: modelDto.DesignationId,
-			CreatedAt:     modelDto.CreatedAt,
-			Base64String:  modelDto.Base64String,
-			SchoolId:      modelDto.SchoolId,
-			CountryCode:   modelDto.CountryCode,
-			SessionId:     modelDto.SessionId,
-			LevelId:       modelDto.LevelId,
-			ClassRoomId:   modelDto.ClassRoomId,
+			Id:               modelDto.ID,
+			PhoneNumber:      modelDto.PhoneNumber,
+			FirstName:        modelDto.FirstName,
+			LastName:         modelDto.LastName,
+			UserName:         modelDto.UserName,
+			UserType:         modelDto.UserType,
+			DesignationId:    modelDto.DesignationId,
+			CreatedAt:        modelDto.CreatedAt,
+			Base64String:     modelDto.Base64String,
+			SchoolId:         modelDto.SchoolId,
+			CountryCode:      modelDto.CountryCode,
+			SessionId:        modelDto.SessionId,
+			LevelId:          modelDto.LevelId,
+			ClassRoomId:      modelDto.ClassRoomId,
+			FileUrl:          modelDto.FileUrl,
+			FileName:         modelDto.FirstName,
+			OriginalFileName: modelDto.OriginalFileName,
+			ConfirmedBy:      modelDto.ConfirmedBy,
+			BlockedBy:        modelDto.BlockedBy,
+			Confirmed:        modelDto.Confirmed,
 		},
 	}
 
@@ -656,6 +664,50 @@ func (impl serviceImpl) PostUser(User dtos.CreateUserRequest) (interface{}, erro
 	return m.InsertedID, er
 }
 
+func (impl serviceImpl) ConfirmUser(id string, User dtos.UpdateUserRequest) (interface{}, error) {
+
+	log.Print("ConfirmUser started")
+
+	objId := conversion.GetMongoId(id)
+	var updatedUser dtos.UpdateUserRequest
+	conversion.Convert(User, &updatedUser)
+	filter := bson.D{bson.E{Key: "_id", Value: objId}}
+	var modelObj models.User
+
+	update := bson.D{bson.E{Key: "confirmedby", Value: updatedUser.ConfirmedBy},
+		bson.E{Key: "confirmed", Value: true}}
+
+	_, err := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
+	if err != nil {
+		return modelObj, errors.Error("Could not upadte user")
+	}
+
+	log.Print("ConfirmUser completed")
+	return modelObj, nil
+}
+
+func (impl serviceImpl) BlockUser(id string, User dtos.UpdateUserRequest) (interface{}, error) {
+
+	log.Print("BlockUser started")
+
+	objId := conversion.GetMongoId(id)
+	var updatedUser dtos.UpdateUserRequest
+	conversion.Convert(User, &updatedUser)
+	filter := bson.D{bson.E{Key: "_id", Value: objId}}
+	var modelObj models.User
+
+	update := bson.D{bson.E{Key: "blockedby", Value: updatedUser.BlockedBy},
+		bson.E{Key: "confirmed", Value: false}}
+
+	_, err := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
+	if err != nil {
+		return modelObj, errors.Error("Could not upadte user")
+	}
+
+	log.Print("BlockUser completed")
+	return modelObj, nil
+}
+
 func (impl serviceImpl) PutUser(id string, User dtos.UpdateUserRequest) (interface{}, error) {
 
 	log.Print("PutUser started")
@@ -676,7 +728,10 @@ func (impl serviceImpl) PutUser(id string, User dtos.UpdateUserRequest) (interfa
 		bson.E{Key: "classroomid", Value: updatedUser.ClassRoomId},
 		bson.E{Key: "levelid", Value: updatedUser.LevelId},
 		bson.E{Key: "sessionid", Value: updatedUser.SessionId},
-		bson.E{Key: "schoolid", Value: updatedUser.SchoolId}}
+		bson.E{Key: "schoolid", Value: updatedUser.SchoolId},
+		bson.E{Key: "fileurl", Value: updatedUser.FileUrl},
+		bson.E{Key: "filename", Value: updatedUser.FileName},
+		bson.E{Key: "originalfilename", Value: updatedUser.OriginalFileName}}
 
 	_, err := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
 	if err != nil {
@@ -701,7 +756,10 @@ func (impl serviceImpl) PutReferal(id string, User dtos.UpdateUserRequest) (inte
 		bson.E{Key: "lastname", Value: updatedUser.LastName},
 		bson.E{Key: "phonenumber", Value: updatedUser.PhoneNumber},
 		bson.E{Key: "username", Value: updatedUser.UserName},
-		bson.E{Key: "countrycode", Value: updatedUser.CountryCode}}
+		bson.E{Key: "countrycode", Value: updatedUser.CountryCode},
+		bson.E{Key: "fileurl", Value: updatedUser.FileUrl},
+		bson.E{Key: "filename", Value: updatedUser.FileName},
+		bson.E{Key: "originalfilename", Value: updatedUser.OriginalFileName}}
 
 	_, err := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
 	if err != nil {

@@ -40,6 +40,8 @@ type UserController interface {
 	GetStudentsByClassRooms(ctx *gin.Context) *rest.Response
 	LogInStudent(ctx *gin.Context) *rest.Response
 	toBase64(b []byte) string
+	BlockUser(ctx *gin.Context) *rest.Response
+	ConfirmUser(ctx *gin.Context) *rest.Response
 }
 
 type ImageName struct {
@@ -77,11 +79,11 @@ func (ctrl *controllerImpl) RegisterUser(ctx *gin.Context) *rest.Response {
 		return _response.GetError(http.StatusBadRequest, er.Error())
 	}
 
-	payload, _ := middleware.GetAuthorizationPayload(ctx)
-	var userId string = payload.UserId
-	if userId == "" {
+	//payload, _ := middleware.GetAuthorizationPayload(ctx)
+	var userId string = model.CreatedBy // payload.UserId
+	/* if userId == "" {
 		return _response.NotAuthorized()
-	}
+	} */
 
 	if m, er := ctrl.userService.RegisterUser(userId, model); er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
@@ -224,6 +226,34 @@ func (ctrl *controllerImpl) GetStudentsByClassRooms(ctx *gin.Context) *rest.Resp
 
 	if m, er := ctrl.userService.GetStudentsByClassRooms(model.SchoolId, model.LevelId,
 		model.ClassRoomIds, model.SessionId); er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	} else {
+		return _response.GetSuccess(http.StatusOK, m)
+	}
+}
+
+func (ctrl *controllerImpl) ConfirmUser(ctx *gin.Context) *rest.Response {
+	id := ctx.Param("id")
+	var model dtos.UpdateUserRequest
+	if er := ctx.BindJSON(&model); er != nil {
+		return _response.GetError(http.StatusBadRequest, er.Error())
+	}
+
+	if m, er := ctrl.userService.ConfirmUser(id, model); er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	} else {
+		return _response.GetSuccess(http.StatusOK, m)
+	}
+}
+
+func (ctrl *controllerImpl) BlockUser(ctx *gin.Context) *rest.Response {
+	id := ctx.Param("id")
+	var model dtos.UpdateUserRequest
+	if er := ctx.BindJSON(&model); er != nil {
+		return _response.GetError(http.StatusBadRequest, er.Error())
+	}
+
+	if m, er := ctrl.userService.BlockUser(id, model); er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	} else {
 		return _response.GetSuccess(http.StatusOK, m)
