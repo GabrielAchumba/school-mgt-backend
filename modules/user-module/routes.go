@@ -45,6 +45,7 @@ func (module *userModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker token.M
 		moduleRoute.PUT("/blockuser/:id", serverHttp(module.controller.BlockUser))
 		moduleRoute.GET("/:schoolId", serverHttp(module.controller.GetUsers))
 		moduleRoute.GET("/students/:schoolId", serverHttp(module.controller.GetStudents))
+		moduleRoute.GET("/unconfirmedusers/:schoolId", serverHttp(module.controller.GetUnconfirmedUsers))
 		//moduleRoute.GET("/:id", serverHttp(module.controller.GetUser))
 		moduleRoute.GET("category/:category/:schoolId", serverHttp(module.controller.GetUsersByCategory))
 		moduleRoute.POST("selectedstudents", serverHttp(module.controller.GetStudentsByClassRooms))

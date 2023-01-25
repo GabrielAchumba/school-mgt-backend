@@ -42,6 +42,7 @@ type UserController interface {
 	toBase64(b []byte) string
 	BlockUser(ctx *gin.Context) *rest.Response
 	ConfirmUser(ctx *gin.Context) *rest.Response
+	GetUnconfirmedUsers(ctx *gin.Context) *rest.Response
 }
 
 type ImageName struct {
@@ -201,6 +202,16 @@ func (ctrl *controllerImpl) GetUsers(ctx *gin.Context) *rest.Response {
 
 	schoolId := ctx.Param("schoolId")
 	m, er := ctrl.userService.GetUsers(schoolId)
+	if er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	}
+	return _response.GetSuccess(http.StatusOK, m)
+}
+
+func (ctrl *controllerImpl) GetUnconfirmedUsers(ctx *gin.Context) *rest.Response {
+
+	schoolId := ctx.Param("schoolId")
+	m, er := ctrl.userService.GetUnconfirmedUsers(schoolId)
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}

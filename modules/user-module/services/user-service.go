@@ -31,6 +31,7 @@ type UserService interface {
 	UserIsExist2(requestModel dtos.CreateUserRequest) (interface{}, error)
 	RegisterAdminOrReferal(model dtos.CreateUserRequest) (interface{}, error)
 	GetUsers(schoolId string) ([]dtos.UserResponse, error)
+	GetUnconfirmedUsers(schoolId string) ([]dtos.UserResponse, error)
 	GetStudents(schoolId string) ([]dtos.UserResponse, error)
 	GetUser(id string, schoolId string) (dtos.UserResponse, error)
 	GetStudent(id string, schoolId string) (dtos.UserResponse, error)
@@ -449,6 +450,50 @@ func (impl serviceImpl) GetUsers(schoolId string) ([]dtos.UserResponse, error) {
 	var Users []dtos.UserResponse
 	filter := bson.D{bson.E{Key: "schoolid", Value: schoolId},
 		bson.E{Key: "usertype", Value: "Member"}}
+	cur, err := impl.collection.Find(impl.ctx, filter)
+
+	if err != nil {
+		Users = make([]dtos.UserResponse, 0)
+		return Users, errors.Error("Users not found!")
+	}
+
+	err = cur.All(impl.ctx, &Users)
+	if err != nil {
+		return Users, err
+	}
+
+	cur.Close(impl.ctx)
+	length := len(Users)
+	if length == 0 {
+		Users = make([]dtos.UserResponse, 0)
+	}
+
+	DesignationIds := make([]string, 0)
+	for _, v := range Users {
+		DesignationIds = append(DesignationIds, v.DesignationId)
+	}
+
+	staffs, _ := impl.staffService.GetStaffsByIds(schoolId, DesignationIds)
+	for i := 0; i < length; i++ {
+		for _, staff := range staffs {
+			if staff.Id == Users[i].DesignationId {
+				Users[i].Designation = staff.Type
+				break
+			}
+		}
+	}
+
+	log.Print("Call to get all Users completed.")
+	return Users, err
+}
+
+func (impl serviceImpl) GetUnconfirmedUsers(schoolId string) ([]dtos.UserResponse, error) {
+
+	log.Print("Call to get all Unconfirmed Users started.")
+
+	var Users []dtos.UserResponse
+	filter := bson.D{bson.E{Key: "schoolid", Value: schoolId},
+		bson.E{Key: "confirmed", Value: false}}
 	cur, err := impl.collection.Find(impl.ctx, filter)
 
 	if err != nil {
