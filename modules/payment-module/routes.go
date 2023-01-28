@@ -33,5 +33,6 @@ func (module *PaymentModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker toke
 		moduleRoute.GET("/:schoolId", serverHttp(module.controller.GetPayment))
 		moduleRoute.GET("check-results-subscription/:schoolId", serverHttp(module.controller.CheckSubscription))
 		moduleRoute.DELETE("/:id/:schoolId", serverHttp(module.controller.DeletePayment))
+		moduleRoute.GET("banks", serverHttp(module.controller.GetBanks))
 	}
 }

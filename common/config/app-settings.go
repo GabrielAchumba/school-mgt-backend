@@ -47,6 +47,10 @@ type Settings struct {
 		SMTPPort  int
 		SMTPUser  string
 	}
+	PayStackKey struct {
+		TestKey   string
+		ActualKey string
+	}
 }
 
 var AppSettings = &Settings{}
@@ -84,6 +88,8 @@ func Setup() {
 	AppSettings.Token.RefreshTokenDuration = refreshTokenDuration
 	AppSettings.Token.TokenSecretKey = os.Getenv("TOKEN_SECRET_KEY")
 	AppSettings.Token.RefreshTokenSecretKey = os.Getenv("REFRESH_TOKEN_SECRET_KEY")
+
+	AppSettings.PayStackKey.TestKey = "sk_test_574ef246a0c1d74f8b9e0b8b10214d3959a00b01"
 
 	fmt.Println("App settings was successfully loaded.")
 }

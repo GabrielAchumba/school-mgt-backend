@@ -13,6 +13,7 @@ import (
 	errors "github.com/GabrielAchumba/school-mgt-backend/common/errors"
 	"github.com/GabrielAchumba/school-mgt-backend/modules/payment-module/dtos"
 	"github.com/GabrielAchumba/school-mgt-backend/modules/payment-module/models"
+	paystack "github.com/rpip/paystack-go"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -24,19 +25,25 @@ type PaymentService interface {
 	GetPendingPayments() ([]dtos.PaymentResponse, error)
 	CheckSubscription(schoolId string) (dtos.CheckSubscription, error)
 	PutPayment(id string) (interface{}, error)
+	GetBanks() ([]paystack.Bank, error)
 }
 
 type serviceImpl struct {
 	ctx        context.Context
 	collection *mongo.Collection
+	client     *paystack.Client
+	apiKey     string
 }
 
 func New(mongoClient *mongo.Client, config config.Settings, ctx context.Context) PaymentService {
 	collection := mongoClient.Database(config.Database.DatabaseName).Collection(config.TableNames.Payment)
+	client := paystack.NewClient(config.PayStackKey.TestKey, nil)
 
 	return &serviceImpl{
 		collection: collection,
 		ctx:        ctx,
+		client:     client,
+		apiKey:     config.PayStackKey.TestKey,
 	}
 }
 
@@ -367,4 +374,17 @@ func (impl serviceImpl) PutPayment(id string) (interface{}, error) {
 
 	log.Print("PutStaff completed")
 	return modelObj, nil
+}
+
+func (impl serviceImpl) GetBanks() ([]paystack.Bank, error) {
+
+	log.Print("GetBanks called")
+	bankList, err := impl.client.Bank.List()
+	if err != nil {
+		return make([]paystack.Bank, 0), errors.Error("could not fetch list of banks")
+	}
+
+	log.Print("GetBanks completed")
+	return bankList.Values, err
+
 }

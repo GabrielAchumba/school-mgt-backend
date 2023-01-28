@@ -22,6 +22,7 @@ type PaymentController interface {
 	GetPendingPayments(ctx *gin.Context) *rest.Response
 	CheckSubscription(ctx *gin.Context) *rest.Response
 	PutPayment(ctx *gin.Context) *rest.Response
+	GetBanks(ctx *gin.Context) *rest.Response
 }
 
 type ImageName struct {
@@ -187,4 +188,13 @@ func (ctrl *controllerImpl) PutPayment(ctx *gin.Context) *rest.Response {
 	} else {
 		return _response.GetSuccess(http.StatusOK, m)
 	}
+}
+
+func (ctrl *controllerImpl) GetBanks(ctx *gin.Context) *rest.Response {
+
+	m, er := ctrl.PaymentService.GetBanks()
+	if er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	}
+	return _response.GetSuccess(http.StatusOK, m)
 }

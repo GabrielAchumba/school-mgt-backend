@@ -110,9 +110,17 @@ func (impl serviceImpl) GetStaffs(schoolId string) ([]dtos.StaffResponse, error)
 func (impl serviceImpl) GetStaffsByIds(schoolId string, Ids []string) ([]dtos.StaffResponse, error) {
 
 	log.Print("Call to get GetStaffsByIds started.")
+	nonEmptyIds := make([]string, 0)
+	i := -1
+	for _, id := range Ids {
+		i++
+		if id != "" {
+			nonEmptyIds = append(nonEmptyIds, id)
+		}
+	}
 
 	var objIds = make([]primitive.ObjectID, 0)
-	for _, id := range Ids {
+	for _, id := range nonEmptyIds {
 		objIds = append(objIds, conversion.GetMongoId(id))
 	}
 

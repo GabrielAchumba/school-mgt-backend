@@ -31,6 +31,8 @@ type UserService interface {
 	UserIsExist2(requestModel dtos.CreateUserRequest) (interface{}, error)
 	RegisterAdminOrReferal(model dtos.CreateUserRequest) (interface{}, error)
 	GetUsers(schoolId string) ([]dtos.UserResponse, error)
+	GetPaginatedUnconfirmedUsers(schoolId string, page int) (dtos.UserResponsePaginated, error)
+	GetPaginatedConfirmedUsers(schoolId string, page int) (dtos.UserResponsePaginated, error)
 	GetUnconfirmedUsers(schoolId string) ([]dtos.UserResponse, error)
 	GetStudents(schoolId string) ([]dtos.UserResponse, error)
 	GetUser(id string, schoolId string) (dtos.UserResponse, error)
@@ -485,6 +487,141 @@ func (impl serviceImpl) GetUsers(schoolId string) ([]dtos.UserResponse, error) {
 
 	log.Print("Call to get all Users completed.")
 	return Users, err
+}
+
+func (impl serviceImpl) GetPaginatedUnconfirmedUsers(schoolId string, page int) (dtos.UserResponsePaginated, error) {
+
+	log.Print("Call to get paginated users started.")
+
+	var Users []dtos.UserResponse
+	filter := bson.D{bson.E{Key: "schoolid", Value: schoolId}}
+	cur, err := impl.collection.Find(impl.ctx, filter)
+
+	if err != nil {
+		Users = make([]dtos.UserResponse, 0)
+		return dtos.UserResponsePaginated{
+			PaginatedUsers:     Users,
+			TotalNumberOfUsers: len(Users),
+		}, errors.Error("Users not found!")
+	}
+
+	err = cur.All(impl.ctx, &Users)
+	if err != nil {
+		Users = make([]dtos.UserResponse, 0)
+		return dtos.UserResponsePaginated{
+			PaginatedUsers:     Users,
+			TotalNumberOfUsers: len(Users),
+		}, err
+	}
+
+	cur.Close(impl.ctx)
+	length := len(Users)
+	if length == 0 {
+		Users = make([]dtos.UserResponse, 0)
+	}
+
+	paginatedUsers := make([]dtos.UserResponse, 0)
+	limit := 10
+	skip := int64(page*limit - limit)
+	lent := (skip + int64(limit))
+	if lent > int64(length) {
+		lent = int64(length)
+	}
+	for i := skip; i < lent; i++ {
+		if !Users[i].Confirmed {
+			paginatedUsers = append(paginatedUsers, Users[i])
+		}
+	}
+
+	DesignationIds := make([]string, 0)
+	for _, v := range paginatedUsers {
+		DesignationIds = append(DesignationIds, v.DesignationId)
+	}
+
+	staffs, _ := impl.staffService.GetStaffsByIds(schoolId, DesignationIds)
+	for i := 0; int64(i) < lent; i++ {
+		for _, staff := range staffs {
+			if staff.Id == paginatedUsers[i].DesignationId {
+				paginatedUsers[i].Designation = staff.Type
+				break
+			}
+		}
+	}
+
+	userResponsePaginated := dtos.UserResponsePaginated{
+		PaginatedUsers:     paginatedUsers,
+		TotalNumberOfUsers: length,
+		Limit:              limit,
+	}
+	log.Print("Call to get paginated users completed.")
+	return userResponsePaginated, err
+}
+
+func (impl serviceImpl) GetPaginatedConfirmedUsers(schoolId string, page int) (dtos.UserResponsePaginated, error) {
+
+	log.Print("Call to get paginated users started.")
+
+	var Users []dtos.UserResponse
+	filter := bson.D{bson.E{Key: "schoolid", Value: schoolId},
+		bson.E{Key: "confirmed", Value: true}}
+	cur, err := impl.collection.Find(impl.ctx, filter)
+
+	if err != nil {
+		Users = make([]dtos.UserResponse, 0)
+		return dtos.UserResponsePaginated{
+			PaginatedUsers:     Users,
+			TotalNumberOfUsers: len(Users),
+		}, errors.Error("Users not found!")
+	}
+
+	err = cur.All(impl.ctx, &Users)
+	if err != nil {
+		Users = make([]dtos.UserResponse, 0)
+		return dtos.UserResponsePaginated{
+			PaginatedUsers:     Users,
+			TotalNumberOfUsers: len(Users),
+		}, err
+	}
+
+	cur.Close(impl.ctx)
+	length := len(Users)
+	if length == 0 {
+		Users = make([]dtos.UserResponse, 0)
+	}
+
+	paginatedUsers := make([]dtos.UserResponse, 0)
+	limit := 10
+	skip := int64(page*limit - limit)
+	lent := (skip + int64(limit))
+	if lent > int64(length) {
+		lent = int64(length)
+	}
+	for i := skip; i < lent; i++ {
+		paginatedUsers = append(paginatedUsers, Users[i])
+	}
+
+	DesignationIds := make([]string, 0)
+	for _, v := range paginatedUsers {
+		DesignationIds = append(DesignationIds, v.DesignationId)
+	}
+
+	staffs, _ := impl.staffService.GetStaffsByIds(schoolId, DesignationIds)
+	for i := 0; int64(i) < lent; i++ {
+		for _, staff := range staffs {
+			if staff.Id == paginatedUsers[i].DesignationId {
+				paginatedUsers[i].Designation = staff.Type
+				break
+			}
+		}
+	}
+
+	userResponsePaginated := dtos.UserResponsePaginated{
+		PaginatedUsers:     paginatedUsers,
+		TotalNumberOfUsers: length,
+		Limit:              limit,
+	}
+	log.Print("Call to get paginated users completed.")
+	return userResponsePaginated, err
 }
 
 func (impl serviceImpl) GetUnconfirmedUsers(schoolId string) ([]dtos.UserResponse, error) {

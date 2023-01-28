@@ -122,6 +122,12 @@ type UserResponse struct {
 	OriginalFileName     string    `json:"originalFileName"`
 }
 
+type UserResponsePaginated struct {
+	TotalNumberOfUsers int            `json:"totalNumberOfUsers"`
+	PaginatedUsers     []UserResponse `json:"paginatedUsers"`
+	Limit              int            `json:"limit"`
+}
+
 type ForgotPasswordInput struct {
 	Email      string `json:"email"`
 	ResetToken string `json:"resetToken"`

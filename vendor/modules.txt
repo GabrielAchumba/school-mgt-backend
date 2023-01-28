@@ -67,6 +67,9 @@ github.com/leodido/go-urn
 # github.com/mattn/go-isatty v0.0.14
 ## explicit; go 1.12
 github.com/mattn/go-isatty
+# github.com/mitchellh/mapstructure v0.0.0-20170125051937-db1efb556f84
+## explicit
+github.com/mitchellh/mapstructure
 # github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421
 ## explicit
 github.com/modern-go/concurrent
@@ -85,6 +88,9 @@ github.com/pelletier/go-toml/v2/internal/tracker
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
+# github.com/rpip/paystack-go v0.0.0-20210725234520-196191f8ab58
+## explicit; go 1.16
+github.com/rpip/paystack-go
 # github.com/thanhpk/randstr v1.0.4
 ## explicit
 github.com/thanhpk/randstr

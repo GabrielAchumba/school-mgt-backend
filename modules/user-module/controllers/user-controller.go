@@ -43,6 +43,8 @@ type UserController interface {
 	BlockUser(ctx *gin.Context) *rest.Response
 	ConfirmUser(ctx *gin.Context) *rest.Response
 	GetUnconfirmedUsers(ctx *gin.Context) *rest.Response
+	GetPaginatedUnconfirmedUsers(ctx *gin.Context) *rest.Response
+	GetPaginatedConfirmedUsers(ctx *gin.Context) *rest.Response
 }
 
 type ImageName struct {
@@ -175,6 +177,32 @@ func (ctrl *controllerImpl) GetUser(ctx *gin.Context) *rest.Response {
 		return _response.GetError(http.StatusOK, er.Error())
 	}
 	return _response.GetSuccess(http.StatusOK, m)
+}
+
+func (ctrl *controllerImpl) GetPaginatedUnconfirmedUsers(ctx *gin.Context) *rest.Response {
+	page, _ := strconv.Atoi(ctx.Param("page"))
+	schoolId := ctx.Param("schoolId")
+
+	m, er := ctrl.userService.GetPaginatedUnconfirmedUsers(schoolId, page)
+	if er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	}
+	return _response.GetSuccess(http.StatusOK, m)
+}
+
+func (ctrl *controllerImpl) GetPaginatedConfirmedUsers(ctx *gin.Context) *rest.Response {
+	page, _ := strconv.Atoi(ctx.Param("page"))
+	schoolId := ctx.Param("schoolId")
+
+	m, er := ctrl.userService.GetPaginatedConfirmedUsers(schoolId, page)
+	if er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	}
+	return _response.GetSuccess(http.StatusOK, m)
+}
+
+func Int64(s string) {
+	panic("unimplemented")
 }
 
 func (ctrl *controllerImpl) GetRerals(ctx *gin.Context) *rest.Response {
