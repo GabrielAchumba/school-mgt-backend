@@ -495,14 +495,14 @@ func (impl serviceImpl) CustomFilter(rows []dtos.UserResponse, filter string) []
 	lowerSearch := ""
 	filteredRows := make([]dtos.UserResponse, 0)
 
-	if filter != "" {
+	if filter != "@" {
 		lowerSearch = strings.ToLower(filter)
 	}
 
 	s1 := true
 
 	for _, row := range rows {
-		if lowerSearch != "" {
+		if lowerSearch != "" && lowerSearch != "@" {
 			s1 = false
 			//Get the values
 			v := reflect.ValueOf(row)
@@ -516,7 +516,8 @@ func (impl serviceImpl) CustomFilter(rows []dtos.UserResponse, filter string) []
 			for _, item := range s1_values {
 				dataType := reflect.TypeOf(item).String()
 				if dataType == "string" {
-					s1_lower = append(s1_lower, dataType)
+					txt := reflect.ValueOf(item).String()
+					s1_lower = append(s1_lower, strings.ToLower(txt))
 				}
 			}
 
@@ -571,34 +572,34 @@ func (impl serviceImpl) GetPaginatedUnconfirmedUsers(schoolId string, page int, 
 		Users = make([]dtos.UserResponse, 0)
 	}
 
+	DesignationIds := make([]string, 0)
+	for _, v := range Users {
+		DesignationIds = append(DesignationIds, v.DesignationId)
+	}
+
+	staffs, _ := impl.staffService.GetStaffsByIds(schoolId, DesignationIds)
+	for i := 0; int64(i) < int64(len(Users)); i++ {
+		for _, staff := range staffs {
+			if staff.Id == Users[i].DesignationId {
+				Users[i].Designation = staff.Type
+				break
+			}
+		}
+	}
+
 	filteredUsers := impl.CustomFilter(Users, filterModel)
 
 	paginatedUsers := make([]dtos.UserResponse, 0)
 	limit := 10
 	skip := int64(page*limit - limit)
 	counter := 0
-	for i := skip; i < int64(length); i++ {
+	for i := skip; i < int64(len(filteredUsers)); i++ {
 		counter++
 		if counter > limit {
 			break
 		}
 		if !filteredUsers[i].Confirmed {
 			paginatedUsers = append(paginatedUsers, filteredUsers[i])
-		}
-	}
-
-	DesignationIds := make([]string, 0)
-	for _, v := range paginatedUsers {
-		DesignationIds = append(DesignationIds, v.DesignationId)
-	}
-
-	staffs, _ := impl.staffService.GetStaffsByIds(schoolId, DesignationIds)
-	for i := 0; int64(i) < int64(len(paginatedUsers)); i++ {
-		for _, staff := range staffs {
-			if staff.Id == paginatedUsers[i].DesignationId {
-				paginatedUsers[i].Designation = staff.Type
-				break
-			}
 		}
 	}
 
@@ -643,6 +644,21 @@ func (impl serviceImpl) GetPaginatedConfirmedUsers(schoolId string, page int, fi
 		Users = make([]dtos.UserResponse, 0)
 	}
 
+	DesignationIds := make([]string, 0)
+	for _, v := range Users {
+		DesignationIds = append(DesignationIds, v.DesignationId)
+	}
+
+	staffs, _ := impl.staffService.GetStaffsByIds(schoolId, DesignationIds)
+	for i := 0; int64(i) < int64(len(Users)); i++ {
+		for _, staff := range staffs {
+			if staff.Id == Users[i].DesignationId {
+				Users[i].Designation = staff.Type
+				break
+			}
+		}
+	}
+
 	filteredUsers := impl.CustomFilter(Users, filterModel)
 
 	paginatedUsers := make([]dtos.UserResponse, 0)
@@ -650,27 +666,12 @@ func (impl serviceImpl) GetPaginatedConfirmedUsers(schoolId string, page int, fi
 	skip := int64(page*limit - limit)
 
 	counter := 0
-	for i := skip; i < int64(length); i++ {
+	for i := skip; i < int64(len(filteredUsers)); i++ {
 		counter++
 		if counter > limit {
 			break
 		}
 		paginatedUsers = append(paginatedUsers, filteredUsers[i])
-	}
-
-	DesignationIds := make([]string, 0)
-	for _, v := range paginatedUsers {
-		DesignationIds = append(DesignationIds, v.DesignationId)
-	}
-
-	staffs, _ := impl.staffService.GetStaffsByIds(schoolId, DesignationIds)
-	for i := 0; int64(i) < int64(len(paginatedUsers)); i++ {
-		for _, staff := range staffs {
-			if staff.Id == paginatedUsers[i].DesignationId {
-				paginatedUsers[i].Designation = staff.Type
-				break
-			}
-		}
 	}
 
 	userResponsePaginated := dtos.UserResponsePaginated{
@@ -706,27 +707,27 @@ func (impl serviceImpl) GetUnconfirmedUsers(schoolId string, filterModel string)
 		Users = make([]dtos.UserResponse, 0)
 	}
 
-	filteredUsers := impl.CustomFilter(Users, filterModel)
-
-	unConfirmedUsers := make([]dtos.UserResponse, 0)
-	for i := 0; i < length; i++ {
-		if !filteredUsers[i].Confirmed {
-			unConfirmedUsers = append(unConfirmedUsers, filteredUsers[i])
-		}
-	}
-
 	DesignationIds := make([]string, 0)
-	for _, v := range unConfirmedUsers {
+	for _, v := range Users {
 		DesignationIds = append(DesignationIds, v.DesignationId)
 	}
 
 	staffs, _ := impl.staffService.GetStaffsByIds(schoolId, DesignationIds)
-	for i := 0; i < len(unConfirmedUsers); i++ {
+	for i := 0; i < len(Users); i++ {
 		for _, staff := range staffs {
-			if staff.Id == unConfirmedUsers[i].DesignationId {
-				unConfirmedUsers[i].Designation = staff.Type
+			if staff.Id == Users[i].DesignationId {
+				Users[i].Designation = staff.Type
 				break
 			}
+		}
+	}
+
+	filteredUsers := impl.CustomFilter(Users, filterModel)
+
+	unConfirmedUsers := make([]dtos.UserResponse, 0)
+	for i := 0; i < len(filteredUsers); i++ {
+		if !filteredUsers[i].Confirmed {
+			unConfirmedUsers = append(unConfirmedUsers, filteredUsers[i])
 		}
 	}
 
