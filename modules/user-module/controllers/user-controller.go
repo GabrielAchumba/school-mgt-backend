@@ -182,8 +182,9 @@ func (ctrl *controllerImpl) GetUser(ctx *gin.Context) *rest.Response {
 func (ctrl *controllerImpl) GetPaginatedUnconfirmedUsers(ctx *gin.Context) *rest.Response {
 	page, _ := strconv.Atoi(ctx.Param("page"))
 	schoolId := ctx.Param("schoolId")
+	filter := ctx.Param("filter")
 
-	m, er := ctrl.userService.GetPaginatedUnconfirmedUsers(schoolId, page)
+	m, er := ctrl.userService.GetPaginatedUnconfirmedUsers(schoolId, page, filter)
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}
@@ -193,8 +194,9 @@ func (ctrl *controllerImpl) GetPaginatedUnconfirmedUsers(ctx *gin.Context) *rest
 func (ctrl *controllerImpl) GetPaginatedConfirmedUsers(ctx *gin.Context) *rest.Response {
 	page, _ := strconv.Atoi(ctx.Param("page"))
 	schoolId := ctx.Param("schoolId")
+	filter := ctx.Param("filter")
 
-	m, er := ctrl.userService.GetPaginatedConfirmedUsers(schoolId, page)
+	m, er := ctrl.userService.GetPaginatedConfirmedUsers(schoolId, page, filter)
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}
@@ -239,7 +241,8 @@ func (ctrl *controllerImpl) GetUsers(ctx *gin.Context) *rest.Response {
 func (ctrl *controllerImpl) GetUnconfirmedUsers(ctx *gin.Context) *rest.Response {
 
 	schoolId := ctx.Param("schoolId")
-	m, er := ctrl.userService.GetUnconfirmedUsers(schoolId)
+	filter := ctx.Param("filter")
+	m, er := ctrl.userService.GetUnconfirmedUsers(schoolId, filter)
 	if er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	}
