@@ -7,6 +7,13 @@ import (
 	"net/http"
 	"os"
 
+	/*  socketio "github.com/googollee/go-socket.io"
+	"github.com/googollee/go-socket.io/engineio"
+	"github.com/googollee/go-socket.io/engineio/transport"
+
+	"github.com/googollee/go-socket.io/engineio/transport/polling"
+	"github.com/googollee/go-socket.io/engineio/transport/websocket" */
+
 	"github.com/GabrielAchumba/school-mgt-backend/common/config"
 
 	"time"
@@ -47,6 +54,38 @@ import (
 
 	competitionResultmodule "github.com/GabrielAchumba/school-mgt-backend/modules/competition-result-module"
 	competitionResultService "github.com/GabrielAchumba/school-mgt-backend/modules/competition-result-module/services"
+
+	//=============LaunchPad Packages===============================================================//
+
+	launchpadusermodule "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/user-module"
+	launchpaduserService "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/user-module/services"
+
+	accountService "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/account-module/services"
+	cashoutService "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/cashout-module/services"
+	categoryService "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/category-module/services"
+	cycleService "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/cycle-module/services"
+
+	cyclemodule "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/cycle-module"
+
+	categoryN10000module "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/category-module"
+	categoryN1000module "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/category-module"
+	categoryN2000module "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/category-module"
+	categoryN5000module "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/category-module"
+	categoryN500module "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/category-module"
+
+	accountN10000module "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/account-module"
+	accountN1000module "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/account-module"
+	accountN2000module "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/account-module"
+	accountN5000module "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/account-module"
+	accountN500module "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/account-module"
+
+	cashoutN10000module "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/cashout-module"
+	cashoutN1000module "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/cashout-module"
+	cashoutN2000module "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/cashout-module"
+	cashoutN5000module "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/cashout-module"
+	cashoutN500module "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/cashout-module"
+
+	//=============================================================================================//
 
 	"github.com/GabrielAchumba/school-mgt-backend/authentication/token"
 	"github.com/gin-gonic/gin"
@@ -94,6 +133,11 @@ func init() {
 		log.Fatal(err)
 	}
 	fmt.Println("Mongo connection established")
+}
+
+// Easier to get running with CORS. Thanks for help @Vindexus and @erkie
+var allowOriginFunc = func(r *http.Request) bool {
+	return true
 }
 
 func main() {
@@ -163,7 +207,129 @@ func main() {
 		_staffService, _sessionService, _gradeService, _levelService)
 	competitionResultmodule.InjectService(_competitionResultService).RegisterRoutes(apiBaseName, tokenMaker)
 
+	//==============Launch Pad Set Up========================================================//
+
+	_launchpaduserService := launchpaduserService.New(mongoClient, configSettings, ctx, tokenMaker, emailData)
+	launchpadusermodule.InjectService(_launchpaduserService).RegisterRoutes(apiBaseName, tokenMaker)
+
+	categoryN500Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.CategoryN500)
+	_categoryN500Service := categoryService.New(categoryN500Collection, configSettings, ctx, _launchpaduserService)
+	categoryN500module.InjectService(_categoryN500Service).RegisterRoutes(apiBaseName, tokenMaker)
+
+	categoryN1000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.CategoryN1000)
+	_categoryN1000Service := categoryService.New(categoryN1000Collection, configSettings, ctx, _launchpaduserService)
+	categoryN1000module.InjectService(_categoryN1000Service).RegisterRoutes(apiBaseName, tokenMaker)
+
+	categoryN2000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.CategoryN2000)
+	_categoryN2000Service := categoryService.New(categoryN2000Collection, configSettings, ctx, _launchpaduserService)
+	categoryN2000module.InjectService(_categoryN2000Service).RegisterRoutes(apiBaseName, tokenMaker)
+
+	categoryN5000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.CategoryN5000)
+	_categoryN5000Service := categoryService.New(categoryN5000Collection, configSettings, ctx, _launchpaduserService)
+	categoryN5000module.InjectService(_categoryN5000Service).RegisterRoutes(apiBaseName, tokenMaker)
+
+	categoryN10000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.CategoryN10000)
+	_categoryN10000Service := categoryService.New(categoryN10000Collection, configSettings, ctx, _launchpaduserService)
+	categoryN10000module.InjectService(_categoryN10000Service).RegisterRoutes(apiBaseName, tokenMaker)
+
+	cyclemodule.InjectService(cycleService.New(ctx)).RegisterRoutes(apiBaseName, tokenMaker)
+
+	accountN500Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.AccountN500)
+	accountN500module.InjectService(accountService.New(accountN500Collection, configSettings, ctx, _categoryN500Service, _launchpaduserService)).RegisterRoutes(apiBaseName, tokenMaker)
+
+	accountN1000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.AccountN1000)
+	accountN1000module.InjectService(accountService.New(accountN1000Collection, configSettings, ctx, _categoryN1000Service, _launchpaduserService)).RegisterRoutes(apiBaseName, tokenMaker)
+
+	accountN2000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.AccountN2000)
+	accountN2000module.InjectService(accountService.New(accountN2000Collection, configSettings, ctx, _categoryN2000Service, _launchpaduserService)).RegisterRoutes(apiBaseName, tokenMaker)
+
+	accountN5000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.AccountN5000)
+	accountN5000module.InjectService(accountService.New(accountN5000Collection, configSettings, ctx, _categoryN5000Service, _launchpaduserService)).RegisterRoutes(apiBaseName, tokenMaker)
+
+	accountN10000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.AccountN10000)
+	accountN10000module.InjectService(accountService.New(accountN10000Collection, configSettings, ctx, _categoryN10000Service, _launchpaduserService)).RegisterRoutes(apiBaseName, tokenMaker)
+
+	cashoutN500Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.CashOutN500)
+	cashoutN500module.InjectService(cashoutService.New(cashoutN500Collection, configSettings, ctx, _categoryN500Service)).RegisterRoutes(apiBaseName, tokenMaker)
+
+	cashoutN1000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.CashOutN1000)
+	cashoutN1000module.InjectService(cashoutService.New(cashoutN1000Collection, configSettings, ctx, _categoryN1000Service)).RegisterRoutes(apiBaseName, tokenMaker)
+
+	cashoutN2000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.CashOutN2000)
+	cashoutN2000module.InjectService(cashoutService.New(cashoutN2000Collection, configSettings, ctx, _categoryN2000Service)).RegisterRoutes(apiBaseName, tokenMaker)
+
+	cashoutN5000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.CashOutN5000)
+	cashoutN5000module.InjectService(cashoutService.New(cashoutN5000Collection, configSettings, ctx, _categoryN1000Service)).RegisterRoutes(apiBaseName, tokenMaker)
+
+	cashoutN10000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.CashOutN10000)
+	cashoutN10000module.InjectService(cashoutService.New(cashoutN10000Collection, configSettings, ctx, _categoryN10000Service)).RegisterRoutes(apiBaseName, tokenMaker)
+
+	//=======================================================================================//
+
 	port := config.AppSettings.Server.Port
+
+	//socketServer := socketio.NewServer(nil)
+
+	/* socketServer := socketio.NewServer(&engineio.Options{
+		Transports: []transport.Transport{
+			&websocket.Transport{
+				CheckOrigin: allowOriginFunc,
+			},
+		},
+	}) */
+
+	/* socketServer.OnConnect("/", func(s socketio.Conn) error {
+		s.SetContext("")
+		log.Println("connected:", s.ID())
+		return nil
+	})
+
+	socketServer.OnEvent("/", "chat-message", func(s socketio.Conn, data map[string]interface{}) {
+		log.Println("chat-message:", data["message"])
+		s.Emit("chat-message", data)
+	})
+
+	socketServer.OnEvent("/", "typing", func(s socketio.Conn, data map[string]interface{}) {
+		log.Println("typing:", data["message"])
+		s.Emit("typing", data)
+	})
+
+	socketServer.OnEvent("/", "stopTyping", func(s socketio.Conn, data map[string]interface{}) {
+		log.Println("stopTyping")
+		s.Emit("stopTyping")
+	}) */
+
+	/* socketServer.OnEvent("/chat", "msg", func(s socketio.Conn, msg string) string {
+		s.SetContext(msg)
+		return "recv " + msg
+	})
+
+	socketServer.OnEvent("/", "bye", func(s socketio.Conn) string {
+		last := s.Context().(string)
+		s.Emit("bye", last)
+		s.Close()
+		return last
+	})
+
+	socketServer.OnError("/", func(s socketio.Conn, e error) {
+		log.Println("meet error:", e)
+	}) */
+
+	/* socketServer.OnDisconnect("/", func(s socketio.Conn, reason string) {
+		log.Println("closed", reason, s.Context())
+	}) */
+
+	/* go func() {
+		if err := socketServer.Serve(); err != nil {
+			log.Fatalf("socketio listen error: %s\n", err)
+		}
+	}() */
+
+	/* go socketServer.Serve()
+	defer socketServer.Close() */
+
+	//
+	//http.Handle("/socket.io/", socketServer)
 
 	networkingServer := &http.Server{
 		Addr:         ":" + port,

@@ -26,6 +26,8 @@ type PaymentService interface {
 	CheckSubscription(schoolId string) (dtos.CheckSubscription, error)
 	PutPayment(id string) (interface{}, error)
 	GetBanks() ([]paystack.Bank, error)
+	InitiateTransfer(request dtos.CreatePaymentRequest) (interface{}, error)
+	FinalizeTransfer(request dtos.CreatePaymentRequest) (interface{}, error)
 }
 
 type serviceImpl struct {
@@ -387,4 +389,63 @@ func (impl serviceImpl) GetBanks() ([]paystack.Bank, error) {
 	log.Print("GetBanks completed")
 	return bankList.Values, err
 
+}
+
+func (impl serviceImpl) InitiateTransfer(request dtos.CreatePaymentRequest) (interface{}, error) {
+
+	impl.client.Transfer.EnableOTP()
+
+	recipient := &paystack.TransferRecipient{
+		Type:          "Nuban",
+		Name:          request.AccountNamePaidFrom,
+		Description:   request.Description,
+		AccountNumber: request.AccountNumberPaidFrom,
+		BankCode:      request.BankCode,
+		Currency:      request.CurrencyCode,
+		Metadata:      map[string]interface{}{"Designation": request.Designation},
+	}
+
+	recipient1, _ := impl.client.Transfer.CreateRecipient(recipient)
+
+	amount, _ := strconv.ParseFloat(request.AccountNamePaidFrom, 32)
+
+	req := &paystack.TransferRequest{
+		Source:    "balance",
+		Reason:    request.Reason,
+		Amount:    float32(amount),
+		Recipient: recipient1.RecipientCode,
+	}
+
+	transfer, err := impl.client.Transfer.Initiate(req)
+
+	if err != nil {
+		return nil, errors.Error("Could not initiate transfer")
+	}
+
+	if transfer.TransferCode == "" {
+		return nil, errors.Error("Expected transfer code, got " + transfer.TransferCode)
+	}
+
+	// fetch transfer
+	trf, err := impl.client.Transfer.Get(transfer.TransferCode)
+	if err != nil {
+		return nil, errors.Error("Could not fetch transfer details")
+	}
+
+	if trf.TransferCode == "" {
+		return nil, errors.Error("Expected transfer code, got " + trf.TransferCode)
+	}
+
+	return transfer, nil
+}
+
+func (impl serviceImpl) FinalizeTransfer(request dtos.CreatePaymentRequest) (interface{}, error) {
+
+	response, err := impl.client.Transfer.Finalize(request.TransferCode, request.OTP)
+
+	if err != nil {
+		return nil, errors.Error("Could not initiate transfer")
+	}
+
+	return response, nil
 }

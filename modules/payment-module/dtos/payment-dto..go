@@ -29,6 +29,13 @@ type CreatePaymentRequest struct {
 	AccountNumberPaidFrom        string              `json:"accountNumberPaidFrom"`
 	Base64String                 string              `json:"base64String"`
 	FileName                     string              `json:"fileName"`
+	BankCode                     string              `json:"bankCode"`
+	CurrencyCode                 string              `json:"currencyCode"`
+	Designation                  string              `json:"designation"`
+	Description                  string              `json:"description"`
+	Reason                       string              `json:"reason"`
+	TransferCode                 string              `json:"transferCode"`
+	OTP                          string              `json:"oTP"`
 }
 
 type UpdatePaymentRequest struct {
