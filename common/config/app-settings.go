@@ -125,6 +125,9 @@ func Setup() {
 	AppSettings.Token.RefreshTokenSecretKey = os.Getenv("REFRESH_TOKEN_SECRET_KEY")
 
 	AppSettings.PayStackKey.TestKey = "sk_test_574ef246a0c1d74f8b9e0b8b10214d3959a00b01"
+	//sk_live_047288bfa00c01ebd2e3e9061cf649283254130e
+	//sk_test_574ef246a0c1d74f8b9e0b8b10214d3959a00b01
+	//sk_test_574ef246a0c1d74f8b9e0b8b10214d3959a00b01
 
 	fmt.Println("App settings was successfully loaded.")
 }

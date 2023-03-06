@@ -20,15 +20,15 @@ func InjectService(service services.CategoryService) *CategoryModule {
 	return module
 }
 
-func (module *CategoryModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker token.Maker) {
-	moduleRoute := rg.Group("/category")
+func (module *CategoryModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker token.Maker, relativePath string) {
+	moduleRoute := rg.Group(relativePath)
 
 	serverHttp := rest.ServeHTTP
 	moduleRoute.Use(middleware.AuthMiddleware(tokenMaker))
 	{
 		moduleRoute.POST("/createcategory", serverHttp(module.controller.CreateCategory))
 		moduleRoute.GET("/getcategories", serverHttp(module.controller.GetCategories))
-		moduleRoute.GET("/getcompletedlevelxcategories/:levelIndex", serverHttp(module.controller.GetCompletedLevelXCategories))
+		moduleRoute.GET("/getcompletedlevelxcategories/:levelIndex/:categoryIndex", serverHttp(module.controller.GetCompletedLevelXCategories))
 		moduleRoute.GET("/getpersonaldataList", serverHttp(module.controller.GetPersonalDataList))
 	}
 }

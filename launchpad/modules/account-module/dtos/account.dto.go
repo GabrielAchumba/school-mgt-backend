@@ -19,6 +19,10 @@ type AccountDTO struct {
 	Reference             string  `json:"reference"`
 	Status                string  `json:"status"`
 	Trans                 string  `json:"trans"`
+	TransferCode          string  `json:"transferCode"`
+	TransferId            string  `json:"transferId"`
+	Integration           string  `json:"integration"`
+	Recipient             string  `json:"recipient"`
 	Transactions          string  `json:"transactions"`
 	Trxref                string  `json:"trxref"`
 	IsComfirmed           bool    `json:"isComfirmed"`

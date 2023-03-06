@@ -20,17 +20,17 @@ func InjectService(service services.CashOutService) *CashOutModule {
 	return module
 }
 
-func (module *CashOutModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker token.Maker) {
-	moduleRoute := rg.Group("/cashouts")
+func (module *CashOutModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker token.Maker, relativePath string) {
+	moduleRoute := rg.Group(relativePath)
 
 	serverHttp := rest.ServeHTTP
 	moduleRoute.Use(middleware.AuthMiddleware(tokenMaker))
 	{
 		moduleRoute.POST("/createcashoutdto", serverHttp(module.controller.CreateCashOutDTO))
-		moduleRoute.GET("/getcashouts", serverHttp(module.controller.GetCashOuts))
-		moduleRoute.GET("/getcashout/:id", serverHttp(module.controller.GetCashOut))
+		moduleRoute.GET("/getcashouts/:categoryIndex", serverHttp(module.controller.GetCashOuts))
+		moduleRoute.GET("/getcashout/:id/:categoryIndex", serverHttp(module.controller.GetCashOut))
 		moduleRoute.GET("/getcashoutbycategoryid/:levelIndex/:categoryId", serverHttp(module.controller.GetCashOutByCategoryId))
 		moduleRoute.POST("/uploadphoto", serverHttp(module.controller.UploadPhoto))
-		moduleRoute.GET("/getcategorybankdetails", serverHttp(module.controller.GetCategoryBankDetails))
+		moduleRoute.GET("/getcategorybankdetails/:categoryIndex", serverHttp(module.controller.GetCategoryBankDetails))
 	}
 }

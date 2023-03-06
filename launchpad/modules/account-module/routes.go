@@ -20,10 +20,10 @@ func InjectService(service services.AccountService) *AccountModule {
 	return module
 }
 
-func (module *AccountModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker token.Maker) {
+func (module *AccountModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker token.Maker, relativePath string) {
 	serverHttp := rest.ServeHTTP
 
-	moduleRoute := rg.Group("/accounts")
+	moduleRoute := rg.Group(relativePath)
 
 	moduleRoute.Use(middleware.AuthMiddleware(tokenMaker))
 	{

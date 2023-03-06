@@ -25,6 +25,8 @@ import (
 	staffmodule "github.com/GabrielAchumba/school-mgt-backend/modules/staff-module"
 	staffService "github.com/GabrielAchumba/school-mgt-backend/modules/staff-module/services"
 
+	paymentgatewaymodule "github.com/GabrielAchumba/school-mgt-backend/payment-gateway"
+
 	subjectmodule "github.com/GabrielAchumba/school-mgt-backend/modules/subject-module"
 	subjectService "github.com/GabrielAchumba/school-mgt-backend/modules/subject-module/services"
 
@@ -166,6 +168,9 @@ func main() {
 
 	tokenMaker, _ := token.NewJWTMaker(config.AppSettings.Token.TokenSecretKey, config.AppSettings.Token.RefreshTokenSecretKey, config.AppSettings.Token.AccessTokenDuration, config.AppSettings.Token.RefreshTokenDuration)
 
+	_paymentgatewayService := paymentgatewaymodule.New(ctx, configSettings)
+	paymentgatewaymodule.InjectService(_paymentgatewayService).RegisterRoutes(apiBaseName, tokenMaker)
+
 	_staffService := staffService.New(mongoClient, configSettings, ctx)
 	staffmodule.InjectService(_staffService).RegisterRoutes(apiBaseName, tokenMaker)
 
@@ -214,55 +219,55 @@ func main() {
 
 	categoryN500Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.CategoryN500)
 	_categoryN500Service := categoryService.New(categoryN500Collection, configSettings, ctx, _launchpaduserService)
-	categoryN500module.InjectService(_categoryN500Service).RegisterRoutes(apiBaseName, tokenMaker)
+	categoryN500module.InjectService(_categoryN500Service).RegisterRoutes(apiBaseName, tokenMaker, "/categoryn500")
 
 	categoryN1000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.CategoryN1000)
 	_categoryN1000Service := categoryService.New(categoryN1000Collection, configSettings, ctx, _launchpaduserService)
-	categoryN1000module.InjectService(_categoryN1000Service).RegisterRoutes(apiBaseName, tokenMaker)
+	categoryN1000module.InjectService(_categoryN1000Service).RegisterRoutes(apiBaseName, tokenMaker, "/categoryn1000")
 
 	categoryN2000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.CategoryN2000)
 	_categoryN2000Service := categoryService.New(categoryN2000Collection, configSettings, ctx, _launchpaduserService)
-	categoryN2000module.InjectService(_categoryN2000Service).RegisterRoutes(apiBaseName, tokenMaker)
+	categoryN2000module.InjectService(_categoryN2000Service).RegisterRoutes(apiBaseName, tokenMaker, "/categoryn2000")
 
 	categoryN5000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.CategoryN5000)
 	_categoryN5000Service := categoryService.New(categoryN5000Collection, configSettings, ctx, _launchpaduserService)
-	categoryN5000module.InjectService(_categoryN5000Service).RegisterRoutes(apiBaseName, tokenMaker)
+	categoryN5000module.InjectService(_categoryN5000Service).RegisterRoutes(apiBaseName, tokenMaker, "/categoryn5000")
 
 	categoryN10000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.CategoryN10000)
 	_categoryN10000Service := categoryService.New(categoryN10000Collection, configSettings, ctx, _launchpaduserService)
-	categoryN10000module.InjectService(_categoryN10000Service).RegisterRoutes(apiBaseName, tokenMaker)
+	categoryN10000module.InjectService(_categoryN10000Service).RegisterRoutes(apiBaseName, tokenMaker, "/categoryn10000")
 
 	cyclemodule.InjectService(cycleService.New(ctx)).RegisterRoutes(apiBaseName, tokenMaker)
 
 	accountN500Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.AccountN500)
-	accountN500module.InjectService(accountService.New(accountN500Collection, configSettings, ctx, _categoryN500Service, _launchpaduserService)).RegisterRoutes(apiBaseName, tokenMaker)
+	accountN500module.InjectService(accountService.New(accountN500Collection, configSettings, ctx, _categoryN500Service, _launchpaduserService)).RegisterRoutes(apiBaseName, tokenMaker, "/accountn500")
 
 	accountN1000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.AccountN1000)
-	accountN1000module.InjectService(accountService.New(accountN1000Collection, configSettings, ctx, _categoryN1000Service, _launchpaduserService)).RegisterRoutes(apiBaseName, tokenMaker)
+	accountN1000module.InjectService(accountService.New(accountN1000Collection, configSettings, ctx, _categoryN1000Service, _launchpaduserService)).RegisterRoutes(apiBaseName, tokenMaker, "/accountn1000")
 
 	accountN2000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.AccountN2000)
-	accountN2000module.InjectService(accountService.New(accountN2000Collection, configSettings, ctx, _categoryN2000Service, _launchpaduserService)).RegisterRoutes(apiBaseName, tokenMaker)
+	accountN2000module.InjectService(accountService.New(accountN2000Collection, configSettings, ctx, _categoryN2000Service, _launchpaduserService)).RegisterRoutes(apiBaseName, tokenMaker, "/accountn2000")
 
 	accountN5000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.AccountN5000)
-	accountN5000module.InjectService(accountService.New(accountN5000Collection, configSettings, ctx, _categoryN5000Service, _launchpaduserService)).RegisterRoutes(apiBaseName, tokenMaker)
+	accountN5000module.InjectService(accountService.New(accountN5000Collection, configSettings, ctx, _categoryN5000Service, _launchpaduserService)).RegisterRoutes(apiBaseName, tokenMaker, "/accountn5000")
 
 	accountN10000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.AccountN10000)
-	accountN10000module.InjectService(accountService.New(accountN10000Collection, configSettings, ctx, _categoryN10000Service, _launchpaduserService)).RegisterRoutes(apiBaseName, tokenMaker)
+	accountN10000module.InjectService(accountService.New(accountN10000Collection, configSettings, ctx, _categoryN10000Service, _launchpaduserService)).RegisterRoutes(apiBaseName, tokenMaker, "/accountn10000")
 
 	cashoutN500Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.CashOutN500)
-	cashoutN500module.InjectService(cashoutService.New(cashoutN500Collection, configSettings, ctx, _categoryN500Service)).RegisterRoutes(apiBaseName, tokenMaker)
+	cashoutN500module.InjectService(cashoutService.New(cashoutN500Collection, configSettings, ctx, _categoryN500Service)).RegisterRoutes(apiBaseName, tokenMaker, "/cashoutn500")
 
 	cashoutN1000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.CashOutN1000)
-	cashoutN1000module.InjectService(cashoutService.New(cashoutN1000Collection, configSettings, ctx, _categoryN1000Service)).RegisterRoutes(apiBaseName, tokenMaker)
+	cashoutN1000module.InjectService(cashoutService.New(cashoutN1000Collection, configSettings, ctx, _categoryN1000Service)).RegisterRoutes(apiBaseName, tokenMaker, "/cashoutn1000")
 
 	cashoutN2000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.CashOutN2000)
-	cashoutN2000module.InjectService(cashoutService.New(cashoutN2000Collection, configSettings, ctx, _categoryN2000Service)).RegisterRoutes(apiBaseName, tokenMaker)
+	cashoutN2000module.InjectService(cashoutService.New(cashoutN2000Collection, configSettings, ctx, _categoryN2000Service)).RegisterRoutes(apiBaseName, tokenMaker, "/cashoutn2000")
 
 	cashoutN5000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.CashOutN5000)
-	cashoutN5000module.InjectService(cashoutService.New(cashoutN5000Collection, configSettings, ctx, _categoryN1000Service)).RegisterRoutes(apiBaseName, tokenMaker)
+	cashoutN5000module.InjectService(cashoutService.New(cashoutN5000Collection, configSettings, ctx, _categoryN1000Service)).RegisterRoutes(apiBaseName, tokenMaker, "/cashoutn5000")
 
 	cashoutN10000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.CashOutN10000)
-	cashoutN10000module.InjectService(cashoutService.New(cashoutN10000Collection, configSettings, ctx, _categoryN10000Service)).RegisterRoutes(apiBaseName, tokenMaker)
+	cashoutN10000module.InjectService(cashoutService.New(cashoutN10000Collection, configSettings, ctx, _categoryN10000Service)).RegisterRoutes(apiBaseName, tokenMaker, "/cashoutn10000")
 
 	//=======================================================================================//
 
