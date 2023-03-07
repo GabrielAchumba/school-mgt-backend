@@ -369,6 +369,7 @@ func (impl serviceImpl) OffPlatformPayment(modelObj dtos.AccountDTO) (interface{
 	account.AccountNumberPaidFrom = _account.AccountNumberPaidFrom
 	account.DatePaidFrom = _account.DatePaidFrom
 	account.UserName = _account.UserName
+	account.Recipient = _account.Recipient
 	result, er := impl.Payment(account)
 	return result, er
 }
