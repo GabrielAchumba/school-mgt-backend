@@ -30,6 +30,7 @@ func (module *userModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker token.M
 	moduleRoute.POST("/register", serverHttp(module.controller.RegisterUser))
 	moduleRoute.POST("/forgotpassword", serverHttp(module.controller.ForgotPassword))
 	moduleRoute.POST("/resetpassword", serverHttp(module.controller.ResetPassword))
+	moduleRoute.POST("/user-is-exist", serverHttp(module.controller.UserIsExist))
 
 	moduleRoute.Use(middleware.AuthMiddleware(tokenMaker))
 	{

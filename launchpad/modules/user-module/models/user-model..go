@@ -47,6 +47,7 @@ type User struct {
 	Password           string    `json:"password,omitempty" binding:"required"`
 	PasswordResetToken string    `json:"passwordResetToken"`
 	PasswordResetAt    time.Time `json:"passwordResetAt"`
+	CountryCode        string    `json:"countryCode"`
 }
 
 func (user *User) HashPassword() error {

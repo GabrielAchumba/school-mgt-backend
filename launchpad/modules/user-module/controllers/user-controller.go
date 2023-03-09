@@ -17,6 +17,7 @@ var _response rest.Response
 
 type UserController interface {
 	RegisterUser(ctx *gin.Context) *rest.Response
+	UserIsExist(ctx *gin.Context) *rest.Response
 	Login(ctx *gin.Context) *rest.Response
 	DeleteUser(ctx *gin.Context) *rest.Response
 	GetUser(ctx *gin.Context) *rest.Response
@@ -62,6 +63,20 @@ func (ctrl *controllerImpl) Login(ctx *gin.Context) *rest.Response {
 	}
 
 	if m, er := ctrl.userService.LoginUser(model); er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	} else {
+		return _response.GetSuccess(http.StatusOK, m)
+	}
+}
+
+func (ctrl *controllerImpl) UserIsExist(ctx *gin.Context) *rest.Response {
+	var model dtos.CreateUserRequest
+
+	if er := ctx.BindJSON(&model); er != nil {
+		return _response.GetError(http.StatusBadRequest, er.Error())
+	}
+
+	if m, er := ctrl.userService.UserIsExist(model); er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	} else {
 		return _response.GetSuccess(http.StatusOK, m)

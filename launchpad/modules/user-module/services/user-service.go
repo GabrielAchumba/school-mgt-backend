@@ -25,6 +25,7 @@ import (
 type UserService interface {
 	LoginUser(requestModel dtos.LoginUserRequest) (interface{}, error)
 	RegisterUser(userId string, requestModel dtos.CreateUserRequest) (interface{}, error)
+	UserIsExist(requestModel dtos.CreateUserRequest) (interface{}, error)
 	GetUsers() ([]dtos.UserResponse, error)
 	GetUser(id string) (dtos.UserResponse, error)
 	PutUser(id string, User dtos.UpdateUserRequest) (interface{}, error)
@@ -100,7 +101,7 @@ func (impl serviceImpl) LoginUser(requestModel dtos.LoginUserRequest) (interface
 	filter := bson.D{bson.E{Key: "username", Value: requestModel.UserName}}
 	er := impl.collection.FindOne(impl.ctx, filter).Decode(&modelDto)
 	if er != nil {
-		return nil, er // exception.Error("Invalid credentials supplied.")
+		return nil, networkingerrors.Error(er.Error())
 	}
 
 	credentialError := models.CheckPassword(modelDto.Password, requestModel.Password)
@@ -137,6 +138,40 @@ func (impl serviceImpl) LoginUser(requestModel dtos.LoginUserRequest) (interface
 	return rsp, er
 }
 
+func (impl serviceImpl) UserIsExist(requestModel dtos.CreateUserRequest) (interface{}, error) {
+
+	log.Print("UserIsExist started.")
+
+	var modelObj models.User
+	conversion.Convert(requestModel, &modelObj)
+
+	modelObj.CreatedAt = time.Now()
+
+	if modelObj.UserName == "" {
+		return nil, networkingerrors.Error("UserName cannot be empty.")
+	}
+	if modelObj.PhoneNumber == "" {
+		return nil, networkingerrors.Error("PhoneNumber cannot be empty.")
+	}
+	if modelObj.CountryCode == "" {
+		return nil, networkingerrors.Error("CountryCode cannot be empty.")
+	}
+
+	filter := bson.D{bson.E{Key: "username", Value: modelObj.UserName},
+		bson.E{Key: "phonenumber", Value: modelObj.PhoneNumber},
+		bson.E{Key: "countrycode", Value: modelObj.CountryCode}}
+	count, err := impl.collection.CountDocuments(impl.ctx, filter)
+	if err != nil {
+		return nil, networkingerrors.Error(err.Error())
+	}
+	if count > 0 {
+		return true, nil
+	}
+
+	log.Print("UserIsExist completed.")
+	return false, networkingerrors.Error(err.Error())
+}
+
 func (impl serviceImpl) RegisterUser(userId string, model dtos.CreateUserRequest) (interface{}, error) {
 
 	log.Print("Call to register user started.")
@@ -158,6 +193,12 @@ func (impl serviceImpl) RegisterUser(userId string, model dtos.CreateUserRequest
 	}
 	if modelObj.LastName == "" {
 		return nil, networkingerrors.Error("LastName cannot be empty.")
+	}
+	if modelObj.PhoneNumber == "" {
+		return nil, networkingerrors.Error("PhoneNumber cannot be empty.")
+	}
+	if modelObj.CountryCode == "" {
+		return nil, networkingerrors.Error("CountryCode cannot be empty.")
 	}
 
 	er := modelObj.HashPassword()
@@ -831,8 +872,6 @@ func (impl serviceImpl) ResetPassword(userCredential dtos.ResetPasswordInput) (s
 		return "Error", er
 	}
 
-	resetToken := userCredential.ResetToken
-
 	var user models.User
 	filter := bson.D{bson.E{Key: "username", Value: userCredential.UserName}}
 	err := impl.collection.FindOne(impl.ctx, filter).Decode(&user)
@@ -841,27 +880,10 @@ func (impl serviceImpl) ResetPassword(userCredential dtos.ResetPasswordInput) (s
 		return "Error", networkingerrors.Error("Could not upadte adminstrator's details")
 	}
 
-	passwordResetToken, err := utils.Decode(user.PasswordResetToken)
-
-	if err != nil {
-		return "Error", networkingerrors.Error("Invalid or expired token")
-	}
-
-	if passwordResetToken != resetToken {
-		return "Error", networkingerrors.Error("Invalid or expired token")
-	}
-
-	now := time.Now()
-	if now.Sub(user.PasswordResetAt).Minutes() > 10 {
-		return "Error", networkingerrors.Error("Toke life expired. Please generate another one")
-	}
-
 	// Update User in Database
 	query := bson.D{{Key: "username", Value: userCredential.UserName}}
 	update := bson.D{{Key: "$set", Value: bson.D{
-		bson.E{Key: "password", Value: modelObj.Password},
-		bson.E{Key: "passwordresettoken", Value: ""},
-		bson.E{Key: "passwordresetat", Value: now}}}}
+		bson.E{Key: "password", Value: modelObj.Password}}}}
 
 	_, err = impl.collection.UpdateOne(impl.ctx, query, update)
 

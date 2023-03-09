@@ -6,7 +6,7 @@ import (
 
 type LoginUserRequest struct {
 	UserName string `json:"userName,omitempty" `
-	Password string `json:"password" binding:"required"`
+	Password string `json:"password"`
 }
 
 type LoginUserResponse struct {
@@ -39,9 +39,9 @@ type CreateUserRequest struct {
 	CreatedYear          int    `json:"createdYear"`
 
 	Title       string `json:"title"`
-	FirstName   string `json:"firstName"  binding:"required"`
+	FirstName   string `json:"firstName"`
 	MiddleName  string `json:"middleName"`
-	LastName    string `json:"lastName"  binding:"required"`
+	LastName    string `json:"lastName"`
 	PhoneNumber string `json:"phoneNumber"`
 
 	UserType    string `json:"userType"`
@@ -49,10 +49,11 @@ type CreateUserRequest struct {
 	Description string `json:"description"`
 	Region      string `json:"region"`
 
-	UserName       string `json:"userName"  binding:"required"`
-	Password       string `json:"password"  binding:"required"`
+	UserName       string `json:"userName"`
+	Password       string `json:"password"`
 	ContributorId  string `json:"contributorId"`
 	ParentUserName string `json:"parentUserName"`
+	CountryCode    string `json:"countryCode"`
 }
 
 type UpdateUserRequest struct {
@@ -73,16 +74,17 @@ type UpdateUserRequest struct {
 	Description string `json:"description"`
 	Region      string `json:"region"`
 
-	UserName string `json:"userName"`
-	Password string `json:"password"`
+	UserName    string `json:"userName"`
+	Password    string `json:"password"`
+	CountryCode string `json:"countryCode"`
 }
 
 type UserResponse struct {
 	Id            string `json:"id"  bson:"_id"`
 	Title         string `json:"title"`
-	FirstName     string `json:"firstName" binding:"required"`
+	FirstName     string `json:"firstName"`
 	MiddleName    string `json:"middleName"`
-	LastName      string `json:"lastName" binding:"required"`
+	LastName      string `json:"lastName"`
 	FullName      string `json:"fullName"`
 	Gender        string `json:"gender"`
 	ContributorId string `json:"contributorId"`
@@ -121,7 +123,8 @@ type UserResponse struct {
 	AccountNumber        string `json:"accountNumber"`
 	BVN                  string `json:"bVN"`
 
-	Password string `json:"password,omitempty" binding:"required"`
+	Password    string `json:"password,omitempty"`
+	CountryCode string `json:"countryCode"`
 }
 
 type ForgotPasswordInput struct {
@@ -135,6 +138,5 @@ type ForgotPasswordInput struct {
 type ResetPasswordInput struct {
 	Password        string `json:"password"`
 	PasswordConfirm string `json:"passwordConfirm"`
-	ResetToken      string `json:"resetToken"`
 	UserName        string `json:"userName"`
 }
