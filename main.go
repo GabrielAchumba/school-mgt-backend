@@ -22,6 +22,9 @@ import (
 	userdtos "github.com/GabrielAchumba/school-mgt-backend/modules/user-module/dtos"
 	userService "github.com/GabrielAchumba/school-mgt-backend/modules/user-module/services"
 
+	simulationmodule "github.com/GabrielAchumba/school-mgt-backend/reservoir-simulation/modules/simulation-module"
+	simulationservice "github.com/GabrielAchumba/school-mgt-backend/reservoir-simulation/modules/simulation-module/services"
+
 	staffmodule "github.com/GabrielAchumba/school-mgt-backend/modules/staff-module"
 	staffService "github.com/GabrielAchumba/school-mgt-backend/modules/staff-module/services"
 
@@ -167,6 +170,9 @@ func main() {
 	}
 
 	tokenMaker, _ := token.NewJWTMaker(config.AppSettings.Token.TokenSecretKey, config.AppSettings.Token.RefreshTokenSecretKey, config.AppSettings.Token.AccessTokenDuration, config.AppSettings.Token.RefreshTokenDuration)
+
+	_simulationservice := simulationservice.New(ctx)
+	simulationmodule.InjectService(_simulationservice).RegisterRoutes(apiBaseName, tokenMaker)
 
 	_paymentgatewayService := paymentgatewaymodule.New(ctx, configSettings)
 	paymentgatewaymodule.InjectService(_paymentgatewayService).RegisterRoutes(apiBaseName, tokenMaker)
