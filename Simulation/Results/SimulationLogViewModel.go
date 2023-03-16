@@ -7,16 +7,18 @@ import (
 )
 
 type SimulationLogViewModelImpl struct {
-	CG         CFDPoroMedia.CartGrid
-	DIMENS_    DataStructure.DIMENS
-	Rock       CFDPoroMedia.Rock
-	PVTO       DataStructure.PVTO
-	PVTG       DataStructure.PVTG
-	PVTW       DataStructure.PVTW
-	Times      []float64
-	Pressures  []float64
-	Wells      map[string]DataStructure.WellData
-	Boundaries map[string]DataStructure.Boundary
+	CG                 CFDPoroMedia.CartGrid
+	DIMENS_            DataStructure.DIMENS
+	Rock               CFDPoroMedia.Rock
+	PVTO               DataStructure.PVTO
+	PVTG               DataStructure.PVTG
+	PVTW               DataStructure.PVTW
+	Times              []float64
+	Pressures          []float64
+	Wells              map[string]DataStructure.WellData
+	Boundaries         map[string]DataStructure.Boundary
+	SpaceDistributions []DataStructure.SpaceDistributions
+	SimulationLogs     string
 }
 
 func New(DIMENS_ DataStructure.DIMENS, Rock CFDPoroMedia.Rock,
@@ -319,4 +321,6 @@ func (impl *SimulationLogViewModelImpl) SolveSlightlyCompressible() {
 		impl.PVTG, impl.PVTW, impl.Times)
 
 	SlightlyCompressible.Simulate()
+	impl.SpaceDistributions = SlightlyCompressible.SpaceDistributions
+	impl.SimulationLogs = SlightlyCompressible.SimulationLogs
 }

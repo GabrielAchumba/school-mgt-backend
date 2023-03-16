@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 
-	networkingerrors "github.com/GabrielAchumba/school-mgt-backend/common/errors"
 	"github.com/GabrielAchumba/school-mgt-backend/reservoir-simulation/modules/simulation-module/dtos"
 	utils "github.com/GabrielAchumba/school-mgt-backend/reservoir-simulation/modules/simulation-module/utils"
 )
@@ -25,6 +24,10 @@ func New(ctx context.Context) SimulationService {
 
 func (impl serviceImpl) Run(inputData dtos.SimulationInputDTO) (interface{}, error) {
 
-	utils.Simulate(inputData)
-	return nil, networkingerrors.Error("")
+	SpaceDistributions, SimulationLogs := utils.Simulate(inputData)
+	SimulatioOutput := dtos.SimulatioOutput{
+		SpaceDistributions: SpaceDistributions,
+		SimulationLogs:     SimulationLogs,
+	}
+	return SimulatioOutput, nil
 }

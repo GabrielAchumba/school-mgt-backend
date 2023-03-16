@@ -12,17 +12,19 @@ type DerivateResidualObjectiveFunction func(x []float64) ([]float64, [][]float64
 type ResidualObjectiveFunction func(x []float64) float64
 
 type SlightlyCompressible struct {
-	blocks          []DataStructure.BlockData
-	PVTO            DataStructure.PVTO
-	PVTG            DataStructure.PVTG
-	PVTW            DataStructure.PVTW
-	Times           []float64
-	ficticious      []DataStructure.BlockData
-	Dt              float64
-	TimeStepResults map[float64][]DataStructure.BlockData
-	LinearEquations mathematicsLibrary.LinearEquations
-	ficticiousBlock DataStructure.BlockData
-	Reserve         []float64
+	blocks             []DataStructure.BlockData
+	PVTO               DataStructure.PVTO
+	PVTG               DataStructure.PVTG
+	PVTW               DataStructure.PVTW
+	Times              []float64
+	ficticious         []DataStructure.BlockData
+	Dt                 float64
+	TimeStepResults    map[float64][]DataStructure.BlockData
+	LinearEquations    mathematicsLibrary.LinearEquations
+	ficticiousBlock    DataStructure.BlockData
+	Reserve            []float64
+	SpaceDistributions []DataStructure.SpaceDistributions
+	SimulationLogs     string
 }
 
 func NewSlightlyCompressible(blocks map[string]DataStructure.BlockData,
@@ -36,16 +38,18 @@ func NewSlightlyCompressible(blocks map[string]DataStructure.BlockData,
 
 	_blocks = SortBlocksByIndex(_blocks)
 	return SlightlyCompressible{
-		blocks:          _blocks,
-		Times:           times,
-		ficticious:      make([]DataStructure.BlockData, 0),
-		LinearEquations: mathematicsLibrary.NewLinearEquations(),
-		ficticiousBlock: DataStructure.NewBlockData(),
-		PVTO:            PVTO,
-		PVTG:            PVTG,
-		PVTW:            PVTW,
-		TimeStepResults: make(map[float64][]DataStructure.BlockData),
-		Reserve:         make([]float64, 0),
+		blocks:             _blocks,
+		Times:              times,
+		ficticious:         make([]DataStructure.BlockData, 0),
+		LinearEquations:    mathematicsLibrary.NewLinearEquations(),
+		ficticiousBlock:    DataStructure.NewBlockData(),
+		PVTO:               PVTO,
+		PVTG:               PVTG,
+		PVTW:               PVTW,
+		TimeStepResults:    make(map[float64][]DataStructure.BlockData),
+		Reserve:            make([]float64, 0),
+		SpaceDistributions: make([]DataStructure.SpaceDistributions, 0),
+		SimulationLogs:     "",
 	}
 }
 
@@ -377,11 +381,29 @@ func (impl *SlightlyCompressible) CreateAMatrixBVector(x []float64) ([]float64, 
 	return Bvector, Amatrix
 }
 
+func (impl *SlightlyCompressible) AverageReservoirPressure() float64 {
+	var pr_avg float64 = 0
+	var counter float64 = 0
+	for _, blk := range impl.blocks {
+		if blk.RockData.Porosity > 0 {
+			counter++
+			pr_avg = pr_avg + blk.PressureData.IterationPressureData.OilPressure
+		}
+	}
+	pr_avg = pr_avg / counter
+	return pr_avg
+}
+
 func (impl *SlightlyCompressible) Simulate() {
 
+	x0 := make([]float64, 0)
 	for j := 0; j < len(impl.blocks); j++ {
+		x0 = append(x0, impl.blocks[j].PressureData.OldTimePressureData.OilPressure)
 		impl.blocks[j].PressureData.IterationPressureData.OilPressure = impl.blocks[j].PressureData.OldTimePressureData.OilPressure
 	}
+
+	SpaceDistribution := DataStructure.NewDistributions(x0, x0, x0, x0)
+	impl.SpaceDistributions = append(impl.SpaceDistributions, SpaceDistribution)
 	Coefficients := NewCoefficients(impl.blocks, impl.ficticiousBlock, impl.PVTO, impl.PVTG, impl.PVTW)
 	Coefficients.CalculateCoefficientsOldTime()
 	Coefficients.CalculateCoefficientsNewTime()
@@ -390,7 +412,7 @@ func (impl *SlightlyCompressible) Simulate() {
 
 	for j := 1; j < len(impl.Times); j++ {
 		impl.Dt = impl.Times[j] - impl.Times[j-1]
-		x0 := make([]float64, 0)
+		x0 = make([]float64, 0)
 
 		for i := 0; i < len(impl.blocks); i++ {
 			guess := impl.blocks[i].PressureData.OldTimePressureData.OilPressure
@@ -417,13 +439,17 @@ func (impl *SlightlyCompressible) Simulate() {
 		yy := impl.NewtonRaphson(residuals_Derivates, residuals, x0) */
 
 		y := impl.LinearEquations.Solver(Amatrix, Bvector)
-		for i := 0; i < len(y); i++ {
+		/* for i := 0; i < len(y); i++ {
 			fmt.Println(y[i])
-		}
+		} */
+		SpaceDistribution := DataStructure.NewDistributions(y, y, y, y)
+		impl.SpaceDistributions = append(impl.SpaceDistributions, SpaceDistribution)
 
 		Pressure := NewPressures2(impl.blocks)
 		Pressure.SetNewPressures2(y)
 		impl.blocks = Pressure.Blocks
+		pavg := impl.AverageReservoirPressure()
+		impl.SimulationLogs = impl.SimulationLogs + "Average Reservoir Pressure is " + fmt.Sprintf("%f", pavg) + " psia\n"
 		impl.CalcVolumeInPlace(j)
 		Pressure.SetOldPressures2(y)
 		impl.blocks = Pressure.Blocks

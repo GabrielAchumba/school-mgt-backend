@@ -65,7 +65,7 @@ func (impl *Wells) SumWellRates() {
 				for j := 0; j < len(impl.mBlock.Wells[i].PerforationIntervals); j++ {
 					rerw := re / impl.mBlock.Wells[i].WellBoreRadius
 					WI = WI + 2*math.Pi*beta*kH*impl.mBlock.Wells[i].PerforationIntervals[j].SegmentLength/
-						math.Log(rerw+impl.mBlock.Wells[i].SkinFactor-0.5)
+						(math.Log(rerw)+impl.mBlock.Wells[i].SkinFactor-0.5)
 				}
 				PI := WI * mobility
 				impl.mBlock.Wells_LHS = impl.mBlock.Wells_LHS - PI

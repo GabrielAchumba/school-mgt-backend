@@ -52,7 +52,7 @@ func GasVolumeAccumulationIteration(mGrid DataStructure.BlockData, dt float64) f
 
 func SlightlyCompresibleAcumulation(mGrid DataStructure.BlockData, dt float64) (float64, float64) {
 	var ct float64 = mGrid.RockData.RockCompressibility + mGrid.FluidData.OilData.Compressibility_itr
-	zigma := mGrid.Geometry.Vb * mGrid.RockData.Porosity * ct / (5.615 * dt)
+	zigma := mGrid.Geometry.Vb * mGrid.RockData.Porosity * ct / (5.615 * mGrid.FluidData.OilData.FVF_itr * dt)
 	acc := zigma * (mGrid.PressureData.IterationPressureData.OilPressure - mGrid.PressureData.OldTimePressureData.OilPressure)
 
 	return acc, zigma

@@ -10,7 +10,7 @@ import (
 	"github.com/GabrielAchumba/school-mgt-backend/reservoir-simulation/modules/simulation-module/dtos"
 )
 
-func Simulate(inputData dtos.SimulationInputDTO) {
+func Simulate(inputData dtos.SimulationInputDTO) ([]DataStructure.SpaceDistributions, string) {
 	Dimensions := DataStructure.DIMENS{
 		Nx:    int(inputData.Geometry.Dimensions.Nx),
 		Ny:    int(inputData.Geometry.Dimensions.Ny),
@@ -185,6 +185,8 @@ func Simulate(inputData dtos.SimulationInputDTO) {
 
 	SimRes.InputData_For_Simulation3()
 	SimRes.SolveSlightlyCompressible()
+
+	return SimRes.SpaceDistributions, SimRes.SimulationLogs
 
 }
 
