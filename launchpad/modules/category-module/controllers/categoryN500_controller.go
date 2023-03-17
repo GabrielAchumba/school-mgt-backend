@@ -16,6 +16,7 @@ type CategoryController interface {
 	GetCategories(ctx *gin.Context) *rest.Response
 	GetCompletedLevelXCategories(ctx *gin.Context) *rest.Response
 	GetPersonalDataList(ctx *gin.Context) *rest.Response
+	GetCategoryByContributorId(ctx *gin.Context) *rest.Response
 }
 
 type controllerImpl struct {
@@ -64,6 +65,15 @@ func (ctrl *controllerImpl) GetCompletedLevelXCategories(ctx *gin.Context) *rest
 
 func (ctrl *controllerImpl) GetPersonalDataList(ctx *gin.Context) *rest.Response {
 	if m, er := ctrl.categoryService.GetPersonalDataList(); er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	} else {
+		return _response.GetSuccess(http.StatusOK, m)
+	}
+}
+
+func (ctrl *controllerImpl) GetCategoryByContributorId(ctx *gin.Context) *rest.Response {
+	contributorId := ctx.Param("contributorId")
+	if m, er := ctrl.categoryService.GetCategoryByContributorId(contributorId); er != nil {
 		return _response.GetError(http.StatusOK, er.Error())
 	} else {
 		return _response.GetSuccess(http.StatusOK, m)

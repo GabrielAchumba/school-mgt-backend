@@ -30,5 +30,6 @@ func (module *CategoryModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker tok
 		moduleRoute.GET("/getcategories", serverHttp(module.controller.GetCategories))
 		moduleRoute.GET("/getcompletedlevelxcategories/:levelIndex/:categoryIndex", serverHttp(module.controller.GetCompletedLevelXCategories))
 		moduleRoute.GET("/getpersonaldataList", serverHttp(module.controller.GetPersonalDataList))
+		moduleRoute.GET("/getcategorybycontributorid/:contributorId", serverHttp(module.controller.GetCategoryByContributorId))
 	}
 }

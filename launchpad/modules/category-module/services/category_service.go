@@ -24,6 +24,7 @@ type CategoryService interface {
 	GetCategorys() ([]dtos.Category, error)
 	GetSelectedCategorys(filter primitive.D) ([]models.Category, error)
 	GetCategory(id string) (dtos.Category, error)
+	GetCategoryByContributorId(contributorId string) (dtos.Category, error)
 	GetSelectedCategory(filter primitive.D) (dtos.Category, interface{})
 	CreateCategoryDTO(category contributorDTOPackage.CreateUserRequest) (dtos.Category, error)
 	DeleteCategory(id string) (models.Category, error)
@@ -119,6 +120,41 @@ func (impl serviceImpl) DeleteCategory(id string) (models.Category, error) {
 
 	log.Print("DeleteCategory completed.")
 	return models.Category{}, nil
+}
+
+func (impl serviceImpl) GetCategoryByContributorId(contributorId string) (dtos.Category, error) {
+
+	log.Print("GetCategoryByContributorId started")
+	var category models.Category
+
+	filter := bson.D{bson.E{Key: "contributorid", Value: contributorId}}
+
+	err := impl.collection.FindOne(impl.ctx, filter).Decode(&category)
+	if err != nil {
+		return dtos.Category{}, networkingerrors.Error("could not find category by id")
+	}
+
+	categoryDTO := dtos.Category{
+		FullName: category.FirstName + " " +
+			category.MiddleName + " " +
+			category.LastName + " ",
+		CategoryId: category.Id,
+		EntryDate: strconv.Itoa(category.CreatedDay) + "/" +
+			strconv.Itoa(category.CreatedMonth) + "/" +
+			strconv.Itoa(category.CreatedYear),
+		ContributorId:              category.ContributorId,
+		UserName:                   category.UserName,
+		ParentId:                   category.ParentId,
+		NLevelOneRoomOneChildren:   category.NLevelOneRoomOneChildren,
+		NLevelTwoRoomOneChildren:   category.NLevelTwoRoomOneChildren,
+		NLevelThreeRoomOneChildren: category.NLevelThreeRoomOneChildren,
+		NLevelFourRoomOneChildren:  category.NLevelFourRoomOneChildren,
+		NLevelFiveRoomOneChildren:  category.NLevelFiveRoomOneChildren,
+		NLevelSixRoomOneChildren:   category.NLevelSixRoomOneChildren,
+		NLevelSevenRoomOneChildren: category.NLevelSevenRoomOneChildren,
+	}
+	log.Print("GetCategoryByContributorId completed")
+	return categoryDTO, err
 }
 
 func (impl serviceImpl) GetCategory(id string) (dtos.Category, error) {
