@@ -78,6 +78,7 @@ func Simulate(inputData dtos.SimulationInputDTO) ([]DataStructure.SpaceDistribut
 				{SegmentLength: Dimensions.DzVec[i]},
 			},
 			WellCondition: GetWellControl(inputData.Wells[i].WellCondition),
+			WellName:      inputData.Wells[i].Name,
 		}
 	}
 

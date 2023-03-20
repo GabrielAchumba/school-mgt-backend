@@ -101,7 +101,7 @@ func (impl serviceImpl) LoginUser(requestModel dtos.LoginUserRequest) (interface
 	filter := bson.D{bson.E{Key: "username", Value: requestModel.UserName}}
 	er := impl.collection.FindOne(impl.ctx, filter).Decode(&modelDto)
 	if er != nil {
-		return nil, networkingerrors.Error(er.Error())
+		return nil, networkingerrors.Error("Invalid credentials supplied.")
 	}
 
 	credentialError := models.CheckPassword(modelDto.Password, requestModel.Password)

@@ -25,11 +25,14 @@ type SlightlyCompressible struct {
 	Reserve            []float64
 	SpaceDistributions []DataStructure.SpaceDistributions
 	SimulationLogs     string
+	Wells              map[string]DataStructure.WellData
+	InitialOilInPlace  float64
 }
 
 func NewSlightlyCompressible(blocks map[string]DataStructure.BlockData,
 	PVTO DataStructure.PVTO, PVTG DataStructure.PVTG,
-	PVTW DataStructure.PVTW, times []float64) SlightlyCompressible {
+	PVTW DataStructure.PVTW, times []float64,
+	Wells map[string]DataStructure.WellData) SlightlyCompressible {
 
 	_blocks := make([]DataStructure.BlockData, 0)
 	for _, v := range blocks {
@@ -50,6 +53,7 @@ func NewSlightlyCompressible(blocks map[string]DataStructure.BlockData,
 		Reserve:            make([]float64, 0),
 		SpaceDistributions: make([]DataStructure.SpaceDistributions, 0),
 		SimulationLogs:     "",
+		Wells:              Wells,
 	}
 }
 
@@ -231,6 +235,7 @@ func (impl *SlightlyCompressible) CalcVolumeInPlace(tIndex int) {
 			sum = sum + v
 			impl.blocks[i] = block
 		}
+		impl.InitialOilInPlace = sum
 		impl.Reserve = append(impl.Reserve, sum)
 	} else {
 		initialV := impl.Reserve[tIndex-1]
@@ -385,7 +390,7 @@ func (impl *SlightlyCompressible) AverageReservoirPressure() float64 {
 	var pr_avg float64 = 0
 	var counter float64 = 0
 	for _, blk := range impl.blocks {
-		if blk.RockData.Porosity > 0 {
+		if blk.RockData.Porosity > 0.0000000001 {
 			counter++
 			pr_avg = pr_avg + blk.PressureData.IterationPressureData.OilPressure
 		}
@@ -396,6 +401,7 @@ func (impl *SlightlyCompressible) AverageReservoirPressure() float64 {
 
 func (impl *SlightlyCompressible) Simulate() {
 
+	var WellReport []DataStructure.WellReport = make([]DataStructure.WellReport, 0)
 	x0 := make([]float64, 0)
 	for j := 0; j < len(impl.blocks); j++ {
 		x0 = append(x0, impl.blocks[j].PressureData.OldTimePressureData.OilPressure)
@@ -403,12 +409,15 @@ func (impl *SlightlyCompressible) Simulate() {
 	}
 
 	SpaceDistribution := DataStructure.NewDistributions(x0, x0, x0, x0)
-	impl.SpaceDistributions = append(impl.SpaceDistributions, SpaceDistribution)
 	Coefficients := NewCoefficients(impl.blocks, impl.ficticiousBlock, impl.PVTO, impl.PVTG, impl.PVTW)
 	Coefficients.CalculateCoefficientsOldTime()
 	Coefficients.CalculateCoefficientsNewTime()
 	impl.blocks = Coefficients.Blocks
 	impl.CalcVolumeInPlace(0)
+
+	impl.SimulationLogs = impl.SimulationLogs + "Initial Oil In Place " + fmt.Sprintf("%f", impl.InitialOilInPlace/1000000) + " MMSTB\n\n\n"
+	SpaceDistribution.InitialOilInPlace = impl.InitialOilInPlace
+	impl.SpaceDistributions = append(impl.SpaceDistributions, SpaceDistribution)
 
 	for j := 1; j < len(impl.Times); j++ {
 		impl.Dt = impl.Times[j] - impl.Times[j-1]
@@ -443,18 +452,25 @@ func (impl *SlightlyCompressible) Simulate() {
 			fmt.Println(y[i])
 		} */
 		SpaceDistribution := DataStructure.NewDistributions(y, y, y, y)
-		impl.SpaceDistributions = append(impl.SpaceDistributions, SpaceDistribution)
 
 		Pressure := NewPressures2(impl.blocks)
 		Pressure.SetNewPressures2(y)
 		impl.blocks = Pressure.Blocks
 		pavg := impl.AverageReservoirPressure()
 		impl.SimulationLogs = impl.SimulationLogs + "Average Reservoir Pressure is " + fmt.Sprintf("%f", pavg) + " psia\n"
+		wellReport := NewWellsReport(impl.blocks, impl.Wells, WellReport)
+		wellReport.UpdaetWellsReport(impl.Times[j])
+		WellReport = wellReport.WellReport
+		if j == len(impl.Times)-1 {
+			SpaceDistribution.WellReport = WellReport
+		}
+		impl.SpaceDistributions = append(impl.SpaceDistributions, SpaceDistribution)
 		impl.CalcVolumeInPlace(j)
 		Pressure.SetOldPressures2(y)
 		impl.blocks = Pressure.Blocks
 
 	}
+
 }
 
 func (impl *SlightlyCompressible) NewtonRaphson(fundf DerivateResidualObjectiveFunction,

@@ -318,7 +318,7 @@ func (impl *SimulationLogViewModelImpl) InputData_For_Simulation3() {
 func (impl *SimulationLogViewModelImpl) SolveSlightlyCompressible() {
 
 	SlightlyCompressible := CFDPoroMedia.NewSlightlyCompressible(impl.CG.Blocks, impl.PVTO,
-		impl.PVTG, impl.PVTW, impl.Times)
+		impl.PVTG, impl.PVTW, impl.Times, impl.Wells)
 
 	SlightlyCompressible.Simulate()
 	impl.SpaceDistributions = SlightlyCompressible.SpaceDistributions

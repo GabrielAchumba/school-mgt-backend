@@ -27,11 +27,17 @@ type BlockData struct {
 	Qosc                   float64
 	Qgsc                   float64
 	Qwsc                   float64
+	Pwf                    float64
 	Zigma                  float64
 	Wells_LHS              float64
 	Wells_RHS              float64
 	Boundary               Boundary
 	VolumeInPlace          VolumeInPlace
+	ProductivityIndex      float64
+	I                      int
+	J                      int
+	K                      int
+	KeyIndex               string
 }
 
 func NewBlockData() BlockData {
@@ -103,6 +109,10 @@ func Blocks_OrderBy_XYZ(nx int, ny int, nz int) map[string]BlockData {
 				indexBottom := strconv.Itoa(i) + "_" + strconv.Itoa(j) + "_" + strconv.Itoa(k+1)
 
 				a.IJK = indicies[index]
+				a.I = i
+				a.J = j
+				a.K = k
+				a.KeyIndex = index
 
 				if i-1 < 0 {
 					a.IMinusOneJK = -1

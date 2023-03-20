@@ -12,4 +12,5 @@ type WellData struct {
 	WellBoreRadius               float64 `json:"wellBoreRadius"`
 	WellCondition                string  `json:"wellCondition"`
 	SkinFactor                   float64 `json:"skinFactor"`
+	Name                         string  `json:"name"`
 }

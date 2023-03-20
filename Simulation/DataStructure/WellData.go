@@ -29,8 +29,24 @@ type WellData struct {
 	PerforationIntervals         []PerforationInterval
 	WellCondition                WellCondition
 	SkinFactor                   float64
+	WellName                     string
 }
 
 type PerforationInterval struct {
 	SegmentLength float64
+}
+
+type WellReport struct {
+	ProductionTime            float64 `json:"productionTime"`
+	ReservoirPressure         float64 `json:"reservoirPressure"`
+	FlowingBottomHolePressure float64 `json:"flowingBottomHolePressure"`
+	OilRate                   float64 `json:"oilRate"`
+	GasRate                   float64 `json:"gasRate"`
+	WaterRate                 float64 `json:"waterRate"`
+	WellName                  string  `json:"wellName"`
+	ProductivityIndex         float64 `json:"productivityIndex"`
+}
+
+func NewWellReport() WellReport {
+	return WellReport{}
 }
