@@ -172,7 +172,7 @@ func main() {
 	tokenMaker, _ := token.NewJWTMaker(config.AppSettings.Token.TokenSecretKey, config.AppSettings.Token.RefreshTokenSecretKey, config.AppSettings.Token.AccessTokenDuration, config.AppSettings.Token.RefreshTokenDuration)
 
 	_simulationservice := simulationservice.New(ctx)
-	simulationmodule.InjectService(_simulationservice).RegisterRoutes(apiBaseName, tokenMaker)
+	simulationmodule.InjectService(_simulationservice).RegisterRoutes(apiBaseName)
 
 	_paymentgatewayService := paymentgatewaymodule.New(ctx, configSettings)
 	paymentgatewaymodule.InjectService(_paymentgatewayService).RegisterRoutes(apiBaseName, tokenMaker)

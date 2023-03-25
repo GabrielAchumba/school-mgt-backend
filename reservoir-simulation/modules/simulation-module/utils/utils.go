@@ -75,7 +75,7 @@ func Simulate(inputData dtos.SimulationInputDTO) ([]DataStructure.SpaceDistribut
 			Water:                        inputData.Wells[i].WaterRate,
 			SkinFactor:                   0,
 			PerforationIntervals: []DataStructure.PerforationInterval{
-				{SegmentLength: Dimensions.DzVec[i]},
+				{SegmentLength: Dimensions.DzVec[0]},
 			},
 			WellCondition: GetWellControl(inputData.Wells[i].WellCondition),
 			WellName:      inputData.Wells[i].Name,

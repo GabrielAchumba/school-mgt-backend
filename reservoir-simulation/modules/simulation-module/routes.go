@@ -1,7 +1,6 @@
 package simulationmodule
 
 import (
-	"github.com/GabrielAchumba/school-mgt-backend/authentication/token"
 	"github.com/GabrielAchumba/school-mgt-backend/common/rest"
 	"github.com/GabrielAchumba/school-mgt-backend/reservoir-simulation/modules/simulation-module/controllers"
 	"github.com/GabrielAchumba/school-mgt-backend/reservoir-simulation/modules/simulation-module/services"
@@ -18,7 +17,7 @@ func InjectService(service services.SimulationService) *SimulationModule {
 	return module
 }
 
-func (module *SimulationModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker token.Maker) {
+func (module *SimulationModule) RegisterRoutes(rg *gin.RouterGroup) {
 	moduleRoute := rg.Group("/simulation")
 	serverHttp := rest.ServeHTTP
 

@@ -40,9 +40,13 @@ type WellReport struct {
 	ProductionTime            float64 `json:"productionTime"`
 	ReservoirPressure         float64 `json:"reservoirPressure"`
 	FlowingBottomHolePressure float64 `json:"flowingBottomHolePressure"`
+	Drawdown                  float64 `json:"drawdown"`
 	OilRate                   float64 `json:"oilRate"`
 	GasRate                   float64 `json:"gasRate"`
 	WaterRate                 float64 `json:"waterRate"`
+	CumulativeOilProduced     float64 `json:"cumulativeOilProduced"`
+	CumulativeGasProduced     float64 `json:"cumulativeGasProduced"`
+	CumulativeWaterProduced   float64 `json:"cumulativeWaterProduced"`
 	WellName                  string  `json:"wellName"`
 	ProductivityIndex         float64 `json:"productivityIndex"`
 }
