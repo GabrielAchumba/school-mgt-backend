@@ -75,7 +75,7 @@ func (impl serviceImpl) SeedAdmin() {
 		Password:    "network",
 		FirstName:   "admin",
 		LastName:    "admin",
-		UserName:    "admin@network.com",
+		UserName:    "launch@hdi.com",
 		UserType:    "Admin",
 		Designation: "CEO",
 	}
