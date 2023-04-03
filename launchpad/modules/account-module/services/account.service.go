@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"strconv"
-	"strings"
 
 	"github.com/GabrielAchumba/school-mgt-backend/common/config"
 	"github.com/GabrielAchumba/school-mgt-backend/common/conversion"
@@ -14,6 +13,7 @@ import (
 	"github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/account-module/models"
 	categoryDTOPackage "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/category-module/dtos"
 	categoryServicesPackage "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/category-module/services"
+	contributorDTOPackage "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/user-module/dtos"
 	contributorServicesPackage "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/user-module/services"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -31,9 +31,12 @@ type AccountService interface {
 	OffPlatformPayment(account dtos.AccountDTO) (interface{}, error)
 	Payment(account dtos.AccountDTO) (interface{}, error)
 	DeleteAccount(id string) (models.Account, error)
-	UpdateParents(ParentId string)
 	RegisteredHaveNotContributed() ([]categoryDTOPackage.Category, error)
 	GetDescendantsByLevel(levelIndex int, parentId string) (interface{}, error)
+	GetCompletedLevelXCategorys(levelIndex int, categoryIndex int) ([]categoryDTOPackage.Category, error)
+	GetDownliners(parentId string, contributors []contributorDTOPackage.UserResponse,
+		accounts []models.Account, categories []categoryDTOPackage.Category, Counter int, levelCount int,
+		nLevel int) bool
 }
 
 type serviceImpl struct {
@@ -76,13 +79,6 @@ func (impl serviceImpl) ComfirmPayment(id string,
 		return account, networkingerrors.Error("Account not found.")
 	}
 
-	category, err := impl.categoryService.GetCategory(account.ContributorId)
-	if err != nil {
-		return nil, networkingerrors.Error("Could not find Category for the specified bank account")
-	}
-
-	impl.UpdateParents(category.ParentId)
-
 	if accountModel.Status == "success" {
 		account.IsComfirmed = true
 	} else {
@@ -105,60 +101,6 @@ func (impl serviceImpl) ComfirmPayment(id string,
 
 	log.Print("ComfirmPayment completed")
 	return account, nil
-}
-
-func (impl serviceImpl) UpdateParents(ParentId string) {
-
-	parent, err := impl.categoryService.GetCategory(ParentId)
-	if err != nil {
-		return
-	}
-
-	DesendantsKey, DesendantsValue := "nLevelOneRoomOneChildren", 0
-
-	if parent.NLevelOneRoomOneChildren < 3 {
-		parent.NLevelOneRoomOneChildren++
-		DesendantsKey = "nLevelOneRoomOneChildren"
-		DesendantsValue = parent.NLevelOneRoomOneChildren
-	} else if parent.NLevelOneRoomOneChildren == 3 &&
-		parent.NLevelTwoRoomOneChildren < 9 {
-		parent.NLevelTwoRoomOneChildren++
-		DesendantsKey = "nLevelTwoRoomOneChildren"
-		DesendantsValue = parent.NLevelTwoRoomOneChildren
-	} else if parent.NLevelTwoRoomOneChildren == 9 &&
-		parent.NLevelThreeRoomOneChildren < 27 {
-		parent.NLevelThreeRoomOneChildren++
-		DesendantsKey = "nLevelThreeRoomOneChildren"
-		DesendantsValue = parent.NLevelThreeRoomOneChildren
-	} else if parent.NLevelThreeRoomOneChildren == 27 &&
-		parent.NLevelFourRoomOneChildren < 81 {
-		parent.NLevelFourRoomOneChildren++
-		DesendantsKey = "nLevelFourRoomOneChildren"
-		DesendantsValue = parent.NLevelFourRoomOneChildren
-	} else if parent.NLevelFourRoomOneChildren == 81 &&
-		parent.NLevelFiveRoomOneChildren < 243 {
-		parent.NLevelFiveRoomOneChildren++
-		DesendantsKey = "nLevelFiveRoomOneChildren"
-		DesendantsValue = parent.NLevelFiveRoomOneChildren
-	} else if parent.NLevelFiveRoomOneChildren == 243 &&
-		parent.NLevelSixRoomOneChildren < 729 {
-		parent.NLevelSixRoomOneChildren++
-		DesendantsKey = "nLevelSixRoomOneChildren"
-		DesendantsValue = parent.NLevelSixRoomOneChildren
-	} else if parent.NLevelSixRoomOneChildren == 729 &&
-		parent.NLevelSevenRoomOneChildren < 2187 {
-		parent.NLevelSevenRoomOneChildren++
-		DesendantsKey = "nLevelSevenRoomOneChildren"
-		DesendantsValue = parent.NLevelSevenRoomOneChildren
-	}
-
-	update := bson.D{bson.E{Key: strings.ToLower(DesendantsKey), Value: DesendantsValue}}
-	err = impl.categoryService.UpdateCategory(parent.CategoryId, update)
-	if err != nil {
-		return
-	} else {
-		impl.UpdateParents(parent.ParentId)
-	}
 }
 
 func (impl serviceImpl) DeleteAccount(id string) (models.Account, error) {
@@ -480,4 +422,113 @@ func (impl serviceImpl) GetDescendantsByLevel(levelIndex int, parentId string) (
 	}
 	log.Print("GetDescendantsByLevel completed")
 	return DashboardDTO, nil
+}
+
+func (impl serviceImpl) GetDownliners(parentId string, contributors []contributorDTOPackage.UserResponse,
+	accounts []models.Account, categories []categoryDTOPackage.Category, Counter int, levelCount int,
+	nLevel int) bool {
+
+	confirmedCategories := make([]categoryDTOPackage.Category, 0)
+	for _, chidCategory := range categories {
+		if parentId == chidCategory.ParentId {
+			for _, account := range accounts {
+				if account.ContributorId == chidCategory.CategoryId &&
+					account.IsComfirmed {
+					confirmedCategories = append(confirmedCategories, chidCategory)
+				}
+			}
+		}
+	}
+
+	Counter++
+	ans := false
+	if Counter > levelCount {
+		if nLevel == len(confirmedCategories) {
+			return true
+		} else {
+			return false
+		}
+	} else {
+		for _, confirmedCategory := range confirmedCategories {
+			ans = impl.GetDownliners(confirmedCategory.ParentId, contributors,
+				accounts, categories, Counter, levelCount, nLevel)
+		}
+	}
+	return ans
+}
+
+func (impl serviceImpl) GetCompletedLevelXCategorys(levelIndex int, categoryIndex int) ([]categoryDTOPackage.Category, error) {
+
+	log.Print("GetCompletedLevelXCategorys started")
+	nLevel := 3
+	returnOnInvestment := helpers.ROIs[categoryIndex-1][levelIndex-1]
+
+	switch levelIndex {
+	case 2:
+		nLevel = 9
+
+	case 3:
+		nLevel = 27
+
+	case 4:
+		nLevel = 81
+	case 5:
+		nLevel = 243
+	case 6:
+		nLevel = 729
+	case 7:
+		nLevel = 2187
+	}
+
+	categorys, _ := impl.categoryService.GetCompletedLevelXCategories(levelIndex, categoryIndex)
+	contributors, _ := impl.contributorService.GetAllContributors()
+	accounts, _ := impl.GetAccounts()
+	categories, _ := impl.categoryService.GetCategorys()
+
+	var categorysDTO []categoryDTOPackage.Category = make([]categoryDTOPackage.Category, 0)
+	for _, val := range categorys {
+		NLevelXRoomOneChildren := 0
+		switch levelIndex {
+		case 1:
+			NLevelXRoomOneChildren = val.NLevelOneRoomOneChildren
+		case 2:
+			NLevelXRoomOneChildren = val.NLevelTwoRoomOneChildren
+		case 3:
+			NLevelXRoomOneChildren = val.NLevelThreeRoomOneChildren
+		case 4:
+			NLevelXRoomOneChildren = val.NLevelFourRoomOneChildren
+		case 5:
+			NLevelXRoomOneChildren = val.NLevelFiveRoomOneChildren
+		case 6:
+			NLevelXRoomOneChildren = val.NLevelSixRoomOneChildren
+		case 7:
+			NLevelXRoomOneChildren = val.NLevelSevenRoomOneChildren
+		}
+
+		Counter := 1
+		check := impl.GetDownliners(val.Id, contributors,
+			accounts, categories, Counter, levelIndex,
+			nLevel)
+
+		if check {
+			contributor := impl.UserUtils.FindUserById(contributors, val.ContributorId)
+			categorysDTO = append(categorysDTO, categoryDTOPackage.Category{
+				EntryDate:              strconv.Itoa(val.CreatedDay) + "/" + strconv.Itoa(val.CreatedMonth) + "/" + strconv.Itoa(val.CreatedYear),
+				FullName:               val.FirstName + " " + val.MiddleName + " " + val.LastName,
+				Gender:                 val.Gender,
+				ContributorId:          val.Id,
+				NLevelXRoomOneChildren: NLevelXRoomOneChildren,
+				BankName:               contributor.BankName,
+				AccountName:            contributor.AccountName,
+				AccountNumber:          contributor.AccountNumber,
+				UserName:               val.UserName,
+				CategoryId:             val.Id,
+				ReturnOnInvestment:     returnOnInvestment,
+			})
+
+		}
+	}
+
+	log.Print("GetCompletedLevelXCategorys completed")
+	return categorysDTO, nil
 }

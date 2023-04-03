@@ -20,6 +20,7 @@ type AccountController interface {
 	ComfirmPayment(ctx *gin.Context) *rest.Response
 	RegisteredHaveNotContributed(ctx *gin.Context) *rest.Response
 	GetDescendantsByLevel(ctx *gin.Context) *rest.Response
+	GetCompletedLevelXCategories(ctx *gin.Context) *rest.Response
 }
 
 type ImageName struct {
@@ -169,5 +170,15 @@ func (ctrl *controllerImpl) GetDescendantsByLevel(ctx *gin.Context) *rest.Respon
 	} else {
 		return _response.GetSuccess(http.StatusOK, m)
 
+	}
+}
+
+func (ctrl *controllerImpl) GetCompletedLevelXCategories(ctx *gin.Context) *rest.Response {
+	levelIndex, _ := strconv.Atoi(ctx.Param("levelIndex"))
+	categoryIndex, _ := strconv.Atoi(ctx.Param("categoryIndex"))
+	if m, er := ctrl.accountService.GetCompletedLevelXCategorys(levelIndex, categoryIndex); er != nil {
+		return _response.GetError(http.StatusOK, er.Error())
+	} else {
+		return _response.GetSuccess(http.StatusOK, m)
 	}
 }

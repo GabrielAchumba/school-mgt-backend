@@ -33,5 +33,6 @@ func (module *AccountModule) RegisterRoutes(rg *gin.RouterGroup, tokenMaker toke
 		moduleRoute.PUT("/comfirmpayment/:id", serverHttp(module.controller.ComfirmPayment))
 		moduleRoute.GET("/registeredhavenotcontributed", serverHttp(module.controller.RegisteredHaveNotContributed))
 		moduleRoute.GET("/getdescendantsbylevel/:levelIndex/:parentId", serverHttp(module.controller.GetDescendantsByLevel))
+		moduleRoute.GET("/getcompletedlevelxcategories/:levelIndex/:categoryIndex", serverHttp(module.controller.GetCompletedLevelXCategories))
 	}
 }

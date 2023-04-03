@@ -29,8 +29,10 @@ type CategoryService interface {
 	CreateCategoryDTO(category contributorDTOPackage.CreateUserRequest) (dtos.Category, error)
 	DeleteCategory(id string) (models.Category, error)
 	UpdateCategory(id string, update primitive.D) error
+	UpdateParents(ParentId string, levelCount int)
 	GetCompletedLevelXCategorys(levelIndex int, categoryIndex int) ([]dtos.Category, error)
 	GetPersonalDataList() ([]contributorDTOPackage.UserResponse, error)
+	GetCompletedLevelXCategories(levelIndex int, categoryIndex int) ([]models.Category, error)
 }
 
 type serviceImpl struct {
@@ -87,6 +89,9 @@ func (impl serviceImpl) CreateCategoryDTO(_category contributorDTOPackage.Create
 		return dtos.Category{}, networkingerrors.Error("Error in creating category.")
 	}
 
+	levelCount := 1
+	impl.UpdateParents(category.ParentId, levelCount)
+
 	var stringObjectID = conversion.GetIdFromMongoId(ans.InsertedID)
 	log.Print("CreatePersonalDataDTO completed.")
 	return dtos.Category{
@@ -101,6 +106,96 @@ func (impl serviceImpl) CreateCategoryDTO(_category contributorDTOPackage.Create
 			category.MiddleName + "" + category.LastName + "",
 		Gender: category.Gender,
 	}, err
+}
+
+func (impl serviceImpl) UpdateParents(ParentId string, levelCount int) {
+
+	parent, err := impl.GetCategory(ParentId)
+	if err != nil {
+		return
+	}
+
+	DesendantsKey, DesendantsValue := "nLevelOneRoomOneChildren", 0
+
+	if parent.NLevelOneRoomOneChildren < 3 && levelCount == 1 {
+		parent.NLevelOneRoomOneChildren++
+		DesendantsKey = "nLevelOneRoomOneChildren"
+		DesendantsValue = parent.NLevelOneRoomOneChildren
+		update := bson.D{bson.E{Key: strings.ToLower(DesendantsKey), Value: DesendantsValue}}
+		err = impl.UpdateCategory(parent.CategoryId, update)
+		if err != nil {
+			return
+		}
+	}
+
+	if parent.NLevelTwoRoomOneChildren < 9 && levelCount == 2 {
+		parent.NLevelTwoRoomOneChildren++
+		DesendantsKey = "nLevelTwoRoomOneChildren"
+		DesendantsValue = parent.NLevelTwoRoomOneChildren
+		update := bson.D{bson.E{Key: strings.ToLower(DesendantsKey), Value: DesendantsValue}}
+		err = impl.UpdateCategory(parent.CategoryId, update)
+		if err != nil {
+			return
+		}
+	}
+
+	if parent.NLevelThreeRoomOneChildren < 27 && levelCount == 3 {
+		parent.NLevelThreeRoomOneChildren++
+		DesendantsKey = "nLevelThreeRoomOneChildren"
+		DesendantsValue = parent.NLevelThreeRoomOneChildren
+		update := bson.D{bson.E{Key: strings.ToLower(DesendantsKey), Value: DesendantsValue}}
+		err = impl.UpdateCategory(parent.CategoryId, update)
+		if err != nil {
+			return
+		}
+	}
+
+	if parent.NLevelFourRoomOneChildren < 81 && levelCount == 4 {
+		parent.NLevelFourRoomOneChildren++
+		DesendantsKey = "nLevelFourRoomOneChildren"
+		DesendantsValue = parent.NLevelFourRoomOneChildren
+		update := bson.D{bson.E{Key: strings.ToLower(DesendantsKey), Value: DesendantsValue}}
+		err = impl.UpdateCategory(parent.CategoryId, update)
+		if err != nil {
+			return
+		}
+	}
+
+	if parent.NLevelFiveRoomOneChildren < 243 && levelCount == 5 {
+		parent.NLevelFiveRoomOneChildren++
+		DesendantsKey = "nLevelFiveRoomOneChildren"
+		DesendantsValue = parent.NLevelFiveRoomOneChildren
+		update := bson.D{bson.E{Key: strings.ToLower(DesendantsKey), Value: DesendantsValue}}
+		err = impl.UpdateCategory(parent.CategoryId, update)
+		if err != nil {
+			return
+		}
+	}
+
+	if parent.NLevelSixRoomOneChildren < 729 && levelCount == 6 {
+		parent.NLevelSixRoomOneChildren++
+		DesendantsKey = "nLevelSixRoomOneChildren"
+		DesendantsValue = parent.NLevelSixRoomOneChildren
+		update := bson.D{bson.E{Key: strings.ToLower(DesendantsKey), Value: DesendantsValue}}
+		err = impl.UpdateCategory(parent.CategoryId, update)
+		if err != nil {
+			return
+		}
+	}
+
+	if parent.NLevelSevenRoomOneChildren < 2187 && levelCount == 7 {
+		parent.NLevelSevenRoomOneChildren++
+		DesendantsKey = "nLevelSevenRoomOneChildren"
+		DesendantsValue = parent.NLevelSevenRoomOneChildren
+		update := bson.D{bson.E{Key: strings.ToLower(DesendantsKey), Value: DesendantsValue}}
+		err = impl.UpdateCategory(parent.CategoryId, update)
+		if err != nil {
+			return
+		}
+	}
+
+	levelCount++
+	impl.UpdateParents(parent.ParentId, levelCount)
 }
 
 func (impl serviceImpl) DeleteCategory(id string) (models.Category, error) {
@@ -251,7 +346,7 @@ func (impl serviceImpl) GetCategorys() ([]dtos.Category, error) {
 func (impl serviceImpl) GetCompletedLevelXCategorys(levelIndex int, categoryIndex int) ([]dtos.Category, error) {
 
 	log.Print("GetCompletedLevelXCategorys started")
-	var categorys []models.Category
+	var categorys []models.Category = make([]models.Category, 0)
 	nLevel := 3
 	nLessThan := nLevel - 1
 	nGreaterThan := nLevel + 1
@@ -351,6 +446,72 @@ func (impl serviceImpl) GetCompletedLevelXCategorys(levelIndex int, categoryInde
 
 	log.Print("GetCompletedLevelXCategorys completed")
 	return categorysDTO, nil
+}
+func (impl serviceImpl) GetCompletedLevelXCategories(levelIndex int, categoryIndex int) ([]models.Category, error) {
+
+	log.Print("GetCompletedLevelXCategories started")
+	var categorys []models.Category = make([]models.Category, 0)
+	nLevel := 3
+	nLessThan := nLevel - 1
+	nGreaterThan := nLevel + 1
+	filter := bson.D{bson.E{Key: "nleveloneroomonechildren", Value: bson.D{bson.E{Key: "$gt", Value: nLessThan}}},
+		bson.E{Key: "nleveloneroomonechildren", Value: bson.D{bson.E{Key: "$lt", Value: nGreaterThan}}},
+		bson.E{Key: "isnleveloneroomonechildren", Value: false}}
+
+	switch levelIndex {
+	case 2:
+		nLevel = 9
+		filter = bson.D{bson.E{Key: "nleveltworoomonechildren", Value: bson.D{bson.E{Key: "$gt", Value: nLevel - 1}}},
+			bson.E{Key: "nleveltworoomonechildren", Value: bson.D{bson.E{Key: "$lt", Value: nLevel + 1}}},
+			bson.E{Key: "isnleveltworoomonechildren", Value: false}}
+
+	case 3:
+		nLevel = 27
+		filter = bson.D{bson.E{Key: "nlevelthreeroomonechildren", Value: bson.D{bson.E{Key: "$gt", Value: nLevel - 1}}},
+			bson.E{Key: "nlevelthreeroomonechildren", Value: bson.D{bson.E{Key: "$lt", Value: nLevel + 1}}},
+			bson.E{Key: "isnlevelthreeroomonechildren", Value: false}}
+
+	case 4:
+		nLevel = 81
+		filter = bson.D{bson.E{Key: "nlevelfourroomonechildren", Value: bson.D{bson.E{Key: "$gt", Value: nLevel - 1}}},
+			bson.E{Key: "nlevelfourroomonechildren", Value: bson.D{bson.E{Key: "$lt", Value: nLevel + 1}}},
+			bson.E{Key: "isnlevelfourroomonechildren", Value: false}}
+	case 5:
+		nLevel = 243
+		filter = bson.D{bson.E{Key: "nlevelfiveroomonechildren", Value: bson.D{bson.E{Key: "$gt", Value: nLevel - 1}}},
+			bson.E{Key: "nlevelfiveroomonechildren", Value: bson.D{bson.E{Key: "$lt", Value: nLevel + 1}}},
+			bson.E{Key: "isnlevelfiveroomonechildren", Value: false}}
+	case 6:
+		nLevel = 729
+		filter = bson.D{bson.E{Key: "nlevelsixroomonechildren", Value: bson.D{bson.E{Key: "$gt", Value: nLevel - 1}}},
+			bson.E{Key: "nlevelsixroomonechildren", Value: bson.D{bson.E{Key: "$lt", Value: nLevel + 1}}},
+			bson.E{Key: "isnlevelsixroomonechildren", Value: false}}
+	case 7:
+		nLevel = 2187
+		filter = bson.D{bson.E{Key: "nlevelsevenroomonechildren", Value: bson.D{bson.E{Key: "$gt", Value: nLevel - 1}}},
+			bson.E{Key: "nlevelsevenroomonechildren", Value: bson.D{bson.E{Key: "$lt", Value: nLevel + 1}}},
+			bson.E{Key: "isnlevelsevenroomonechildren", Value: false}}
+	}
+
+	curr, err := impl.collection.Find(impl.ctx, filter)
+	if err != nil {
+		return make([]models.Category, 0),
+			networkingerrors.Error("Could not get all completed level room-one categorys")
+	}
+
+	err = curr.All(impl.ctx, &categorys)
+	if err != nil {
+		return make([]models.Category, 0),
+			networkingerrors.Error("Could not decode all level room-one categorys")
+	}
+
+	curr.Close(impl.ctx)
+	if len(categorys) == 0 {
+		return make([]models.Category, 0), nil
+	}
+
+	log.Print("GetCompletedLevelXCategories completed")
+	return categorys, nil
 }
 
 func (impl serviceImpl) GetSelectedCategory(filter primitive.D) (dtos.Category, interface{}) {

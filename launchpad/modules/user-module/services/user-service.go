@@ -78,6 +78,8 @@ func (impl serviceImpl) SeedAdmin() {
 		UserName:    "launch@hdi.com",
 		UserType:    "Admin",
 		Designation: "CEO",
+		PhoneNumber: "07032488605",
+		CountryCode: "+234",
 	}
 
 	filter := bson.D{bson.E{Key: "username", Value: admin.UserName}}
