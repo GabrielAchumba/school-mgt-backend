@@ -47,6 +47,7 @@ type serviceImpl struct {
 	CategoryUtils      helpers.CategoryUtils
 	AccountUtils       helpers.AccountUtils
 	UserUtils          helpers.UserUtils
+	sum                int
 }
 
 func New(collection *mongo.Collection, config config.Settings, ctx context.Context,
@@ -426,7 +427,7 @@ func (impl serviceImpl) GetDescendantsByLevel(levelIndex int, parentId string) (
 
 func (impl serviceImpl) GetDownliners(parentId string, contributors []contributorDTOPackage.UserResponse,
 	accounts []models.Account, categories []categoryDTOPackage.Category, Counter int, levelCount int,
-	nLevel int) bool {
+	cumNLevel int) bool {
 
 	confirmedCategories := make([]categoryDTOPackage.Category, 0)
 	for _, chidCategory := range categories {
@@ -440,44 +441,57 @@ func (impl serviceImpl) GetDownliners(parentId string, contributors []contributo
 		}
 	}
 
+	impl.sum = impl.sum + len(confirmedCategories)
+
 	Counter++
-	ans := false
+
 	if Counter > levelCount {
-		if nLevel == len(confirmedCategories) {
+		if cumNLevel == impl.sum {
 			return true
 		} else {
 			return false
 		}
 	} else {
 		for _, confirmedCategory := range confirmedCategories {
-			ans = impl.GetDownliners(confirmedCategory.ParentId, contributors,
-				accounts, categories, Counter, levelCount, nLevel)
+			impl.GetDownliners(confirmedCategory.ParentId, contributors,
+				accounts, categories, Counter, levelCount, cumNLevel)
 		}
 	}
-	return ans
+
+	return false
 }
 
 func (impl serviceImpl) GetCompletedLevelXCategorys(levelIndex int, categoryIndex int) ([]categoryDTOPackage.Category, error) {
 
 	log.Print("GetCompletedLevelXCategorys started")
-	nLevel := 3
+	cumNLevel := 3
+	//nLevel := 3
 	returnOnInvestment := helpers.ROIs[categoryIndex-1][levelIndex-1]
 
 	switch levelIndex {
 	case 2:
-		nLevel = 9
+		//nLevel = 9
+		cumNLevel = 3 + 9
 
 	case 3:
-		nLevel = 27
+		//nLevel = 27
+		cumNLevel = 3 + 9 + 27
 
 	case 4:
-		nLevel = 81
+		//nLevel = 81
+		cumNLevel = 3 + 9 + 27 + 81
+
 	case 5:
-		nLevel = 243
+		//nLevel = 243
+		cumNLevel = 3 + 9 + 27 + 81 + 243
+
 	case 6:
-		nLevel = 729
+		//nLevel = 729
+		cumNLevel = 3 + 9 + 27 + 81 + 243 + 729
+
 	case 7:
-		nLevel = 2187
+		//nLevel = 2187
+		cumNLevel = 3 + 9 + 27 + 81 + 243 + 729 + 2187
 	}
 
 	categorys, _ := impl.categoryService.GetCompletedLevelXCategories(levelIndex, categoryIndex)
@@ -506,9 +520,10 @@ func (impl serviceImpl) GetCompletedLevelXCategorys(levelIndex int, categoryInde
 		}
 
 		Counter := 1
+		impl.sum = 0
 		check := impl.GetDownliners(val.Id, contributors,
 			accounts, categories, Counter, levelIndex,
-			nLevel)
+			cumNLevel)
 
 		if check {
 			contributor := impl.UserUtils.FindUserById(contributors, val.ContributorId)
