@@ -10,7 +10,7 @@ type NumericTokenGenerator interface {
 type implService struct {
 }
 
-func New() NumericTokenGenerator {
+func NewNumericTokenGenerator() NumericTokenGenerator {
 	return &implService{}
 }
 

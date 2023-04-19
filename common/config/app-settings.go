@@ -55,6 +55,10 @@ type Settings struct {
 		CategoryN2000     string
 		CategoryN5000     string
 		CategoryN10000    string
+		RealEstateUser    string
+		Land              string
+		House             string
+		File              string
 	}
 	EmailData struct {
 		Origin    string
@@ -109,6 +113,11 @@ func Setup() {
 	AppSettings.TableNames.CategoryN2000 = os.Getenv("CATEGORYN2000")
 	AppSettings.TableNames.CategoryN5000 = os.Getenv("CATEGORYN5000")
 	AppSettings.TableNames.CategoryN10000 = os.Getenv("CATEGORYN10000")
+
+	AppSettings.TableNames.RealEstateUser = os.Getenv("REALESTATEUSER")
+	AppSettings.TableNames.Land = os.Getenv("LAND")
+	AppSettings.TableNames.House = os.Getenv("HOUSE")
+	AppSettings.TableNames.File = os.Getenv("FILE")
 
 	AppSettings.EmailData.EmailFrom = os.Getenv("EMAIL_FROM")
 	AppSettings.EmailData.SMTPHost = os.Getenv("SMTP_HOST")

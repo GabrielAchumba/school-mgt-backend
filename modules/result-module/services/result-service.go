@@ -185,13 +185,13 @@ func (impl serviceImpl) GetResults(schoolId string) ([]dtos.ResultResponse, erro
 
 	AssessmentIds := make([]string, 0)
 	for _, v := range Results {
-		AssessmentIds = append(AssessmentIds, v.ClassRoomId)
+		AssessmentIds = append(AssessmentIds, v.AssessmentId)
 	}
 	assessments, _ := impl.assessmentService.GetAssessmentsByIds(schoolId, AssessmentIds)
 
 	LevelIds := make([]string, 0)
 	for _, v := range Results {
-		LevelIds = append(LevelIds, v.ClassRoomId)
+		LevelIds = append(LevelIds, v.LevelId)
 	}
 	levels, _ := impl.levelService.GetLevelsByIds(schoolId, LevelIds)
 

@@ -18,6 +18,17 @@ import (
 
 	"time"
 
+	realestateUsermodule "github.com/GabrielAchumba/school-mgt-backend/realestate/user-module"
+	realestateuserService "github.com/GabrielAchumba/school-mgt-backend/realestate/user-module/services"
+
+	landmodule "github.com/GabrielAchumba/school-mgt-backend/realestate/land-module"
+	landService "github.com/GabrielAchumba/school-mgt-backend/realestate/land-module/services"
+
+	filemodule "github.com/GabrielAchumba/school-mgt-backend/realestate/file-module"
+	fileService "github.com/GabrielAchumba/school-mgt-backend/realestate/file-module/services"
+
+	housemodule "github.com/GabrielAchumba/school-mgt-backend/realestate/land-module"
+
 	usermodule "github.com/GabrielAchumba/school-mgt-backend/modules/user-module"
 	userdtos "github.com/GabrielAchumba/school-mgt-backend/modules/user-module/dtos"
 	userService "github.com/GabrielAchumba/school-mgt-backend/modules/user-module/services"
@@ -274,6 +285,21 @@ func main() {
 
 	cashoutN10000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.CashOutN10000)
 	cashoutN10000module.InjectService(cashoutService.New(cashoutN10000Collection, configSettings, ctx, _categoryN10000Service)).RegisterRoutes(apiBaseName, tokenMaker, "/cashoutn10000")
+
+	//=======================================================================================//
+
+	//============================REAL ESTATE APP =============================================//
+	_realestateuserService := realestateuserService.New(mongoClient, configSettings, ctx, tokenMaker)
+	realestateUsermodule.InjectService(_realestateuserService).RegisterRoutes(apiBaseName, tokenMaker)
+
+	_fileService := fileService.New(mongoClient, configSettings, ctx)
+	filemodule.InjectService(_fileService).RegisterRoutes(apiBaseName, tokenMaker)
+
+	landCollection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.Land)
+	landmodule.InjectService(landService.New(landCollection, configSettings, ctx, _realestateuserService)).RegisterRoutes(apiBaseName, tokenMaker, "/land")
+
+	houseCollection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.House)
+	housemodule.InjectService(landService.New(houseCollection, configSettings, ctx, _realestateuserService)).RegisterRoutes(apiBaseName, tokenMaker, "/house")
 
 	//=======================================================================================//
 

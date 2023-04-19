@@ -81,6 +81,7 @@ func New(mongoClient *mongo.Client, config config.Settings, ctx context.Context,
 		tokenMaker:   tokenMaker,
 		emailDto:     emailDto,
 		staffService: staffService,
+		utils:        utils.NewNumericTokenGenerator(),
 	}
 }
 
