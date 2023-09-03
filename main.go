@@ -153,7 +153,8 @@ func init() {
 	fmt.Println("Mongo connection established")
 
 	//-------------------------SQLite DB Connection------------------//
-	_, err := os.Stat("movie-db")
+	fl, err := os.Stat("movie-db")
+	fmt.Print(fl)
 	if err != nil {
 		file, err := os.Create("movie-db")
 		if err != nil {
