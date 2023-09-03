@@ -33,6 +33,8 @@ type User struct {
 	FileUrl              string    `json:"fileUrl"`
 	FileName             string    `json:"fileName"`
 	OriginalFileName     string    `json:"originalFileName"`
+	ReferralID           string    `json:"referralID"`
+	ReferalSchoolId      string    `json:"referalSchoolId"`
 }
 
 func (user *User) HashPassword() error {

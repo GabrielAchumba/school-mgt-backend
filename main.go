@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 
+	"database/sql"
+
 	/*  socketio "github.com/googollee/go-socket.io"
 	"github.com/googollee/go-socket.io/engineio"
 	"github.com/googollee/go-socket.io/engineio/transport"
@@ -17,6 +19,12 @@ import (
 	"github.com/GabrielAchumba/school-mgt-backend/common/config"
 
 	"time"
+
+	//==========================Newpay================================================================//
+	vTUModule "github.com/GabrielAchumba/school-mgt-backend/newpay"
+	vTUService "github.com/GabrielAchumba/school-mgt-backend/newpay/services"
+
+	//============================================================================================//
 
 	realestateUsermodule "github.com/GabrielAchumba/school-mgt-backend/realestate/user-module"
 	realestateuserService "github.com/GabrielAchumba/school-mgt-backend/realestate/user-module/services"
@@ -81,29 +89,21 @@ import (
 	categoryService "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/category-module/services"
 	cycleService "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/cycle-module/services"
 
+	accountModule "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/account-module"
+	cashoutModule "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/cashout-module"
+	categoryModule "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/category-module"
 	cyclemodule "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/cycle-module"
-
-	categoryN10000module "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/category-module"
-	categoryN1000module "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/category-module"
-	categoryN2000module "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/category-module"
-	categoryN5000module "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/category-module"
-	categoryN500module "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/category-module"
-
-	accountN10000module "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/account-module"
-	accountN1000module "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/account-module"
-	accountN2000module "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/account-module"
-	accountN5000module "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/account-module"
-	accountN500module "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/account-module"
-
-	cashoutN10000module "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/cashout-module"
-	cashoutN1000module "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/cashout-module"
-	cashoutN2000module "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/cashout-module"
-	cashoutN5000module "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/cashout-module"
-	cashoutN500module "github.com/GabrielAchumba/school-mgt-backend/launchpad/modules/cashout-module"
 
 	//=============================================================================================//
 
+	"github.com/GabrielAchumba/go-backend/db"
+	userMovieModule "github.com/GabrielAchumba/go-backend/user-module"
+	userMovieService "github.com/GabrielAchumba/go-backend/user-module/services"
+
+	//============================================================
+
 	"github.com/GabrielAchumba/school-mgt-backend/authentication/token"
+
 	"github.com/gin-gonic/gin"
 	cors "github.com/itsjamie/gin-cors"
 	"github.com/joho/godotenv"
@@ -118,6 +118,7 @@ var (
 	configSettings config.Settings
 	mongoClient    *mongo.Client
 	ctx            context.Context
+	sqlClient      *sql.DB
 )
 
 func isProduction() string {
@@ -138,6 +139,7 @@ func init() {
 	ctx = context.TODO()
 	config.Setup()
 	configSettings = *config.AppSettings
+
 	mongoConn := options.Client().ApplyURI(config.AppSettings.Database.DatabaseConnection)
 	client, err := mongo.Connect(ctx, mongoConn)
 	if err != nil {
@@ -149,12 +151,30 @@ func init() {
 		log.Fatal(err)
 	}
 	fmt.Println("Mongo connection established")
+
+	//-------------------------SQLite DB Connection------------------//
+	_, err := os.Stat("movie-db")
+	if err != nil {
+		file, err := os.Create("movie-db")
+		if err != nil {
+			log.Fatal(err)
+		}
+		file.Close()
+		log.Println("movie-db created")
+	}
+
+	moviesDB, _ := sql.Open("sqlite3", "./movie-db.db")
+	sqlClient = moviesDB
+
+	//defer moviesDB.Close()
+
+	db.CreateTable(sqlClient, db.CREATEUSERTABLE, "users")
 }
 
 // Easier to get running with CORS. Thanks for help @Vindexus and @erkie
-var allowOriginFunc = func(r *http.Request) bool {
+/* var allowOriginFunc = func(r *http.Request) bool {
 	return true
-}
+} */
 
 func main() {
 	defer mongoClient.Disconnect(ctx)
@@ -182,6 +202,12 @@ func main() {
 
 	tokenMaker, _ := token.NewJWTMaker(config.AppSettings.Token.TokenSecretKey, config.AppSettings.Token.RefreshTokenSecretKey, config.AppSettings.Token.AccessTokenDuration, config.AppSettings.Token.RefreshTokenDuration)
 
+	//======================================================
+
+	_userMovieService := userMovieService.New(sqlClient)
+	userMovieModule.InjectService(_userMovieService).RegisterRoutes(apiBaseName)
+
+	//=================================================================
 	_simulationservice := simulationservice.New(ctx)
 	simulationmodule.InjectService(_simulationservice).RegisterRoutes(apiBaseName)
 
@@ -236,55 +262,55 @@ func main() {
 
 	categoryN500Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.CategoryN500)
 	_categoryN500Service := categoryService.New(categoryN500Collection, configSettings, ctx, _launchpaduserService)
-	categoryN500module.InjectService(_categoryN500Service).RegisterRoutes(apiBaseName, tokenMaker, "/categoryn500")
+	categoryModule.InjectService(_categoryN500Service).RegisterRoutes(apiBaseName, tokenMaker, "/categoryn500")
 
 	categoryN1000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.CategoryN1000)
 	_categoryN1000Service := categoryService.New(categoryN1000Collection, configSettings, ctx, _launchpaduserService)
-	categoryN1000module.InjectService(_categoryN1000Service).RegisterRoutes(apiBaseName, tokenMaker, "/categoryn1000")
+	categoryModule.InjectService(_categoryN1000Service).RegisterRoutes(apiBaseName, tokenMaker, "/categoryn1000")
 
 	categoryN2000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.CategoryN2000)
 	_categoryN2000Service := categoryService.New(categoryN2000Collection, configSettings, ctx, _launchpaduserService)
-	categoryN2000module.InjectService(_categoryN2000Service).RegisterRoutes(apiBaseName, tokenMaker, "/categoryn2000")
+	categoryModule.InjectService(_categoryN2000Service).RegisterRoutes(apiBaseName, tokenMaker, "/categoryn2000")
 
 	categoryN5000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.CategoryN5000)
 	_categoryN5000Service := categoryService.New(categoryN5000Collection, configSettings, ctx, _launchpaduserService)
-	categoryN5000module.InjectService(_categoryN5000Service).RegisterRoutes(apiBaseName, tokenMaker, "/categoryn5000")
+	categoryModule.InjectService(_categoryN5000Service).RegisterRoutes(apiBaseName, tokenMaker, "/categoryn5000")
 
 	categoryN10000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.CategoryN10000)
 	_categoryN10000Service := categoryService.New(categoryN10000Collection, configSettings, ctx, _launchpaduserService)
-	categoryN10000module.InjectService(_categoryN10000Service).RegisterRoutes(apiBaseName, tokenMaker, "/categoryn10000")
+	categoryModule.InjectService(_categoryN10000Service).RegisterRoutes(apiBaseName, tokenMaker, "/categoryn10000")
 
 	cyclemodule.InjectService(cycleService.New(ctx)).RegisterRoutes(apiBaseName, tokenMaker)
 
 	accountN500Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.AccountN500)
-	accountN500module.InjectService(accountService.New(accountN500Collection, configSettings, ctx, _categoryN500Service, _launchpaduserService)).RegisterRoutes(apiBaseName, tokenMaker, "/accountn500")
+	accountModule.InjectService(accountService.New(accountN500Collection, configSettings, ctx, _categoryN500Service, _launchpaduserService)).RegisterRoutes(apiBaseName, tokenMaker, "/accountn500")
 
 	accountN1000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.AccountN1000)
-	accountN1000module.InjectService(accountService.New(accountN1000Collection, configSettings, ctx, _categoryN1000Service, _launchpaduserService)).RegisterRoutes(apiBaseName, tokenMaker, "/accountn1000")
+	accountModule.InjectService(accountService.New(accountN1000Collection, configSettings, ctx, _categoryN1000Service, _launchpaduserService)).RegisterRoutes(apiBaseName, tokenMaker, "/accountn1000")
 
 	accountN2000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.AccountN2000)
-	accountN2000module.InjectService(accountService.New(accountN2000Collection, configSettings, ctx, _categoryN2000Service, _launchpaduserService)).RegisterRoutes(apiBaseName, tokenMaker, "/accountn2000")
+	accountModule.InjectService(accountService.New(accountN2000Collection, configSettings, ctx, _categoryN2000Service, _launchpaduserService)).RegisterRoutes(apiBaseName, tokenMaker, "/accountn2000")
 
 	accountN5000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.AccountN5000)
-	accountN5000module.InjectService(accountService.New(accountN5000Collection, configSettings, ctx, _categoryN5000Service, _launchpaduserService)).RegisterRoutes(apiBaseName, tokenMaker, "/accountn5000")
+	accountModule.InjectService(accountService.New(accountN5000Collection, configSettings, ctx, _categoryN5000Service, _launchpaduserService)).RegisterRoutes(apiBaseName, tokenMaker, "/accountn5000")
 
 	accountN10000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.AccountN10000)
-	accountN10000module.InjectService(accountService.New(accountN10000Collection, configSettings, ctx, _categoryN10000Service, _launchpaduserService)).RegisterRoutes(apiBaseName, tokenMaker, "/accountn10000")
+	accountModule.InjectService(accountService.New(accountN10000Collection, configSettings, ctx, _categoryN10000Service, _launchpaduserService)).RegisterRoutes(apiBaseName, tokenMaker, "/accountn10000")
 
 	cashoutN500Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.CashOutN500)
-	cashoutN500module.InjectService(cashoutService.New(cashoutN500Collection, configSettings, ctx, _categoryN500Service)).RegisterRoutes(apiBaseName, tokenMaker, "/cashoutn500")
+	cashoutModule.InjectService(cashoutService.New(cashoutN500Collection, configSettings, ctx, _categoryN500Service)).RegisterRoutes(apiBaseName, tokenMaker, "/cashoutn500")
 
 	cashoutN1000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.CashOutN1000)
-	cashoutN1000module.InjectService(cashoutService.New(cashoutN1000Collection, configSettings, ctx, _categoryN1000Service)).RegisterRoutes(apiBaseName, tokenMaker, "/cashoutn1000")
+	cashoutModule.InjectService(cashoutService.New(cashoutN1000Collection, configSettings, ctx, _categoryN1000Service)).RegisterRoutes(apiBaseName, tokenMaker, "/cashoutn1000")
 
 	cashoutN2000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.CashOutN2000)
-	cashoutN2000module.InjectService(cashoutService.New(cashoutN2000Collection, configSettings, ctx, _categoryN2000Service)).RegisterRoutes(apiBaseName, tokenMaker, "/cashoutn2000")
+	cashoutModule.InjectService(cashoutService.New(cashoutN2000Collection, configSettings, ctx, _categoryN2000Service)).RegisterRoutes(apiBaseName, tokenMaker, "/cashoutn2000")
 
 	cashoutN5000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.CashOutN5000)
-	cashoutN5000module.InjectService(cashoutService.New(cashoutN5000Collection, configSettings, ctx, _categoryN1000Service)).RegisterRoutes(apiBaseName, tokenMaker, "/cashoutn5000")
+	cashoutModule.InjectService(cashoutService.New(cashoutN5000Collection, configSettings, ctx, _categoryN1000Service)).RegisterRoutes(apiBaseName, tokenMaker, "/cashoutn5000")
 
 	cashoutN10000Collection := mongoClient.Database(configSettings.Database.DatabaseName).Collection(configSettings.TableNames.CashOutN10000)
-	cashoutN10000module.InjectService(cashoutService.New(cashoutN10000Collection, configSettings, ctx, _categoryN10000Service)).RegisterRoutes(apiBaseName, tokenMaker, "/cashoutn10000")
+	cashoutModule.InjectService(cashoutService.New(cashoutN10000Collection, configSettings, ctx, _categoryN10000Service)).RegisterRoutes(apiBaseName, tokenMaker, "/cashoutn10000")
 
 	//=======================================================================================//
 
@@ -302,6 +328,15 @@ func main() {
 	housemodule.InjectService(landService.New(houseCollection, configSettings, ctx, _realestateuserService)).RegisterRoutes(apiBaseName, tokenMaker, "/house")
 
 	//=======================================================================================//
+
+	//===========================Newpay===================================================//
+	vTUModule.InjectAirtimeService(vTUService.NewAirtimeService(ctx, configSettings)).RegisterAirtimeRoutes(apiBaseName, tokenMaker, "/airtime")
+	vTUModule.InjectBalanceService(vTUService.NewBalanceService(ctx, configSettings)).RegisterBalanceRoutes(apiBaseName, tokenMaker, "/wallet")
+	vTUModule.InjectService(vTUService.NewCableTVService(ctx, configSettings)).RegisterRoutes(apiBaseName, tokenMaker, "/cable-tv")
+	vTUModule.InjectDataBundleService(vTUService.NewDataBundleService(ctx, configSettings)).RegisterDataBundleRoutes(apiBaseName, tokenMaker, "/data-bundle")
+	vTUModule.InjectElectricityService(vTUService.NewElectricityService(ctx, configSettings)).RegisterElectricityRoutes(apiBaseName, tokenMaker, "/electricity")
+
+	//===================================================================================//
 
 	port := config.AppSettings.Server.Port
 

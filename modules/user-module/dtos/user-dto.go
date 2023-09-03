@@ -38,6 +38,8 @@ type UserInternalOperation struct {
 	FileUrl          string    `json:"fileUrl"`
 	FileName         string    `json:"fileName"`
 	OriginalFileName string    `json:"originalFileName"`
+	ReferralID       string    `json:"referralID"`
+	ReferalSchoolId  string    `json:"referalSchoolId"`
 }
 
 type CreateUserRequest struct {
@@ -65,6 +67,8 @@ type CreateUserRequest struct {
 	FileUrl              string   `json:"fileUrl"`
 	FileName             string   `json:"fileName"`
 	OriginalFileName     string   `json:"originalFileName"`
+	ReferralID           string   `json:"referralID"`
+	ReferalSchoolId      string   `json:"referalSchoolId"`
 }
 
 type UpdateUserRequest struct {
@@ -91,6 +95,8 @@ type UpdateUserRequest struct {
 	FileUrl              string   `json:"fileUrl"`
 	FileName             string   `json:"fileName"`
 	OriginalFileName     string   `json:"originalFileName"`
+	ReferralID           string   `json:"referralID"`
+	ReferalSchoolId      string   `json:"referalSchoolId"`
 }
 
 type UserResponse struct {
@@ -120,6 +126,8 @@ type UserResponse struct {
 	FileUrl              string    `json:"fileUrl"`
 	FileName             string    `json:"fileName"`
 	OriginalFileName     string    `json:"originalFileName"`
+	ReferralID           string    `json:"referralID"`
+	ReferalSchoolId      string    `json:"referalSchoolId"`
 }
 
 type UserResponsePaginated struct {

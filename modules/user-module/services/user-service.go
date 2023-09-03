@@ -59,6 +59,7 @@ type UserService interface {
 	BlockUser(id string, User dtos.UpdateUserRequest) (interface{}, error)
 	ConfirmUser(id string, User dtos.UpdateUserRequest) (interface{}, error)
 	CustomFilter(rows []dtos.UserResponse, filter string) []dtos.UserResponse
+	GetUserByUsername(username string, referalSchoolId string) (dtos.UserResponse, error)
 }
 
 type serviceImpl struct {
@@ -888,6 +889,27 @@ func (impl serviceImpl) GetUsersByCategory(category string, schoolId string) ([]
 	return Users, err
 }
 
+func (impl serviceImpl) GetUserByUsername(username string, referalSchoolId string) (dtos.UserResponse, error) {
+
+	log.Print("GetUserByUsername started.")
+
+	var User dtos.UserResponse
+	filter := bson.D{bson.E{Key: "username", Value: username},
+		bson.E{Key: "schoolid", Value: referalSchoolId}}
+
+	err := impl.collection.FindOne(impl.ctx, filter).Decode(&User)
+	if err != nil {
+		return User, errors.Error("could not find user by id")
+	}
+
+	/* staff, _ := impl.staffService.GetStaff(User.DesignationId, referalSchoolId)
+	User.Designation = staff.Type */
+
+	log.Print("GetUserByUsername completed")
+
+	return User, err
+}
+
 func (impl serviceImpl) PostUser(User dtos.CreateUserRequest) (interface{}, error) {
 
 	log.Print("Call to create User started.")
@@ -966,8 +988,15 @@ func (impl serviceImpl) PutUser(id string, User dtos.UpdateUserRequest) (interfa
 	objId := conversion.GetMongoId(id)
 	var updatedUser dtos.UpdateUserRequest
 	conversion.Convert(User, &updatedUser)
+
+	//UserName:      "admin@school.com"
+	referral, err := impl.GetUserByUsername(id, updatedUser.ReferalSchoolId)
+
+	if err != nil {
+		return models.User{}, errors.Error("Referral username does not exist")
+	}
+
 	filter := bson.D{bson.E{Key: "_id", Value: objId}}
-	var modelObj models.User
 
 	update := bson.D{bson.E{Key: "designationyd", Value: updatedUser.DesignationId},
 		bson.E{Key: "firstname", Value: updatedUser.FirstName},
@@ -982,15 +1011,16 @@ func (impl serviceImpl) PutUser(id string, User dtos.UpdateUserRequest) (interfa
 		bson.E{Key: "schoolid", Value: updatedUser.SchoolId},
 		bson.E{Key: "fileurl", Value: updatedUser.FileUrl},
 		bson.E{Key: "filename", Value: updatedUser.FileName},
-		bson.E{Key: "originalfilename", Value: updatedUser.OriginalFileName}}
+		bson.E{Key: "originalfilename", Value: updatedUser.OriginalFileName},
+		bson.E{Key: "referralid", Value: referral.Id}}
 
-	_, err := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
+	a, err := impl.collection.UpdateOne(impl.ctx, filter, bson.D{bson.E{Key: "$set", Value: update}})
 	if err != nil {
-		return modelObj, errors.Error("Could not upadte user")
+		return models.User{}, errors.Error("Could not upadte user")
 	}
 
 	log.Print("PutUser completed")
-	return modelObj, nil
+	return a, nil
 }
 
 func (impl serviceImpl) PutReferal(id string, User dtos.UpdateUserRequest) (interface{}, error) {

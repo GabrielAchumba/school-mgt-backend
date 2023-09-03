@@ -2,8 +2,10 @@ package paymentgateway
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strconv"
+	"time"
 
 	"github.com/GabrielAchumba/school-mgt-backend/common/config"
 	errors "github.com/GabrielAchumba/school-mgt-backend/common/errors"
@@ -14,6 +16,7 @@ type PaymentGatewayService interface {
 	GetBanks() []paystack.Bank
 	InitiateTransfer(request PaymentGatewayRequest) (interface{}, error)
 	FinalizeTransfer(request PaymentGatewayRequest) (interface{}, error)
+	InitializePayment(request PaymentGatewayRequest) (interface{}, error)
 }
 
 type serviceImpl struct {
@@ -111,4 +114,56 @@ func (impl serviceImpl) FinalizeTransfer(request PaymentGatewayRequest) (interfa
 	}
 
 	return response, nil
+}
+
+func (impl serviceImpl) makeTimestamp() int64 {
+	return time.Now().UnixNano() / int64(time.Millisecond)
+}
+
+func (impl serviceImpl) InitializePayment(request PaymentGatewayRequest) (interface{}, error) {
+
+	txn := &paystack.TransactionRequest{
+		Email:     "user123@gmail.com",
+		Amount:    6000,
+		Reference: "Txn-" + fmt.Sprintf("%d", impl.makeTimestamp()),
+	}
+	resp, err := impl.client.Transaction.Initialize(txn)
+	if err != nil {
+		return nil, errors.Error(err.Error())
+	}
+
+	if resp["authorization_code"] == "" {
+		return nil, errors.Error("Missing transaction authorization code")
+	}
+
+	if resp["access_code"] == "" {
+		return nil, errors.Error("Missing transaction access code")
+	}
+
+	if resp["reference"] == "" {
+		return nil, errors.Error("Missing transaction reference")
+	}
+
+	txn1, err := impl.client.Transaction.Verify(resp["reference"].(string))
+
+	if err != nil {
+		return nil, errors.Error(err.Error())
+	}
+
+	if txn1.Amount != txn.Amount {
+		x := fmt.Sprintf("Expected transaction amount %f, got %+v", txn.Amount, txn1.Amount)
+		return nil, errors.Error(x)
+	}
+
+	if txn1.Reference == "" {
+		return nil, errors.Error("Missing transaction reference")
+	}
+
+	reponse, err := impl.client.Transaction.Get(txn1.ID)
+
+	if err != nil {
+		return nil, errors.Error(err.Error())
+	}
+
+	return reponse, nil
 }
