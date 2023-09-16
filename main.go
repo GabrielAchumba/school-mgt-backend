@@ -96,9 +96,9 @@ import (
 
 	//=============================================================================================//
 
-	"github.com/GabrielAchumba/go-backend/db"
-	userMovieModule "github.com/GabrielAchumba/go-backend/user-module"
-	userMovieService "github.com/GabrielAchumba/go-backend/user-module/services"
+	//"github.com/GabrielAchumba/go-backend/db"
+	//userMovieModule "github.com/GabrielAchumba/go-backend/user-module"
+	//userMovieService "github.com/GabrielAchumba/go-backend/user-module/services"
 
 	//============================================================
 
@@ -153,7 +153,7 @@ func init() {
 	fmt.Println("Mongo connection established")
 
 	//-------------------------SQLite DB Connection------------------//
-	fl, err := os.Stat("movie-db")
+	/* fl, err := os.Stat("movie-db")
 	fmt.Print(fl)
 	if err != nil {
 		file, err := os.Create("movie-db")
@@ -169,7 +169,7 @@ func init() {
 
 	//defer moviesDB.Close()
 
-	db.CreateTable(sqlClient, db.CREATEUSERTABLE, "users")
+	db.CreateTable(sqlClient, db.CREATEUSERTABLE, "users") */
 }
 
 // Easier to get running with CORS. Thanks for help @Vindexus and @erkie
@@ -205,8 +205,8 @@ func main() {
 
 	//======================================================
 
-	_userMovieService := userMovieService.New(sqlClient)
-	userMovieModule.InjectService(_userMovieService).RegisterRoutes(apiBaseName)
+	//_userMovieService := userMovieService.New(sqlClient)
+	//userMovieModule.InjectService(_userMovieService).RegisterRoutes(apiBaseName)
 
 	//=================================================================
 	_simulationservice := simulationservice.New(ctx)
